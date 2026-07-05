@@ -1,0 +1,13 @@
+# Example extension for local development.
+# Codex must first review PortalCorporativo/docker-compose.yml and extend its conventions.
+
+services:
+  financiero-api:
+    image: financiero-api:dev
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - sqlserver
