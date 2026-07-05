@@ -1,0 +1,15 @@
+name: Placeholder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate repository bootstrap
+        run: |
+          test -f AGENTS.md
+          test -f codex/INSTRUCTIONS.md
+          test -f docs/accounting-tax-platform/18-codex-agent-coordinator.md
