@@ -4,7 +4,27 @@
 
 Este archivo define cómo Codex debe operar en este repositorio.
 
-El objetivo es implementar el módulo financiero/contable/tributario/SRI como extensión del PortalCorporativo, reutilizando sus APIs y componentes transversales.
+El objetivo es implementar el módulo financiero/contable/tributario/SRI como extensión de `PortalCorporativo`, reutilizando sus APIs y componentes transversales.
+
+## Repositorios relacionados
+
+```text
+PortalCorporativo: https://github.com/christyepez/PortalCorporativo
+Financiero: https://github.com/christyepez/Financiero
+CodexCommonAgents: https://github.com/christyepez/CodexCommonAgents
+```
+
+## Lectura mínima
+
+Codex debe leer primero:
+
+1. `README.md`.
+2. `codex/PROJECT_CONTEXT.md`.
+3. `docs/accounting-tax-platform/18-codex-agent-coordinator.md`.
+4. `PortalCorporativo/codex/REUSABLE_CAPABILITIES.md` si está disponible.
+5. `CodexCommonAgents/AGENTS.md` y playbook aplicable cuando el repo común esté disponible.
+
+No leer todo el repositorio si la tarea no lo requiere.
 
 ## Regla obligatoria
 
