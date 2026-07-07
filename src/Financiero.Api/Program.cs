@@ -34,6 +34,7 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => fa
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains("ready") }).AllowAnonymous();
 app.MapGet("/", () => Results.Ok(new { service = "Financiero.Api", status = "bootstrap" })).AllowAnonymous();
 app.MapChartOfAccounts();
+app.MapFiscalPeriods();
 app.Run();
 
 public partial class Program;

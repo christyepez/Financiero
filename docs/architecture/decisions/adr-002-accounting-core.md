@@ -24,3 +24,9 @@ Las invariantes son deterministas y auditables, con concurrencia requerida para 
 Se implementa primero `ChartOfAccounts` con tabla `financial.accounts` en `FinancieroDb`. Security/Menu/Configuration se extienden mediante metadata `financial.chartofaccounts.*`; Audit usa eventos `AccountCreated`, `AccountUpdated`, `AccountActivated`, `AccountDeactivated`, `AccountArchived`; Outbox usa `FinancialAccountCreated`, `FinancialAccountUpdated` y `FinancialAccountStatusChanged`.
 
 No se crea SQL Server, login, auditoría ni motor de notificaciones propios.
+
+## Decisión P2 - Fiscal Periods
+
+Se implementan `FiscalYear` y `FiscalPeriod` como segundo paquete funcional. Un año fiscal es único por tenant/año; los periodos son únicos por tenant/año/número y no se solapan. Un periodo solo abre si su año fiscal está `Open`; un año fiscal no cierra si tiene periodos abiertos; periodos `Locked` no se reabren sin permiso/regla futura especial.
+
+Se mantiene `FinancieroDb` como base lógica separada y se reutilizan Portal Security/Menu/Configuration/Audit/Outbox mediante metadata y puertos existentes.

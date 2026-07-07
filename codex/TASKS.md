@@ -15,13 +15,14 @@
 - [x] Diseñar ChartOfAccounts, FiscalPeriods y JournalEntries; aprobar ADR-002.
 - [x] Implementar P0 Bootstrap Financiero.
 - [x] Implementar P1 Chart of Accounts.
-- [ ] Implementar P2 Fiscal Periods.
+- [x] Implementar P2 Fiscal Periods.
 - [ ] Implementar P3 Journal Entries.
 - [ ] Implementar P4 adaptadores Portal.
 - [ ] Ejecutar P5 QA integrado y P6 documentación.
 - [ ] Reglas de partida doble, estados, cierre de período y pruebas de dominio.
 - [x] Extender permisos, Menu y Configuration para Plan de Cuentas mediante metadata.
 - [x] Adaptar Audit y Outbox para Plan de Cuentas mediante contratos existentes.
+- [x] Adaptar Audit y Outbox para Años/Periodos fiscales mediante contratos existentes.
 
 ## Sprint 2 — Facturación y documentos tributarios
 
