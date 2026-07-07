@@ -20,7 +20,7 @@ Moneda base única configurable; `decimal(19,4)`; balance exacto; cuentas padre 
 | P5 | QA integrado | QA Agent | unitarias, integración SQL/JWT, contrato y smoke | build/tests/health/autorización y casos negativos pasan |
 | P6 | Documentación | Documentation Agent | runbook, contratos y estado reutilizable | docs reflejan implementación real |
 
-Estado: P0 completado con solución .NET 8, proyectos Clean Architecture, SQL aislado, health/JWT/logging/correlationId, contratos Portal, adaptadores dev y pruebas. P1 Chart of Accounts está implementado como primer vertical slice funcional.
+Estado: P0 completado con solución .NET 8, proyectos Clean Architecture, SQL aislado, health/JWT/logging/correlationId, contratos Portal, adaptadores dev y pruebas. P1 Chart of Accounts, P2 Fiscal Periods y P3 Journal Entries están implementados como vertical slices funcionales.
 
 ## P1 Chart of Accounts
 
@@ -31,6 +31,12 @@ Incluye entidad `Account`, reglas de jerarquía/código/estado, endpoints `/api/
 Incluye entidades `FiscalYear` y `FiscalPeriod`, reglas de unicidad, rangos de fechas, no solapamiento, apertura/cierre/reapertura/bloqueo/archivo, endpoints `/api/financial/fiscal-years` y `/api/financial/fiscal-periods`, persistencia `FinancieroDb.financial.fiscal_years` y `financial.fiscal_periods`, metadata Portal y adaptación Audit/Outbox.
 
 Además endurece P1: no se permite desactivar ni archivar cuentas padre con hijos activos.
+
+## P3 Journal Entries
+
+Incluye entidades `JournalEntry` y `JournalEntryLine`, estados Draft/Posted/Reversed/Voided, fuentes Manual/OpeningBalance/Adjustment/Integration/System, reglas de partida doble, validación de cuentas activas de movimiento y periodo fiscal Open, endpoints `/api/financial/journal-entries`, persistencia `financial.journal_entries`, `financial.journal_entry_lines` y `financial.accounting_sequences`, metadata Portal Security/Menu/Configuration y adaptación Audit/Outbox.
+
+La numeración queda como secuencia por tenant/año con formato `JE-{year}-{000000}`. La prevención de desactivar/archivar cuentas usadas en asientos Posted queda preparada por `IJournalEntryRepository.HasPostedEntriesForAccountAsync` y debe conectarse en P4/P5 con una política transversal de integridad contable.
 
 ## Permisos propuestos
 

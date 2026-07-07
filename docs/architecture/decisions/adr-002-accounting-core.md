@@ -30,3 +30,9 @@ No se crea SQL Server, login, auditoría ni motor de notificaciones propios.
 Se implementan `FiscalYear` y `FiscalPeriod` como segundo paquete funcional. Un año fiscal es único por tenant/año; los periodos son únicos por tenant/año/número y no se solapan. Un periodo solo abre si su año fiscal está `Open`; un año fiscal no cierra si tiene periodos abiertos; periodos `Locked` no se reabren sin permiso/regla futura especial.
 
 Se mantiene `FinancieroDb` como base lógica separada y se reutilizan Portal Security/Menu/Configuration/Audit/Outbox mediante metadata y puertos existentes.
+
+## Decisión P3 - Journal Entries
+
+Se implementan `JournalEntry` y `JournalEntryLine` como foundation de asientos contables. Draft admite edición y líneas; Posted requiere mínimo dos líneas, cuentas existentes/activas/de movimiento y periodo fiscal `Open`; Posted/Reversed/Voided son inmutables para edición. Void aplica solo a Draft. Reverse crea un nuevo asiento Posted con líneas invertidas y enlaza original/reverso.
+
+La numeración usa `financial.accounting_sequences` con scope tenant/año y formato inicial `JE-{year}-{000000}`. Es gap-tolerant; la contención/concurrencia fina queda como riesgo para pruebas de integración SQL en P5. Audit y Outbox se adaptan con eventos `JournalEntryCreated`, `JournalEntryUpdated`, `JournalEntryPosted`, `JournalEntryReversed` y `JournalEntryVoided`.
