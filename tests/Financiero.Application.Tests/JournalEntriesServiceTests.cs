@@ -175,6 +175,7 @@ internal sealed class InMemoryJournalEntryRepository : IJournalEntryRepository
     private readonly List<JournalEntry> _entries = [];
     private readonly Dictionary<string, long> _sequences = [];
     public Task AddAsync(JournalEntry entry, CancellationToken ct) { _entries.Add(entry); return Task.CompletedTask; }
+    public Task AddLineAsync(JournalEntryLine line, CancellationToken ct) => Task.CompletedTask;
     public void Track(JournalEntry entry) => _entries.Add(entry);
     public Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromResult(_entries.FirstOrDefault(x => x.Id == id && x.TenantId == tenantId));
     public Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct) => Task.FromResult(_entries.FirstOrDefault(x => x.EntryNumber == entryNumber && x.TenantId == tenantId));

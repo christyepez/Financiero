@@ -18,7 +18,8 @@
 - [x] Implementar P2 Fiscal Periods.
 - [x] Implementar P3 Journal Entries.
 - [x] Implementar P4 adaptadores Portal, seguridad runtime y hardening contable.
-- [ ] Ejecutar P5 QA integrado y P6 documentación.
+- [x] Ejecutar P5 QA integrado, security smoke, concurrencia SQL y migraciones.
+- [ ] Ejecutar P6 documentación/cierre Sprint 1.
 - [ ] Reglas de partida doble, estados, cierre de período y pruebas de dominio.
 - [x] Extender permisos, Menu y Configuration para Plan de Cuentas mediante metadata.
 - [x] Adaptar Audit y Outbox para Plan de Cuentas mediante contratos existentes.
@@ -27,6 +28,9 @@
 - [x] Aplicar autorización runtime por permisos `financial.*`.
 - [x] Endurecer cuentas, períodos y asientos contra movimientos contables críticos.
 - [x] Crear estrategia documentada de migraciones/versioning.
+- [x] Crear scripts versionados `database/migrations/financial`.
+- [x] Crear smoke script local.
+- [x] Documentar contratos API financieros.
 
 ## Sprint 2 — Facturación y documentos tributarios
 
@@ -55,3 +59,11 @@ Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OID
 - Implementar adapters HTTP productivos hacia Portal cuando se congelen contratos de Security/Menu/Configuration/Audit/Outbox.
 - Fortalecer secuencia con rowversion/UPDLOCK/sp_getapplock en P5 si las pruebas de concurrencia SQL lo requieren.
 - Migrar desde `EnsureCreated` + SQL raw hacia migraciones versionadas antes de producción.
+
+## Sprint 1 P5
+
+- [x] IntegratedAccountingFlowTests cubre flujo contable mínimo.
+- [x] Security smoke cubre permisos positivos/negativos y `X-Dev-Permissions`.
+- [x] Secuencia SQL usa transacción serializable con `UPDLOCK,HOLDLOCK`.
+- [x] Readiness valida tablas core.
+- [x] Runner básico usa `financial.schema_versions`.

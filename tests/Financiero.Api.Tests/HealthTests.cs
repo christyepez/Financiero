@@ -62,4 +62,26 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
         var response = await client.SendAsync(request);
         Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     }
+
+    [Theory]
+    [InlineData("GET", "/api/financial/fiscal-periods", "financial.fiscalperiods.read")]
+    [InlineData("POST", "/api/financial/fiscal-periods/00000000-0000-0000-0000-000000000001/open", "financial.fiscalperiods.open")]
+    [InlineData("GET", "/api/financial/journal-entries", "financial.journalentries.read")]
+    [InlineData("POST", "/api/financial/journal-entries/00000000-0000-0000-0000-000000000001/post", "financial.journalentries.post")]
+    public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
+    {
+        using var request = new HttpRequestMessage(new HttpMethod(method), url);
+        request.Headers.Add("X-Dev-Permissions", permission);
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Development_wildcard_permission_is_allowed_by_design()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/journal-entries");
+        request.Headers.Add("X-Dev-Permissions", "financial.*");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
 }

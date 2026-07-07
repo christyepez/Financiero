@@ -12,6 +12,7 @@ services:
       Portal__UsePortalConfiguration: ${USE_PORTAL_CONFIGURATION:-false}
       FinancialPlatform__TenantId: default
       Database__Initialize: "true"
+      Database__RunMigrations: "true"
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}
       Jwt__Audience: ${JWT_AUDIENCE:-portal-corporativo-clients}
       Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
