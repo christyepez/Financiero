@@ -21,7 +21,7 @@ public interface IAccountRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
-public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalAuditClient audit, IPortalOutboxClient outbox)
+public sealed class ChartOfAccountsService(IAccountRepository accounts, IJournalEntryRepository journalEntries, IPortalAuditClient audit, IPortalOutboxClient outbox)
 {
     public async Task<AccountDto> CreateAsync(CreateAccountRequest request, PortalCallContext context, CancellationToken ct)
     {
@@ -48,6 +48,11 @@ public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalA
         var parent = await ValidateParentAsync(request.ParentAccountId, request.Level, context.TenantId, ct);
         if (request.ParentAccountId == id) throw new FinancialApplicationException("account.parent.self", "Parent account cannot be the same account.");
         if (await accounts.HasChildrenAsync(id, context.TenantId, ct) && request.IsMovementAccount) throw new FinancialApplicationException("account.movement.has_children", "Accounts with children cannot be movement accounts.");
+        if (await journalEntries.HasPostedEntriesForAccountAsync(id, context.TenantId, ct))
+        {
+            if (code != account.Code) throw new FinancialApplicationException("account.code.used_in_posted_entries", "Accounts used in posted journal entries cannot change code.");
+            if (account.IsMovementAccount && !request.IsMovementAccount) throw new FinancialApplicationException("account.movement.used_in_posted_entries", "Accounts used in posted journal entries cannot become summary accounts.");
+        }
 
         account.Update(code, request.Name, type, request.Level, request.ParentAccountId, request.IsMovementAccount, DateTimeOffset.UtcNow);
         parent?.MarkAsSummaryAccount(DateTimeOffset.UtcNow);
@@ -74,6 +79,7 @@ public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalA
     {
         var account = await GetRequiredAsync(id, context.TenantId, ct);
         if (await accounts.HasChildrenAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.parent.has_active_children", "Parent accounts with active children cannot be deactivated.");
+        if (await journalEntries.HasPostedEntriesForAccountAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.used_in_posted_entries", "Accounts used in posted journal entries cannot be deactivated.");
         account.Deactivate(DateTimeOffset.UtcNow);
         await accounts.SaveChangesAsync(ct);
         await AuditAndOutboxAsync("AccountDeactivated", "FinancialAccountStatusChanged", account, context, ct);
@@ -84,6 +90,7 @@ public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalA
     {
         var account = await GetRequiredAsync(id, context.TenantId, ct);
         if (await accounts.HasChildrenAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.parent.has_active_children", "Parent accounts with active children cannot be archived.");
+        if (await journalEntries.HasPostedEntriesForAccountAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.used_in_posted_entries", "Accounts used in posted journal entries cannot be archived.");
         account.Archive(DateTimeOffset.UtcNow);
         await accounts.SaveChangesAsync(ct);
         await AuditAndOutboxAsync("AccountArchived", "FinancialAccountStatusChanged", account, context, ct);

@@ -11,41 +11,41 @@ public static class FiscalPeriodsEndpoints
     {
         var years = app.MapGroup("/api/financial/fiscal-years").WithTags("Fiscal Years");
         years.MapPost("/", async (CreateFiscalYearRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.CreateYearAsync(request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.CreateYearAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsCreate);
         years.MapPut("/{id:guid}", async (Guid id, UpdateFiscalYearRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.UpdateYearAsync(id, request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.UpdateYearAsync(id, request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsUpdate);
         years.MapGet("/", async ([AsParameters] SearchFiscalYearsRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.SearchYearsAsync(request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.SearchYearsAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsRead);
         years.MapGet("/{id:guid}", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.GetYearByIdAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.GetYearByIdAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsRead);
         years.MapPost("/{id:guid}/open", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.OpenYearAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.OpenYearAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsOpen);
         years.MapPost("/{id:guid}/close", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.CloseYearAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.CloseYearAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsClose);
         years.MapPost("/{id:guid}/archive", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.ArchiveYearAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.ArchiveYearAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalYearsArchive);
 
         var periods = app.MapGroup("/api/financial/fiscal-periods").WithTags("Fiscal Periods");
         periods.MapPost("/", async (CreateFiscalPeriodRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.CreatePeriodAsync(request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.CreatePeriodAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsCreate);
         periods.MapPut("/{id:guid}", async (Guid id, UpdateFiscalPeriodRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.UpdatePeriodAsync(id, request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.UpdatePeriodAsync(id, request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsUpdate);
         periods.MapGet("/", async ([AsParameters] SearchFiscalPeriodsRequest request, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.SearchPeriodsAsync(request, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.SearchPeriodsAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsRead);
         periods.MapGet("/{id:guid}", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.GetPeriodByIdAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.GetPeriodByIdAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsRead);
         periods.MapGet("/open-by-date", async (DateOnly date, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.GetOpenPeriodByDateAsync(date, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.GetOpenPeriodByDateAsync(date, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsRead);
         periods.MapPost("/{id:guid}/open", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.OpenPeriodAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.OpenPeriodAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsOpen);
         periods.MapPost("/{id:guid}/close", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.ClosePeriodAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.ClosePeriodAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsClose);
         periods.MapPost("/{id:guid}/lock", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.LockPeriodAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.LockPeriodAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsLock);
         periods.MapPost("/{id:guid}/reopen", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.ReopenPeriodAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.ReopenPeriodAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsReopen);
         periods.MapPost("/{id:guid}/archive", async (Guid id, FiscalPeriodsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
-            await ExecuteAsync(() => service.ArchivePeriodAsync(id, Context(http, options.Value), ct), http));
+            await ExecuteAsync(() => service.ArchivePeriodAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.FiscalPeriodsArchive);
 
         return app;
     }

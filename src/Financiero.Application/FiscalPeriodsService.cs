@@ -20,7 +20,7 @@ public interface IFiscalRepository
     Task SaveChangesAsync(CancellationToken ct);
 }
 
-public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IPortalAuditClient audit, IPortalOutboxClient outbox)
+public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IJournalEntryRepository journalEntries, IFinancialConfigurationReader configuration, IPortalAuditClient audit, IPortalOutboxClient outbox)
 {
     public async Task<FiscalYearDto> CreateYearAsync(CreateFiscalYearRequest request, PortalCallContext context, CancellationToken ct)
     {
@@ -64,6 +64,7 @@ public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IPortalAuditC
     public async Task<FiscalYearDto> ArchiveYearAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var year = await GetYearAsync(id, context.TenantId, ct);
+        if (await journalEntries.HasPostedEntriesInFiscalYearAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("fiscal_year.archive.posted_entries", "Fiscal years with posted journal entries cannot be archived.");
         year.Archive(DateTimeOffset.UtcNow);
         await fiscal.SaveChangesAsync(ct);
         await AuditOutboxAsync("FiscalYearArchived", "FiscalYearStatusChanged", year.Id, year, context, ct);
@@ -104,8 +105,21 @@ public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IPortalAuditC
         return ToDto(period);
     }
 
-    public async Task<FiscalPeriodDto> ClosePeriodAsync(Guid id, PortalCallContext context, CancellationToken ct) => await ChangePeriodStatusAsync(id, context, "FiscalPeriodClosed", p => p.Close(DateTimeOffset.UtcNow), ct);
-    public async Task<FiscalPeriodDto> LockPeriodAsync(Guid id, PortalCallContext context, CancellationToken ct) => await ChangePeriodStatusAsync(id, context, "FiscalPeriodLocked", p => p.Lock(DateTimeOffset.UtcNow), ct);
+    public async Task<FiscalPeriodDto> ClosePeriodAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var period = await GetPeriodAsync(id, context.TenantId, ct);
+        var closeRequiresNoDraft = await configuration.GetBoolAsync("financial.fiscalPeriods.closeRequiresNoDraftEntries", true, context, ct);
+        if (closeRequiresNoDraft && await journalEntries.HasDraftEntriesInDateRangeAsync(context.TenantId, period.StartDate, period.EndDate, ct))
+            throw new FinancialApplicationException("fiscal_period.close.draft_entries", "Fiscal period cannot be closed while draft journal entries exist in its date range.");
+        return await ChangePeriodStatusAsync(period, context, "FiscalPeriodClosed", p => p.Close(DateTimeOffset.UtcNow), ct);
+    }
+    public async Task<FiscalPeriodDto> LockPeriodAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var period = await GetPeriodAsync(id, context.TenantId, ct);
+        if (await journalEntries.HasDraftEntriesInDateRangeAsync(context.TenantId, period.StartDate, period.EndDate, ct))
+            throw new FinancialApplicationException("fiscal_period.lock.draft_entries", "Fiscal period cannot be locked while draft journal entries exist in its date range.");
+        return await ChangePeriodStatusAsync(period, context, "FiscalPeriodLocked", p => p.Lock(DateTimeOffset.UtcNow), ct);
+    }
 
     public async Task<FiscalPeriodDto> ReopenPeriodAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
@@ -121,6 +135,7 @@ public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IPortalAuditC
     public async Task<FiscalPeriodDto> ArchivePeriodAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var period = await GetPeriodAsync(id, context.TenantId, ct);
+        if (await journalEntries.HasPostedEntriesInPeriodAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("fiscal_period.archive.posted_entries", "Fiscal periods with posted journal entries cannot be archived.");
         period.Archive(DateTimeOffset.UtcNow);
         await fiscal.SaveChangesAsync(ct);
         await AuditOutboxAsync("FiscalPeriodArchived", "FiscalPeriodStatusChanged", period.Id, period, context, ct);
@@ -154,6 +169,11 @@ public sealed class FiscalPeriodsService(IFiscalRepository fiscal, IPortalAuditC
     private async Task<FiscalPeriodDto> ChangePeriodStatusAsync(Guid id, PortalCallContext context, string auditAction, Action<FiscalPeriod> change, CancellationToken ct)
     {
         var period = await GetPeriodAsync(id, context.TenantId, ct);
+        return await ChangePeriodStatusAsync(period, context, auditAction, change, ct);
+    }
+
+    private async Task<FiscalPeriodDto> ChangePeriodStatusAsync(FiscalPeriod period, PortalCallContext context, string auditAction, Action<FiscalPeriod> change, CancellationToken ct)
+    {
         change(period);
         await fiscal.SaveChangesAsync(ct);
         await AuditOutboxAsync(auditAction, "FiscalPeriodStatusChanged", period.Id, period, context, ct);

@@ -71,9 +71,17 @@ Permisos específicos P2: `financial.fiscalyears.*` y `financial.fiscalperiods.*
 
 Permisos específicos P3: `financial.journalentries.read`, `create`, `update`, `post`, `reverse`, `void` y `manage`.
 
+## Seguridad runtime P4
+
+Los endpoints aplican policies por permiso específico. La API acepta permisos desde claims JWT `permission`, `permissions`, `scope`, `roles` o rol estándar. En Development, `X-Dev-Permissions` permite smoke tests sin crear login local; en Production se ignora.
+
+Financiero no es source of truth de identidad ni permisos. Portal Security conserva ownership; Financiero solo adapta autorización en runtime.
+
 ## Datos lógicos
 
 Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`, `journal_entry_lines`, `accounting_sequences`, `accounting_configurations` y `outbox_messages`. Índices únicos implementados: cuenta `(tenant, code)`, año `(tenant, year)`, período `(tenant, fiscalYear, number)`, asiento `(tenant, entryNumber)` y secuencia `(tenant, sequenceKey)`.
+
+La secuencia de asientos usa prefijo/padding desde Configuration con defaults `JE` y `6`, scope tenant/año y unicidad `(TenantId, SequenceKey)`.
 
 ## Portal
 

@@ -14,7 +14,7 @@ public sealed class FiscalPeriodsServiceTests
     {
         var audit = new RecordingAudit();
         var outbox = new RecordingOutbox();
-        var service = new FiscalPeriodsService(new InMemoryFiscalRepository(), audit, outbox);
+        var service = new FiscalPeriodsService(new InMemoryFiscalRepository(), new InMemoryJournalEntryRepository(), new StaticFinancialConfigurationReader(), audit, outbox);
 
         var year = await service.CreateYearAsync(new(2026, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), Context, default);
 
@@ -110,7 +110,27 @@ public sealed class FiscalPeriodsServiceTests
         Assert.Equal(2, page.Total);
     }
 
-    private static FiscalPeriodsService NewService(InMemoryFiscalRepository repo) => new(repo, new RecordingAudit(), new RecordingOutbox());
+    [Fact]
+    public async Task Rejects_close_or_lock_period_with_draft_journal_entries_when_config_enabled()
+    {
+        var repo = new InMemoryFiscalRepository();
+        var entries = new InMemoryJournalEntryRepository();
+        var service = NewService(repo, entries, new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.fiscalPeriods.closeRequiresNoDraftEntries"] = "true"
+        }));
+        var year = await service.CreateYearAsync(new(2026, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), Context, default);
+        await service.OpenYearAsync(year.Id, Context, default);
+        var period = await service.CreatePeriodAsync(new(year.Id, 1, new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 31)), Context, default);
+        await service.OpenPeriodAsync(period.Id, Context, default);
+        entries.Track(JournalEntry.Create("default", new DateOnly(2026, 1, 15), JournalEntrySource.Manual, null, "draft", DateTimeOffset.UtcNow));
+
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.ClosePeriodAsync(period.Id, Context, default));
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.LockPeriodAsync(period.Id, Context, default));
+    }
+
+    private static FiscalPeriodsService NewService(InMemoryFiscalRepository repo, InMemoryJournalEntryRepository? entries = null, IFinancialConfigurationReader? configuration = null) =>
+        new(repo, entries ?? new InMemoryJournalEntryRepository(), configuration ?? new StaticFinancialConfigurationReader(), new RecordingAudit(), new RecordingOutbox());
 }
 
 internal sealed class InMemoryFiscalRepository : IFiscalRepository

@@ -22,7 +22,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), ValidateLifetime = true,
     ClockSkew = TimeSpan.FromMinutes(1)
 });
-builder.Services.AddAuthorization();
+builder.Services.AddFinancialRuntimeAuthorization();
 
 var app = builder.Build();
 app.UseMiddleware<CorrelationIdMiddleware>();
