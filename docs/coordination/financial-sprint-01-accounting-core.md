@@ -20,7 +20,11 @@ Moneda base única configurable; `decimal(19,4)`; balance exacto; cuentas padre 
 | P5 | QA integrado | QA Agent | unitarias, integración SQL/JWT, contrato y smoke | build/tests/health/autorización y casos negativos pasan |
 | P6 | Documentación | Documentation Agent | runbook, contratos y estado reutilizable | docs reflejan implementación real |
 
-Estado: P0 completado con solución .NET 8, proyectos Clean Architecture, SQL aislado, health/JWT/logging/correlationId, contratos Portal, adaptadores dev y 8 pruebas. P1 es el siguiente paquete.
+Estado: P0 completado con solución .NET 8, proyectos Clean Architecture, SQL aislado, health/JWT/logging/correlationId, contratos Portal, adaptadores dev y pruebas. P1 Chart of Accounts está implementado como primer vertical slice funcional.
+
+## P1 Chart of Accounts
+
+Incluye entidad `Account`, reglas de jerarquía/código/estado, endpoints `/api/financial/accounts`, persistencia `FinancieroDb.financial.accounts`, metadata Portal Security/Menu/Configuration y adaptación Audit/Outbox. No incluye frontend, asientos, SRI ni facturación.
 
 ## Permisos propuestos
 
