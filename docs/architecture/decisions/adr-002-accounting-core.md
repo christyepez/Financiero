@@ -18,3 +18,9 @@
 ## Consecuencias
 
 Las invariantes son deterministas y auditables, con concurrencia requerida para secuencias y cierres. Multimoneda, aprobaciones, cierres automáticos y reglas tributarias se difieren.
+
+## Decisión P1 - Chart of Accounts
+
+Se implementa primero `ChartOfAccounts` con tabla `financial.accounts` en `FinancieroDb`. Security/Menu/Configuration se extienden mediante metadata `financial.chartofaccounts.*`; Audit usa eventos `AccountCreated`, `AccountUpdated`, `AccountActivated`, `AccountDeactivated`, `AccountArchived`; Outbox usa `FinancialAccountCreated`, `FinancialAccountUpdated` y `FinancialAccountStatusChanged`.
+
+No se crea SQL Server, login, auditoría ni motor de notificaciones propios.

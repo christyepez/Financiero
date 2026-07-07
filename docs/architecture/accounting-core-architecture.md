@@ -57,6 +57,12 @@ Todos incluyen tenant derivado de identidad, expectedVersion en mutaciones, acto
 - `POST /api/financial/journal-entries/{id}/lines|post|reverse|void`.
 - `GET /health/live`, `GET /health/ready` anónimos; restantes con JWT y permiso específico.
 
+## Estado P1 implementado
+
+`ChartOfAccounts` queda implementado en código con `Account`, endpoints `/api/financial/accounts`, búsqueda paginada, árbol de cuentas y persistencia EF Core en `financial.accounts`. Los eventos Audit/Outbox se emiten por puertos existentes hacia Portal/adaptadores dev.
+
+Permisos específicos P1: `financial.chartofaccounts.read`, `create`, `update`, `activate`, `deactivate`, `archive` y `manage`.
+
 ## Datos lógicos
 
 Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`, `journal_entry_lines`, `accounting_sequences`, `accounting_configurations` y `outbox_messages`. Índices únicos: cuenta `(tenant, code)`, período/rangos controlados, asiento `(tenant, fiscalYear, entryNumber)` y eventId. No se crean migraciones en diseño.
