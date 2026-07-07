@@ -10,9 +10,12 @@ public interface IJournalEntryRepository
     Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct);
     Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct);
     Task<(IReadOnlyCollection<JournalEntry> Items, long Total)> SearchAsync(string tenantId, JournalEntryStatus? status, DateOnly? from, DateOnly? to, string? search, int page, int pageSize, CancellationToken ct);
-    Task<string> GetNextEntryNumberAsync(string tenantId, int year, CancellationToken ct);
+    Task<string> GetNextEntryNumberAsync(string tenantId, int year, string prefix, int padding, CancellationToken ct);
     Task<bool> HasPostedEntriesForAccountAsync(Guid accountId, string tenantId, CancellationToken ct);
     Task<bool> HasDraftEntriesInPeriodAsync(Guid fiscalPeriodId, string tenantId, CancellationToken ct);
+    Task<bool> HasDraftEntriesInDateRangeAsync(string tenantId, DateOnly startDate, DateOnly endDate, CancellationToken ct);
+    Task<bool> HasPostedEntriesInPeriodAsync(Guid fiscalPeriodId, string tenantId, CancellationToken ct);
+    Task<bool> HasPostedEntriesInFiscalYearAsync(Guid fiscalYearId, string tenantId, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }
 
@@ -20,6 +23,7 @@ public sealed class JournalEntriesService(
     IJournalEntryRepository entries,
     IAccountRepository accounts,
     IFiscalRepository fiscal,
+    IFinancialConfigurationReader configuration,
     IPortalAuditClient audit,
     IPortalOutboxClient outbox)
 {
@@ -78,7 +82,9 @@ public sealed class JournalEntriesService(
         var period = await fiscal.GetOpenPeriodByDateAsync(context.TenantId, entry.PostingDate, ct)
             ?? throw new FinancialApplicationException("journal_entry.period.open.not_found", "Posting date must belong to an open fiscal period.");
         await ValidateLinesAsync(entry, context.TenantId, ct);
-        var number = await entries.GetNextEntryNumberAsync(context.TenantId, entry.PostingDate.Year, ct);
+        var prefix = await configuration.GetStringAsync("financial.journalEntries.numbering.prefix", "JE", context, ct);
+        var padding = await configuration.GetIntAsync("financial.journalEntries.numbering.padding", 6, context, ct);
+        var number = await entries.GetNextEntryNumberAsync(context.TenantId, entry.PostingDate.Year, prefix, padding, ct);
         entry.Post(number, period.Id, DateTimeOffset.UtcNow);
         await entries.SaveChangesAsync(ct);
         await AuditOutboxAsync("JournalEntryPosted", "JournalEntryPosted", entry, context, ct);
@@ -92,7 +98,9 @@ public sealed class JournalEntriesService(
         await ValidateLinesAsync(reversal, context.TenantId, ct);
         var period = await fiscal.GetOpenPeriodByDateAsync(context.TenantId, reversal.PostingDate, ct)
             ?? throw new FinancialApplicationException("journal_entry.period.open.not_found", "Reversal posting date must belong to an open fiscal period.");
-        var number = await entries.GetNextEntryNumberAsync(context.TenantId, reversal.PostingDate.Year, ct);
+        var prefix = await configuration.GetStringAsync("financial.journalEntries.numbering.prefix", "JE", context, ct);
+        var padding = await configuration.GetIntAsync("financial.journalEntries.numbering.padding", 6, context, ct);
+        var number = await entries.GetNextEntryNumberAsync(context.TenantId, reversal.PostingDate.Year, prefix, padding, ct);
         reversal.Post(number, period.Id, DateTimeOffset.UtcNow);
         await entries.AddAsync(reversal, ct);
         original.MarkReversed(reversal.Id, request.Reason, DateTimeOffset.UtcNow);
@@ -104,6 +112,8 @@ public sealed class JournalEntriesService(
     public async Task<JournalEntryDto> VoidAsync(Guid id, VoidJournalEntryRequest request, PortalCallContext context, CancellationToken ct)
     {
         var entry = await GetRequiredAsync(id, context.TenantId, ct);
+        var allowVoidDraft = await configuration.GetBoolAsync("financial.journalEntries.allowVoidDraft", true, context, ct);
+        if (!allowVoidDraft) throw new FinancialApplicationException("journal_entry.void.disabled", "Voiding draft journal entries is disabled by configuration.");
         entry.Void(request.Reason, DateTimeOffset.UtcNow);
         await entries.SaveChangesAsync(ct);
         await AuditOutboxAsync("JournalEntryVoided", "JournalEntryVoided", entry, context, ct);

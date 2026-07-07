@@ -24,7 +24,7 @@ public sealed class JournalEntriesServiceTests
         var accounts = new InMemoryAccountRepository();
         var fiscal = new InMemoryFiscalRepository();
         await OpenPeriodAsync(fiscal);
-        var service = new JournalEntriesService(repo, accounts, fiscal, new RecordingAudit(), new RecordingOutbox());
+        var service = new JournalEntriesService(repo, accounts, fiscal, new StaticFinancialConfigurationReader(), new RecordingAudit(), new RecordingOutbox());
         var missing = await service.CreateAsync(new(new DateOnly(2026, 1, 15), "Manual", null, "Missing", [new(Guid.NewGuid(), null, 10, 0), new(Guid.NewGuid(), null, 0, 10)]), Context, default);
         await Assert.ThrowsAsync<FinancialApplicationException>(() => service.PostAsync(missing.Id, Context, default));
 
@@ -93,6 +93,30 @@ public sealed class JournalEntriesServiceTests
     }
 
     [Fact]
+    public async Task Void_respects_runtime_configuration()
+    {
+        var harness = await NewHarnessAsync(configuration: new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.journalEntries.allowVoidDraft"] = "false"
+        }));
+        var draft = await CreateBalancedDraftAsync(harness);
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => harness.Service.VoidAsync(draft.Id, new("blocked"), Context, default));
+    }
+
+    [Fact]
+    public async Task Post_uses_configured_numbering_format()
+    {
+        var harness = await NewHarnessAsync(configuration: new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.journalEntries.numbering.prefix"] = "FIN",
+            ["financial.journalEntries.numbering.padding"] = "4"
+        }));
+        var draft = await CreateBalancedDraftAsync(harness);
+        var posted = await harness.Service.PostAsync(draft.Id, Context, default);
+        Assert.Equal("FIN-2026-0001", posted.EntryNumber);
+    }
+
+    [Fact]
     public async Task Line_crud_keeps_draft_editable()
     {
         var harness = await NewHarnessAsync();
@@ -112,14 +136,14 @@ public sealed class JournalEntriesServiceTests
 
     private sealed record TestHarness(JournalEntriesService Service, Guid DebitAccountId, Guid CreditAccountId);
 
-    private static async Task<TestHarness> NewHarnessAsync(bool openPeriod = true, RecordingAudit? audit = null, RecordingOutbox? outbox = null)
+    private static async Task<TestHarness> NewHarnessAsync(bool openPeriod = true, RecordingAudit? audit = null, RecordingOutbox? outbox = null, IFinancialConfigurationReader? configuration = null)
     {
         var accounts = new InMemoryAccountRepository();
         var debit = await AddAccountAsync(accounts, "1");
         var credit = await AddAccountAsync(accounts, "2");
         var fiscal = new InMemoryFiscalRepository();
         if (openPeriod) await OpenPeriodAsync(fiscal);
-        return new(new JournalEntriesService(new InMemoryJournalEntryRepository(), accounts, fiscal, audit ?? new RecordingAudit(), outbox ?? new RecordingOutbox()), debit.Id, credit.Id);
+        return new(new JournalEntriesService(new InMemoryJournalEntryRepository(), accounts, fiscal, configuration ?? new StaticFinancialConfigurationReader(), audit ?? new RecordingAudit(), outbox ?? new RecordingOutbox()), debit.Id, credit.Id);
     }
 
     private static async Task<JournalEntryDto> CreateBalancedDraftAsync(TestHarness harness)
@@ -151,6 +175,7 @@ internal sealed class InMemoryJournalEntryRepository : IJournalEntryRepository
     private readonly List<JournalEntry> _entries = [];
     private readonly Dictionary<string, long> _sequences = [];
     public Task AddAsync(JournalEntry entry, CancellationToken ct) { _entries.Add(entry); return Task.CompletedTask; }
+    public void Track(JournalEntry entry) => _entries.Add(entry);
     public Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromResult(_entries.FirstOrDefault(x => x.Id == id && x.TenantId == tenantId));
     public Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct) => Task.FromResult(_entries.FirstOrDefault(x => x.EntryNumber == entryNumber && x.TenantId == tenantId));
     public Task<(IReadOnlyCollection<JournalEntry> Items, long Total)> SearchAsync(string tenantId, JournalEntryStatus? status, DateOnly? from, DateOnly? to, string? search, int page, int pageSize, CancellationToken ct)
@@ -163,14 +188,19 @@ internal sealed class InMemoryJournalEntryRepository : IJournalEntryRepository
         var list = query.OrderByDescending(x => x.PostingDate).ToArray();
         return Task.FromResult(((IReadOnlyCollection<JournalEntry>)list.Skip((page - 1) * pageSize).Take(pageSize).ToArray(), (long)list.Length));
     }
-    public Task<string> GetNextEntryNumberAsync(string tenantId, int year, CancellationToken ct)
+    public Task<string> GetNextEntryNumberAsync(string tenantId, int year, string prefix, int padding, CancellationToken ct)
     {
+        prefix = string.IsNullOrWhiteSpace(prefix) ? "JE" : prefix.Trim().ToUpperInvariant();
+        padding = Math.Clamp(padding, 1, 12);
         var key = $"{tenantId}-{year}";
         _sequences[key] = _sequences.TryGetValue(key, out var next) ? next : 1;
         var value = _sequences[key]++;
-        return Task.FromResult($"JE-{year}-{value:000000}");
+        return Task.FromResult($"{prefix}-{year}-{value.ToString().PadLeft(padding, '0')}");
     }
     public Task<bool> HasPostedEntriesForAccountAsync(Guid accountId, string tenantId, CancellationToken ct) => Task.FromResult(_entries.Any(x => x.TenantId == tenantId && x.Status == JournalEntryStatus.Posted && x.Lines.Any(l => l.AccountId == accountId)));
     public Task<bool> HasDraftEntriesInPeriodAsync(Guid fiscalPeriodId, string tenantId, CancellationToken ct) => Task.FromResult(_entries.Any(x => x.TenantId == tenantId && x.FiscalPeriodId == fiscalPeriodId && x.Status == JournalEntryStatus.Draft));
+    public Task<bool> HasDraftEntriesInDateRangeAsync(string tenantId, DateOnly startDate, DateOnly endDate, CancellationToken ct) => Task.FromResult(_entries.Any(x => x.TenantId == tenantId && x.Status == JournalEntryStatus.Draft && x.PostingDate >= startDate && x.PostingDate <= endDate));
+    public Task<bool> HasPostedEntriesInPeriodAsync(Guid fiscalPeriodId, string tenantId, CancellationToken ct) => Task.FromResult(_entries.Any(x => x.TenantId == tenantId && x.FiscalPeriodId == fiscalPeriodId && x.Status is JournalEntryStatus.Posted or JournalEntryStatus.Reversed));
+    public Task<bool> HasPostedEntriesInFiscalYearAsync(Guid fiscalYearId, string tenantId, CancellationToken ct) => Task.FromResult(false);
     public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
 }

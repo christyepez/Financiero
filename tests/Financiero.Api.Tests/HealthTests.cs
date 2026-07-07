@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using System.Net;
 using Xunit;
 namespace Financiero.Api.Tests;
 public sealed class HealthTests : IClassFixture<FinancialApiFactory>
@@ -19,5 +20,46 @@ public sealed class FinancialApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:Issuer", "portal-corporativo");
         builder.UseSetting("Jwt:Audience", "portal-corporativo-clients");
         builder.UseSetting("ConnectionStrings:FinancialDb", "");
+    }
+}
+
+public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
+{
+    private readonly FinancialApiFactory _factory;
+    public RuntimeSecurityTests(FinancialApiFactory factory) => _factory = factory;
+
+    [Fact]
+    public async Task Read_endpoint_rejects_without_permission()
+    {
+        var response = await _factory.CreateClient().GetAsync("/api/financial/accounts");
+        Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Development_header_allows_required_permission()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/accounts");
+        request.Headers.Add("X-Dev-Permissions", "financial.chartofaccounts.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Development_header_requires_matching_permission()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/financial/journal-entries/00000000-0000-0000-0000-000000000001/post");
+        request.Headers.Add("X-Dev-Permissions", "financial.journalentries.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Development_header_is_ignored_in_production()
+    {
+        var client = _factory.WithWebHostBuilder(builder => builder.UseEnvironment("Production")).CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/accounts");
+        request.Headers.Add("X-Dev-Permissions", "financial.chartofaccounts.read");
+        var response = await client.SendAsync(request);
+        Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     }
 }

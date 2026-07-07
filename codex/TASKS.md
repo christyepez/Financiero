@@ -17,13 +17,16 @@
 - [x] Implementar P1 Chart of Accounts.
 - [x] Implementar P2 Fiscal Periods.
 - [x] Implementar P3 Journal Entries.
-- [ ] Implementar P4 adaptadores Portal.
+- [x] Implementar P4 adaptadores Portal, seguridad runtime y hardening contable.
 - [ ] Ejecutar P5 QA integrado y P6 documentación.
 - [ ] Reglas de partida doble, estados, cierre de período y pruebas de dominio.
 - [x] Extender permisos, Menu y Configuration para Plan de Cuentas mediante metadata.
 - [x] Adaptar Audit y Outbox para Plan de Cuentas mediante contratos existentes.
 - [x] Adaptar Audit y Outbox para Años/Periodos fiscales mediante contratos existentes.
 - [x] Adaptar Audit y Outbox para Asientos contables mediante contratos existentes.
+- [x] Aplicar autorización runtime por permisos `financial.*`.
+- [x] Endurecer cuentas, períodos y asientos contra movimientos contables críticos.
+- [x] Crear estrategia documentada de migraciones/versioning.
 
 ## Sprint 2 — Facturación y documentos tributarios
 
@@ -46,3 +49,9 @@
 ## Dependencias Portal Sprint 2
 
 Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OIDC, proveedor productivo de Notification y secret/certificate management. No suplir estas brechas duplicando plataforma.
+
+## Deuda técnica controlada P4
+
+- Implementar adapters HTTP productivos hacia Portal cuando se congelen contratos de Security/Menu/Configuration/Audit/Outbox.
+- Fortalecer secuencia con rowversion/UPDLOCK/sp_getapplock en P5 si las pruebas de concurrencia SQL lo requieren.
+- Migrar desde `EnsureCreated` + SQL raw hacia migraciones versionadas antes de producción.

@@ -36,3 +36,9 @@ Se mantiene `FinancieroDb` como base lógica separada y se reutilizan Portal Sec
 Se implementan `JournalEntry` y `JournalEntryLine` como foundation de asientos contables. Draft admite edición y líneas; Posted requiere mínimo dos líneas, cuentas existentes/activas/de movimiento y periodo fiscal `Open`; Posted/Reversed/Voided son inmutables para edición. Void aplica solo a Draft. Reverse crea un nuevo asiento Posted con líneas invertidas y enlaza original/reverso.
 
 La numeración usa `financial.accounting_sequences` con scope tenant/año y formato inicial `JE-{year}-{000000}`. Es gap-tolerant; la contención/concurrencia fina queda como riesgo para pruebas de integración SQL en P5. Audit y Outbox se adaptan con eventos `JournalEntryCreated`, `JournalEntryUpdated`, `JournalEntryPosted`, `JournalEntryReversed` y `JournalEntryVoided`.
+
+## Decisión P4 - Runtime Security y hardening
+
+Se aplican policies runtime por permisos `financial.*` en endpoints. Las claims aceptadas son `permission`, `permissions`, `scope`, `roles` y roles estándar. `X-Dev-Permissions` se acepta solo en Development para smoke tests; Production lo ignora. Portal Security sigue siendo fuente de verdad.
+
+Se conecta hardening transversal entre cuentas, periodos y asientos: una cuenta usada en Posted no cambia código/movimiento ni se desactiva/archiva; los periodos bloquean cierre/lock con Draft entries según configuración; periodos/años con Posted entries no se archivan; void y numeración de asientos consumen Configuration con defaults seguros.

@@ -38,6 +38,12 @@ Incluye entidades `JournalEntry` y `JournalEntryLine`, estados Draft/Posted/Reve
 
 La numeración queda como secuencia por tenant/año con formato `JE-{year}-{000000}`. La prevención de desactivar/archivar cuentas usadas en asientos Posted queda preparada por `IJournalEntryRepository.HasPostedEntriesForAccountAsync` y debe conectarse en P4/P5 con una política transversal de integridad contable.
 
+## P4 Portal Adapters / Runtime Security / Hardening
+
+Incluye autorización runtime por permisos `financial.*` en todos los endpoints de cuentas, años fiscales, periodos fiscales y asientos. En Development se admite `X-Dev-Permissions`; en Production se ignora. Los permisos siguen siendo ownership de Portal Security.
+
+El hardening bloquea cambios peligrosos: cuentas usadas en Posted no cambian código, no se convierten en resumen, no se desactivan ni archivan; periodos no cierran/bloquean con Draft entries si la configuración lo exige; periodos/años con Posted entries no se archivan; Journal Entries respetan configuración de void y numeración.
+
 ## Permisos propuestos
 
 - `financial.accounts.read|manage`

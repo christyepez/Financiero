@@ -12,10 +12,24 @@ public interface IPortalConfigurationClient { Task<string?> GetAsync(string key,
 public interface IPortalSecurityClient { Task<bool> HasPermissionAsync(string permission, PortalCallContext context, CancellationToken ct); }
 public interface IPortalMenuRegistrationClient { Task RegisterModuleAsync(string moduleCode, PortalCallContext context, CancellationToken ct); }
 
+public interface IFinancialConfigurationReader
+{
+    Task<bool> GetBoolAsync(string key, bool defaultValue, PortalCallContext context, CancellationToken ct);
+    Task<int> GetIntAsync(string key, int defaultValue, PortalCallContext context, CancellationToken ct);
+    Task<string> GetStringAsync(string key, string defaultValue, PortalCallContext context, CancellationToken ct);
+}
+
 public sealed class PortalOptions
 {
     public const string SectionName = "Portal";
     public Uri? GatewayBaseUrl { get; set; }
+    public Uri? SecurityBaseUrl { get; set; }
+    public Uri? ConfigurationBaseUrl { get; set; }
+    public Uri? MenuBaseUrl { get; set; }
+    public Uri? AuditBaseUrl { get; set; }
+    public Uri? OutboxBaseUrl { get; set; }
+    public int TimeoutSeconds { get; set; } = 10;
+    public bool UseDevelopmentAdapters { get; set; } = true;
     public bool UsePortalAudit { get; set; }
     public bool UsePortalNotification { get; set; }
     public bool UsePortalOutbox { get; set; }

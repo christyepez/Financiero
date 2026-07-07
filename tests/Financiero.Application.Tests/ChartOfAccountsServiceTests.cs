@@ -14,7 +14,7 @@ public sealed class ChartOfAccountsServiceTests
     {
         var audit = new RecordingAudit();
         var outbox = new RecordingOutbox();
-        var service = new ChartOfAccountsService(new InMemoryAccountRepository(), audit, outbox);
+        var service = new ChartOfAccountsService(new InMemoryAccountRepository(), new InMemoryJournalEntryRepository(), audit, outbox);
 
         var account = await service.CreateAsync(new("1", "Activos", "Asset", 1, null), Context, default);
 
@@ -87,6 +87,28 @@ public sealed class ChartOfAccountsServiceTests
     }
 
     [Fact]
+    public async Task Rejects_changes_or_deactivation_when_account_is_used_in_posted_entry()
+    {
+        var repo = new InMemoryAccountRepository();
+        var entries = new InMemoryJournalEntryRepository();
+        var service = NewService(repo, entries);
+        var account = await service.CreateAsync(new("1", "Caja", "Asset", 1, null), Context, default);
+        await service.ActivateAsync(account.Id, Context, default);
+        var credit = await service.CreateAsync(new("2", "Banco", "Asset", 1, null), Context, default);
+        await service.ActivateAsync(credit.Id, Context, default);
+        var posted = JournalEntry.Create("default", new DateOnly(2026, 1, 15), JournalEntrySource.Manual, null, "posted", DateTimeOffset.UtcNow);
+        posted.AddLine(account.Id, null, 10, 0, DateTimeOffset.UtcNow);
+        posted.AddLine(credit.Id, null, 0, 10, DateTimeOffset.UtcNow);
+        posted.Post("JE-2026-000001", Guid.NewGuid(), DateTimeOffset.UtcNow);
+        entries.Track(posted);
+
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.UpdateAsync(account.Id, new("1.1", "Caja", "Asset", 1, null, true), Context, default));
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.UpdateAsync(account.Id, new("1", "Caja", "Asset", 1, null, false), Context, default));
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.DeactivateAsync(account.Id, Context, default));
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.ArchiveAsync(account.Id, Context, default));
+    }
+
+    [Fact]
     public async Task Search_is_paginated()
     {
         var service = NewService(new InMemoryAccountRepository());
@@ -108,7 +130,7 @@ public sealed class ChartOfAccountsServiceTests
         Assert.Contains("Database=FinancieroDb", compose, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static ChartOfAccountsService NewService(InMemoryAccountRepository repo) => new(repo, new RecordingAudit(), new RecordingOutbox());
+    private static ChartOfAccountsService NewService(InMemoryAccountRepository repo, InMemoryJournalEntryRepository? entries = null) => new(repo, entries ?? new InMemoryJournalEntryRepository(), new RecordingAudit(), new RecordingOutbox());
 
     private static string FindRepositoryFile(string fileName)
     {
