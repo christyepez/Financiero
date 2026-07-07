@@ -20,6 +20,10 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<JournalEntryLine> JournalEntryLines => Set<JournalEntryLine>();
     public DbSet<AccountingSequence> AccountingSequences => Set<AccountingSequence>();
+    public DbSet<ElectronicDocument> ElectronicDocuments => Set<ElectronicDocument>();
+    public DbSet<ElectronicDocumentLine> ElectronicDocumentLines => Set<ElectronicDocumentLine>();
+    public DbSet<ElectronicDocumentTax> ElectronicDocumentTaxes => Set<ElectronicDocumentTax>();
+    public DbSet<SriDocumentSequence> SriDocumentSequences => Set<SriDocumentSequence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -87,6 +91,77 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
             entity.Property(x => x.SequenceKey).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.SequenceKey }).IsUnique();
+        });
+        modelBuilder.Entity<ElectronicDocument>(entity =>
+        {
+            entity.ToTable("electronic_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DocumentType).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Environment).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EmissionType).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EstablishmentCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.EmissionPointCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.Sequential).HasMaxLength(9);
+            entity.Property(x => x.AccessKey).HasMaxLength(49);
+            entity.Property(x => x.CustomerIdentificationType).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.CustomerIdentification).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CustomerName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Currency).HasMaxLength(8).IsRequired();
+            entity.Property(x => x.SubtotalWithoutTaxes).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TotalDiscount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TotalTaxes).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TotalAmount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.XmlContentHash).HasMaxLength(128);
+            entity.Property(x => x.SignedXmlContentHash).HasMaxLength(128);
+            entity.Property(x => x.SriAuthorizationNumber).HasMaxLength(64);
+            entity.Property(x => x.SriResponseCode).HasMaxLength(64);
+            entity.Property(x => x.SriResponseMessage).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.AccessKey }).IsUnique().HasFilter("[AccessKey] IS NOT NULL");
+            entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Environment, x.EstablishmentCode, x.EmissionPointCode, x.Sequential }).IsUnique().HasFilter("[Sequential] IS NOT NULL");
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.IssueDate });
+            entity.Navigation(x => x.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.Taxes).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.Taxes).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<ElectronicDocumentLine>(entity =>
+        {
+            entity.ToTable("electronic_document_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProductCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Quantity).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.UnitPrice).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Discount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Subtotal).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Total).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId, x.LineNumber }).IsUnique();
+        });
+        modelBuilder.Entity<ElectronicDocumentTax>(entity =>
+        {
+            entity.ToTable("electronic_document_taxes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TaxCode).HasMaxLength(8).IsRequired();
+            entity.Property(x => x.TaxPercentageCode).HasMaxLength(8).IsRequired();
+            entity.Property(x => x.TaxRate).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TaxBase).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TaxAmount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId });
+        });
+        modelBuilder.Entity<SriDocumentSequence>(entity =>
+        {
+            entity.ToTable("sri_document_sequences");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DocumentType).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Environment).HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EstablishmentCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.EmissionPointCode).HasMaxLength(3).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Environment, x.EstablishmentCode, x.EmissionPointCode }).IsUnique();
         });
     }
 }
@@ -260,6 +335,85 @@ SELECT @value;
     public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
 }
 
+public sealed class EfElectronicDocumentRepository(FinancialDbContext db) : IElectronicDocumentRepository
+{
+    public async Task AddAsync(ElectronicDocument document, CancellationToken ct) => await db.ElectronicDocuments.AddAsync(document, ct);
+    public async Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => await db.ElectronicDocumentLines.AddAsync(line, ct);
+    public async Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
+        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
+    public async Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) =>
+        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).FirstOrDefaultAsync(x => x.AccessKey == accessKey && x.TenantId == tenantId, ct);
+    public async Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct)
+    {
+        var query = db.ElectronicDocuments.Include(x => x.Lines).AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (status.HasValue) query = query.Where(x => x.Status == status);
+        if (!string.IsNullOrWhiteSpace(accessKey)) query = query.Where(x => x.AccessKey == accessKey);
+        var total = await query.LongCountAsync(ct);
+        return (await query.OrderByDescending(x => x.IssueDate).ThenByDescending(x => x.CreatedAtUtc).Skip((page - 1) * pageSize).Take(pageSize).ToArrayAsync(ct), total);
+    }
+    public async Task<string> GetNextSequentialAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, CancellationToken ct)
+    {
+        var connection = db.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open) await connection.OpenAsync(ct);
+        await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        var documentTypeName = documentType.ToString();
+        var environmentName = environment.ToString();
+
+        await using var ensureCommand = connection.CreateCommand();
+        ensureCommand.Transaction = transaction;
+        ensureCommand.CommandText = """
+IF NOT EXISTS (
+    SELECT 1 FROM financial.sri_document_sequences WITH (UPDLOCK, HOLDLOCK)
+    WHERE TenantId = @tenantId AND DocumentType = @documentType AND Environment = @environment AND EstablishmentCode = @establishmentCode AND EmissionPointCode = @emissionPointCode)
+BEGIN
+    INSERT INTO financial.sri_document_sequences (Id, TenantId, DocumentType, EstablishmentCode, EmissionPointCode, CurrentValue, Environment, IsActive, CreatedAtUtc, UpdatedAtUtc)
+    VALUES (NEWID(), @tenantId, @documentType, @establishmentCode, @emissionPointCode, 0, @environment, 1, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END;
+""";
+        AddParameter(ensureCommand, "@tenantId", tenantId);
+        AddParameter(ensureCommand, "@documentType", documentTypeName);
+        AddParameter(ensureCommand, "@environment", environmentName);
+        AddParameter(ensureCommand, "@establishmentCode", establishmentCode);
+        AddParameter(ensureCommand, "@emissionPointCode", emissionPointCode);
+        await ensureCommand.ExecuteNonQueryAsync(ct);
+
+        await using var takeCommand = connection.CreateCommand();
+        takeCommand.Transaction = transaction;
+        takeCommand.CommandText = """
+DECLARE @value bigint;
+SELECT @value = CurrentValue + 1
+FROM financial.sri_document_sequences WITH (UPDLOCK, HOLDLOCK)
+WHERE TenantId = @tenantId AND DocumentType = @documentType AND Environment = @environment AND EstablishmentCode = @establishmentCode AND EmissionPointCode = @emissionPointCode;
+
+UPDATE financial.sri_document_sequences
+SET CurrentValue = @value, UpdatedAtUtc = SYSDATETIMEOFFSET()
+WHERE TenantId = @tenantId AND DocumentType = @documentType AND Environment = @environment AND EstablishmentCode = @establishmentCode AND EmissionPointCode = @emissionPointCode;
+
+SELECT @value;
+""";
+        AddParameter(takeCommand, "@tenantId", tenantId);
+        AddParameter(takeCommand, "@documentType", documentTypeName);
+        AddParameter(takeCommand, "@environment", environmentName);
+        AddParameter(takeCommand, "@establishmentCode", establishmentCode);
+        AddParameter(takeCommand, "@emissionPointCode", emissionPointCode);
+        var scalar = await takeCommand.ExecuteScalarAsync(ct);
+        await transaction.CommitAsync(ct);
+        var value = Convert.ToInt64(scalar, System.Globalization.CultureInfo.InvariantCulture);
+        return value.ToString("000000000", System.Globalization.CultureInfo.InvariantCulture);
+
+        static void AddParameter(System.Data.Common.DbCommand command, string name, object value)
+        {
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = name;
+            parameter.Value = value;
+            command.Parameters.Add(parameter);
+        }
+    }
+    public async Task<bool> SequenceDocumentExistsAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, string sequential, Guid? excludingId, CancellationToken ct) =>
+        await db.ElectronicDocuments.AnyAsync(x => x.TenantId == tenantId && x.DocumentType == documentType && x.Environment == environment && x.EstablishmentCode == establishmentCode && x.EmissionPointCode == emissionPointCode && x.Sequential == sequential && (!excludingId.HasValue || x.Id != excludingId), ct);
+    public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
+}
+
 public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthCheck
 {
     private static readonly string[] CoreTables =
@@ -269,7 +423,12 @@ public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthChec
         "financial.fiscal_periods",
         "financial.journal_entries",
         "financial.journal_entry_lines",
-        "financial.accounting_sequences"
+        "financial.accounting_sequences",
+        "financial.electronic_documents",
+        "financial.electronic_document_lines",
+        "financial.electronic_document_taxes",
+        "financial.sri_document_sequences",
+        "financial.sri_catalog_items"
     ];
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default)
@@ -284,7 +443,7 @@ public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthChec
     }
 }
 
-public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, ILogger<DevelopmentPortalAdapters> logger) :
+public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, ILogger<DevelopmentPortalAdapters> logger, IConfiguration configuration) :
     IPortalAuditClient, IPortalNotificationClient, IPortalOutboxClient, IPortalConfigurationClient,
     IPortalSecurityClient, IPortalMenuRegistrationClient
 {
@@ -297,7 +456,11 @@ public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, I
     public Task RecordAsync(AuditRecord record, PortalCallContext context, CancellationToken ct) { Trace("Audit", context); return Task.CompletedTask; }
     public Task RequestAsync(NotificationRequest request, PortalCallContext context, CancellationToken ct) { Trace("Notification", context); return Task.CompletedTask; }
     public Task EnqueueAsync(OutboxEnvelope message, PortalCallContext context, CancellationToken ct) { Trace("Outbox", context); return Task.CompletedTask; }
-    public Task<string?> GetAsync(string key, PortalCallContext context, CancellationToken ct) { Trace("Configuration", context); return Task.FromResult<string?>(null); }
+    public Task<string?> GetAsync(string key, PortalCallContext context, CancellationToken ct)
+    {
+        Trace("Configuration", context);
+        return Task.FromResult(configuration[key] ?? configuration[key.Replace('.', ':')]);
+    }
     public Task<bool> HasPermissionAsync(string permission, PortalCallContext context, CancellationToken ct) { Trace("Security", context); return Task.FromResult(false); }
     public Task RegisterModuleAsync(string moduleCode, PortalCallContext context, CancellationToken ct) { Trace("Menu", context); return Task.CompletedTask; }
 }
@@ -319,6 +482,11 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ChartOfAccountsService>();
         services.AddScoped<FiscalPeriodsService>();
         services.AddScoped<JournalEntriesService>();
+        services.AddScoped<ElectronicDocumentsService>();
+        services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
+        services.AddScoped<IElectronicSignatureService, DevelopmentElectronicSignatureService>();
+        services.AddScoped<ISriReceptionClient, DevelopmentSriReceptionClient>();
+        services.AddScoped<ISriAuthorizationClient, DevelopmentSriAuthorizationClient>();
 
         var connectionString = configuration.GetConnectionString("FinancialDb");
         if (!string.IsNullOrWhiteSpace(connectionString))
@@ -327,6 +495,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IAccountRepository, EfAccountRepository>();
             services.AddScoped<IFiscalRepository, EfFiscalRepository>();
             services.AddScoped<IJournalEntryRepository, EfJournalEntryRepository>();
+            services.AddScoped<IElectronicDocumentRepository, EfElectronicDocumentRepository>();
             services.AddHealthChecks().AddCheck<FinancialSqlHealthCheck>("financial-sql", tags: ["ready"]);
             if (configuration.GetValue<bool>("Database:Initialize") || configuration.GetValue<bool>("Database:RunMigrations")) services.AddHostedService<FinancialDatabaseInitializer>();
         }
@@ -335,6 +504,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IAccountRepository, UnconfiguredAccountRepository>();
             services.AddScoped<IFiscalRepository, UnconfiguredFiscalRepository>();
             services.AddScoped<IJournalEntryRepository, UnconfiguredJournalEntryRepository>();
+            services.AddScoped<IElectronicDocumentRepository, UnconfiguredElectronicDocumentRepository>();
         }
         return services;
     }
@@ -385,6 +555,19 @@ internal sealed class UnconfiguredJournalEntryRepository : IJournalEntryReposito
     public Task<bool> HasDraftEntriesInDateRangeAsync(string tenantId, DateOnly startDate, DateOnly endDate, CancellationToken ct) => Task.FromException<bool>(Error);
     public Task<bool> HasPostedEntriesInPeriodAsync(Guid fiscalPeriodId, string tenantId, CancellationToken ct) => Task.FromException<bool>(Error);
     public Task<bool> HasPostedEntriesInFiscalYearAsync(Guid fiscalYearId, string tenantId, CancellationToken ct) => Task.FromException<bool>(Error);
+    public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
+}
+
+internal sealed class UnconfiguredElectronicDocumentRepository : IElectronicDocumentRepository
+{
+    private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
+    public Task AddAsync(ElectronicDocument document, CancellationToken ct) => Task.FromException(Error);
+    public Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => Task.FromException(Error);
+    public Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<ElectronicDocument?>(Error);
+    public Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) => Task.FromException<ElectronicDocument?>(Error);
+    public Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct) => Task.FromException<(IReadOnlyCollection<ElectronicDocument>, long)>(Error);
+    public Task<string> GetNextSequentialAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, CancellationToken ct) => Task.FromException<string>(Error);
+    public Task<bool> SequenceDocumentExistsAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, string sequential, Guid? excludingId, CancellationToken ct) => Task.FromException<bool>(Error);
     public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
 }
 

@@ -68,6 +68,8 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/fiscal-periods/00000000-0000-0000-0000-000000000001/open", "financial.fiscalperiods.open")]
     [InlineData("GET", "/api/financial/journal-entries", "financial.journalentries.read")]
     [InlineData("POST", "/api/financial/journal-entries/00000000-0000-0000-0000-000000000001/post", "financial.journalentries.post")]
+    [InlineData("GET", "/api/financial/electronic-documents", "financial.electronicdocuments.read")]
+    [InlineData("POST", "/api/financial/electronic-documents/invoices", "financial.electronicdocuments.create")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
     {
         using var request = new HttpRequestMessage(new HttpMethod(method), url);

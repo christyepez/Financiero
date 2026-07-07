@@ -13,6 +13,20 @@ services:
       FinancialPlatform__TenantId: default
       Database__Initialize: "true"
       Database__RunMigrations: "true"
+      financial__sri__issuer__ruc: ${SRI_ISSUER_RUC:-9999999999999}
+      financial__sri__issuer__legalName: ${SRI_ISSUER_LEGAL_NAME:-EMISOR DESARROLLO}
+      financial__sri__issuer__tradeName: ${SRI_ISSUER_TRADE_NAME:-EMISOR DESARROLLO}
+      financial__sri__issuer__address: ${SRI_ISSUER_ADDRESS:-DIRECCION DESARROLLO}
+      financial__sri__issuer__accountingRequired: ${SRI_ACCOUNTING_REQUIRED:-true}
+      financial__sri__environment: ${SRI_ENVIRONMENT:-Test}
+      financial__sri__integration__mode: ${SRI_INTEGRATION_MODE:-Development}
+      financial__sri__emissionType: ${SRI_EMISSION_TYPE:-Normal}
+      financial__sri__defaultEstablishmentCode: ${SRI_DEFAULT_ESTABLISHMENT_CODE:-001}
+      financial__sri__defaultEmissionPointCode: ${SRI_DEFAULT_EMISSION_POINT_CODE:-001}
+      financial__sri__signature__provider: ${SRI_SIGNATURE_PROVIDER:-Development}
+      financial__sri__signature__certificateSecretName: ${SRI_SIGNATURE_CERTIFICATE_SECRET_NAME:-}
+      financial__sri__signature__keyVaultName: ${SRI_SIGNATURE_KEY_VAULT_NAME:-}
+      financial__sri__timeoutSeconds: ${SRI_TIMEOUT_SECONDS:-30}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}
       Jwt__Audience: ${JWT_AUDIENCE:-portal-corporativo-clients}
       Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
