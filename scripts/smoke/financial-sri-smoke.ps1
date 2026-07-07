@@ -33,6 +33,10 @@ PostJson "$BaseUrl/api/financial/electronic-documents/$id/lines" @{
 } | Out-Null
 
 $generated = PostJson "$BaseUrl/api/financial/electronic-documents/$id/generate-xml" @{}
+$validation = PostJson "$BaseUrl/api/financial/electronic-documents/$id/validate-xml" @{}
+if (-not $validation.data.isValid) {
+    throw "SRI XML validation failed."
+}
 PostJson "$BaseUrl/api/financial/electronic-documents/$id/sign" @{} | Out-Null
 PostJson "$BaseUrl/api/financial/electronic-documents/$id/send" @{} | Out-Null
 $authorized = PostJson "$BaseUrl/api/financial/electronic-documents/$id/authorize" @{}
@@ -45,6 +49,14 @@ if (-not $accessKey -or $accessKey.Length -ne 49) {
 $lookup = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/by-access-key/$accessKey" -Headers $headers
 if ($lookup.data.id -ne $id) {
     throw "Lookup by access key did not return the created document."
+}
+$status = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/status" -Headers $headers
+if ($status.data.status -ne "Authorized") {
+    throw "Unexpected document status: $($status.data.status)"
+}
+$storage = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/storage-metadata" -Headers $headers
+if (-not $storage.data.unsignedXmlStorageId -or -not $storage.data.signedXmlStorageId -or -not $storage.data.authorizationXmlStorageId) {
+    throw "Storage metadata placeholder was not registered."
 }
 
 Write-Host "Financial SRI smoke OK. Id=$id AccessKey=$accessKey Status=$($authorized.data.status)"

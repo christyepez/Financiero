@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 2 P1 SRI & Electronic Invoicing Foundation implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, JWT, logging/correlationId, autorización runtime por permisos, migraciones versionadas, adaptadores Portal dev, Plan de Cuentas, Años/Periodos fiscales, Asientos contables, documentos electrónicos SRI foundation, clave de acceso, XML base, firma dev/mock y clientes SRI dev/mock están preparados.
+Estado: Sprint 2 P2 XAdES / SRI Test Contract / XML-PDF Storage Strategy implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, clave de acceso, XML base, validación XML, firma dev/mock controlada, contrato SRI test/mock y storage placeholder delegado a Portal Content/File están preparados.
 
 Documentos principales:
 
@@ -34,6 +34,9 @@ Documentos principales:
 - `docs/architecture/decisions/adr-003-sri-electronic-invoicing-foundation.md`
 - `docs/api/financial-sri-api-contracts.md`
 - `docs/security/sri-certificate-and-secrets-strategy.md`
+- `docs/security/xades-signature-strategy.md`
+- `docs/integration/sri-soap-contract-strategy.md`
+- `docs/integration/electronic-document-storage-strategy.md`
 - `docs/database/financial-sri-database-inventory.md`
 
 No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF, firma XAdES productiva ni envío real a SRI.
@@ -67,4 +70,4 @@ APIs principales:
 - `/api/financial/electronic-documents`
 - `/health`, `/health/live`, `/health/ready`
 
-Próximo paso recomendado: Sprint 2 P2 — completar facturación electrónica con validación normativa, firma XAdES productiva, SOAP SRI test, almacenamiento XML/PDF vía Portal Content/File y estrategia RIDE.
+Próximo paso recomendado: Sprint 2 P3 — integrar firma XAdES real y SRI Test real bajo secret store/Key Vault y Portal Content/File.

@@ -53,6 +53,16 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
         Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     }
 
+    [Theory]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/sign")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/send")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/authorize")]
+    public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
+    {
+        var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
+        Assert.True(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
     [Fact]
     public async Task Development_header_is_ignored_in_production()
     {

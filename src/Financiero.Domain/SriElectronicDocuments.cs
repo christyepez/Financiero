@@ -68,10 +68,20 @@ public sealed class ElectronicDocument
     public decimal TotalAmount { get; private set; }
     public string? XmlContentHash { get; private set; }
     public string? SignedXmlContentHash { get; private set; }
+    public string? UnsignedXmlStorageId { get; private set; }
+    public string? SignedXmlStorageId { get; private set; }
+    public string? AuthorizationXmlStorageId { get; private set; }
+    public string? RidePdfStorageId { get; private set; }
+    public string? SignatureProvider { get; private set; }
+    public string? SignatureDigest { get; private set; }
     public string? SriAuthorizationNumber { get; private set; }
     public DateTimeOffset? SriAuthorizationDate { get; private set; }
     public string? SriResponseCode { get; private set; }
     public string? SriResponseMessage { get; private set; }
+    public string? LastSriStatus { get; private set; }
+    public string? LastSriMessage { get; private set; }
+    public string? LastErrorCode { get; private set; }
+    public string? LastErrorMessage { get; private set; }
     public Guid? RelatedJournalEntryId { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
@@ -126,12 +136,26 @@ public sealed class ElectronicDocument
         UpdatedAtUtc = now;
     }
 
-    public void MarkSigned(string signedXml, DateTimeOffset now)
+    public void RegisterUnsignedXmlStorage(string storageId, DateTimeOffset now)
+    {
+        UnsignedXmlStorageId = Required(storageId, nameof(UnsignedXmlStorageId));
+        UpdatedAtUtc = now;
+    }
+
+    public void MarkSigned(string signedXml, string provider, string signatureDigest, DateTimeOffset now)
     {
         if (Status != ElectronicDocumentStatus.Generated) throw new FinancialDomainException("electronic_document.sign.status", "Only generated documents can be signed.");
         SignedXmlContentHash = Sha256(signedXml);
+        SignatureProvider = Required(provider, nameof(SignatureProvider));
+        SignatureDigest = Required(signatureDigest, nameof(SignatureDigest));
         Status = ElectronicDocumentStatus.Signed;
         SignedAtUtc = now;
+        UpdatedAtUtc = now;
+    }
+
+    public void RegisterSignedXmlStorage(string storageId, DateTimeOffset now)
+    {
+        SignedXmlStorageId = Required(storageId, nameof(SignedXmlStorageId));
         UpdatedAtUtc = now;
     }
 
@@ -140,6 +164,8 @@ public sealed class ElectronicDocument
         if (Status != ElectronicDocumentStatus.Signed) throw new FinancialDomainException("electronic_document.send.status", "Only signed documents can be sent.");
         SriResponseCode = responseCode;
         SriResponseMessage = responseMessage;
+        LastSriStatus = "Sent";
+        LastSriMessage = responseMessage;
         Status = ElectronicDocumentStatus.Sent;
         SentAtUtc = now;
         UpdatedAtUtc = now;
@@ -152,6 +178,8 @@ public sealed class ElectronicDocument
         SriAuthorizationDate = authorizationDate;
         SriResponseCode = responseCode.Trim();
         SriResponseMessage = responseMessage.Trim();
+        LastSriStatus = "Authorized";
+        LastSriMessage = responseMessage.Trim();
         Status = ElectronicDocumentStatus.Authorized;
         AuthorizedAtUtc = now;
         UpdatedAtUtc = now;
@@ -161,8 +189,24 @@ public sealed class ElectronicDocument
     {
         SriResponseCode = Required(responseCode, nameof(SriResponseCode));
         SriResponseMessage = Required(responseMessage, nameof(SriResponseMessage));
+        LastSriStatus = "Rejected";
+        LastSriMessage = SriResponseMessage;
         Status = ElectronicDocumentStatus.Rejected;
         RejectedAtUtc = now;
+        UpdatedAtUtc = now;
+    }
+
+    public void RegisterAuthorizationXmlStorage(string storageId, DateTimeOffset now)
+    {
+        AuthorizationXmlStorageId = Required(storageId, nameof(AuthorizationXmlStorageId));
+        UpdatedAtUtc = now;
+    }
+
+    public void MarkError(string code, string message, DateTimeOffset now)
+    {
+        LastErrorCode = Required(code, nameof(LastErrorCode));
+        LastErrorMessage = Required(message, nameof(LastErrorMessage));
+        Status = ElectronicDocumentStatus.Error;
         UpdatedAtUtc = now;
     }
 
