@@ -1,13 +1,4 @@
-bin/
-obj/
-.vs/
-node_modules/
-dist/
+**/bin/
+**/obj/
 .env
-*.pfx
-*.p12
-*.key
-*.pem
-*.user
-*.log
-.DS_Store
+TestResults/

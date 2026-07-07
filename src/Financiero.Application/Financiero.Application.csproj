@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="..\Financiero.Domain\Financiero.Domain.csproj"/><ProjectReference Include="..\Financiero.Contracts\Financiero.Contracts.csproj"/></ItemGroup></Project>

@@ -1,88 +1,28 @@
-# Contexto del proyecto Financiero
+# Contexto de Financiero
 
 ## Propósito
 
-Implementar el módulo financiero, contable, tributario Ecuador y SRI como extensión de `PortalCorporativo`.
+Financiero implementa contabilidad y cumplimiento tributario/SRI. Es un dominio independiente y consumidor de PortalCorporativo; CodexCommonAgents define su orquestación y clasificación Portal-first.
 
-## Repositorios relacionados
+## Ownership del dominio
 
-```text
-PortalCorporativo: https://github.com/christyepez/PortalCorporativo
-Financiero: https://github.com/christyepez/Financiero
-CodexCommonAgents: https://github.com/christyepez/CodexCommonAgents
-```
+Financiero posee plan de cuentas, períodos fiscales, asientos y detalles, motor contable, facturación, notas, retenciones, liquidaciones, guías, documentos electrónicos, reglas tributarias, integración SRI y reporting fiscal. No posee capacidades corporativas transversales.
 
-## Estrategia
+## Relación con PortalCorporativo
 
-La estrategia es Portal-First:
+- REUSE: Gateway, health, logging y correlationId.
+- EXTEND: recursos/permisos Security, Menu, Configuration y Workers cuando exista proceso financiero específico.
+- ADAPT: Audit, Notification y contratos Outbox/Inbox.
+- BLOCKED hasta Portal Sprint 2: Content/File, Reporting, Integration productiva, Angular Shell e IdP productivo.
 
-1. Revisar capacidades del portal.
-2. Clasificar cada necesidad como REUSE, EXTEND, ADAPT, CREATE o BLOCKED.
-3. Reutilizar capacidades transversales del portal.
-4. Crear solo componentes propios del dominio financiero/SRI.
-5. Registrar decisiones en la matriz de reutilización.
+## Adaptadores previstos
 
-## Capacidades del portal a revisar primero
+`FinancialAuditAdapter`, `FinancialNotificationAdapter`, Outbox por bounded context, Inbox para respuestas externas y, posteriormente, adaptadores Content/File, Reporting y SriIntegration.
 
-- Security API.
-- Menu API.
-- Configuration API.
-- Catalog API.
-- Audit API.
-- Notification API.
-- Content/File API.
-- Reporting API.
-- Integration API.
-- API Gateway.
-- SQL Outbox.
-- Workers.
-- Portal Angular Shell.
+## Límites
 
-## Dominio propio permitido
+Cada bounded context financiero posee su modelo y almacenamiento. La comunicación externa ocurre mediante API, adaptador o evento versionado con correlationId. Sprint 1 solo cubre Contabilidad Core; excluye facturación, SRI productivo, firma, documentos, reporting y frontend.
 
-- Plan de cuentas.
-- Periodos fiscales.
-- Asientos contables.
-- Motor de contabilización.
-- Documentos electrónicos.
-- Facturación electrónica.
-- Retenciones.
-- Notas de crédito.
-- Notas de débito.
-- Liquidaciones de compra.
-- Guías de remisión.
-- Catálogos tributarios SRI.
-- Generación XML.
-- Firma electrónica XML.
-- Envío y autorización SRI.
-- RIDE.
-- ATS.
-- Reportes fiscales.
+## No duplicación
 
-## Reglas de bloqueo
-
-Codex no debe avanzar si:
-
-- No existe clasificación REUSE/EXTEND/ADAPT/CREATE/BLOCKED.
-- Se intenta duplicar login, usuarios, roles, menús, auditoría o notificaciones.
-- Se intenta guardar secretos en código.
-- Se intenta quemar catálogos SRI o porcentajes tributarios.
-- Se intenta llamar SRI directamente desde controladores.
-
-## Salida obligatoria
-
-```text
-Agent:
-Task:
-Portal Capability Checked:
-Reuse Classification:
-Portal Components Reused:
-Portal Components Extended:
-New Components Created:
-Reason for New Components:
-Files Created:
-Files Modified:
-Tests Added:
-Risks:
-Next Step:
-```
+No crear login, usuarios, roles globales, policies, Gateway, motores de Menu/Configuration/Audit/Notification, archivos genéricos, reporting transversal, shell, health o logging. No consultar bases del portal, compartir tablas entre contextos, guardar secretos/certificados en código ni autorizar solo en frontend.

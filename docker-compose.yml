@@ -1,0 +1,25 @@
+services:
+  financial-api:
+    build: .
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__FinancialDb: Server=host.docker.internal,${PORTAL_SQLSERVER_PORT:-1433};Database=FinancieroDb;User Id=sa;Password=${SQLSERVER_SA_PASSWORD:?Set the same SQLSERVER_SA_PASSWORD used by PortalCorporativo .env};Encrypt=true;TrustServerCertificate=true
+      Portal__GatewayBaseUrl: ${PORTAL_GATEWAY_BASE_URL:-http://host.docker.internal:8080}
+      Portal__UsePortalAudit: ${USE_PORTAL_AUDIT:-false}
+      Portal__UsePortalNotification: ${USE_PORTAL_NOTIFICATION:-false}
+      Portal__UsePortalOutbox: ${USE_PORTAL_OUTBOX:-false}
+      Portal__UsePortalConfiguration: ${USE_PORTAL_CONFIGURATION:-false}
+      FinancialPlatform__TenantId: default
+      Database__Initialize: "true"
+      Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}
+      Jwt__Audience: ${JWT_AUDIENCE:-portal-corporativo-clients}
+      Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      Seq__ServerUrl: ${SEQ_SERVER_URL:-http://host.docker.internal:5341}
+    ports: ["${FINANCIAL_API_PORT:-8081}:8080"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
