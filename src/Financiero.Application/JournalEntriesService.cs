@@ -7,6 +7,7 @@ namespace Financiero.Application;
 public interface IJournalEntryRepository
 {
     Task AddAsync(JournalEntry entry, CancellationToken ct);
+    Task AddLineAsync(JournalEntryLine line, CancellationToken ct);
     Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct);
     Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct);
     Task<(IReadOnlyCollection<JournalEntry> Items, long Total)> SearchAsync(string tenantId, JournalEntryStatus? status, DateOnly? from, DateOnly? to, string? search, int page, int pageSize, CancellationToken ct);
@@ -52,7 +53,8 @@ public sealed class JournalEntriesService(
     public async Task<JournalEntryDto> AddLineAsync(Guid id, CreateJournalEntryLineRequest request, PortalCallContext context, CancellationToken ct)
     {
         var entry = await GetRequiredAsync(id, context.TenantId, ct);
-        entry.AddLine(request.AccountId, request.Description, request.Debit, request.Credit, DateTimeOffset.UtcNow);
+        var line = entry.AddLine(request.AccountId, request.Description, request.Debit, request.Credit, DateTimeOffset.UtcNow);
+        await entries.AddLineAsync(line, ct);
         await entries.SaveChangesAsync(ct);
         await AuditOnlyAsync("JournalEntryLineAdded", entry, context, ct);
         return ToDto(entry);

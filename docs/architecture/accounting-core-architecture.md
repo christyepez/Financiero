@@ -83,6 +83,8 @@ Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`
 
 La secuencia de asientos usa prefijo/padding desde Configuration con defaults `JE` y `6`, scope tenant/año y unicidad `(TenantId, SequenceKey)`.
 
+P5 endurece la reserva de números con transacción serializable y locks SQL `UPDLOCK,HOLDLOCK`. Readiness valida las tablas core antes de reportar `/health/ready` saludable.
+
 ## Portal
 
 - REUSE: Gateway, health, logging, correlationId.

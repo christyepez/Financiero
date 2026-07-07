@@ -4,9 +4,9 @@
 
 El entorno local usa `EnsureCreated` más SQL raw idempotente para crear el esquema `financial` en la base lógica `FinancieroDb`, reutilizando el SQL Server común de Portal.
 
-## Decisión P4
+## Decisión P4/P5
 
-No se introduce EF Migrations todavía para no romper Docker ni el flujo local. Se documenta transición obligatoria antes de producción.
+No se introduce EF Migrations todavía para no romper Docker ni el flujo local. P5 agrega scripts SQL idempotentes versionados y runner básico con tabla `financial.schema_versions`.
 
 ## Secuencia versionada objetivo
 
@@ -15,6 +15,16 @@ No se introduce EF Migrations todavía para no romper Docker ni el flujo local. 
 3. `003_fiscal_periods.sql`: `financial.fiscal_years`, `financial.fiscal_periods`.
 4. `004_journal_entries.sql`: `financial.journal_entries`, `financial.journal_entry_lines`, `financial.accounting_sequences`.
 5. `005_hardening_indexes.sql`: índices de integridad y concurrencia.
+
+## Runner P5
+
+`FinancialDatabaseMigrationRunner` busca scripts en `database/migrations/financial`, omite versiones aplicadas y registra cada script en `financial.schema_versions`.
+
+Docker local habilita:
+
+```yaml
+Database__RunMigrations: "true"
+```
 
 ## Reglas
 

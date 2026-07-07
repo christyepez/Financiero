@@ -44,6 +44,12 @@ Incluye autorización runtime por permisos `financial.*` en todos los endpoints 
 
 El hardening bloquea cambios peligrosos: cuentas usadas en Posted no cambian código, no se convierten en resumen, no se desactivan ni archivan; periodos no cierran/bloquean con Draft entries si la configuración lo exige; periodos/años con Posted entries no se archivan; Journal Entries respetan configuración de void y numeración.
 
+## P5 Integrated QA / SQL Concurrency / Security Smoke
+
+Incluye flujo contable integrado, security smoke por permisos, health readiness con verificación de tablas core, migraciones versionadas `001` a `006`, runner básico con `financial.schema_versions`, script smoke local y documentación de contratos API.
+
+La secuencia contable se endurece con transacción serializable y `UPDLOCK,HOLDLOCK`. La numeración es gap-tolerant pero no debe duplicarse.
+
 ## Permisos propuestos
 
 - `financial.accounts.read|manage`

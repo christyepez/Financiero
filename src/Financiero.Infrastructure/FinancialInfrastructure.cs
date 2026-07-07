@@ -1,6 +1,8 @@
 using Financiero.Application;
 using Financiero.Domain;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -178,6 +180,7 @@ public sealed class EfFiscalRepository(FinancialDbContext db) : IFiscalRepositor
 public sealed class EfJournalEntryRepository(FinancialDbContext db) : IJournalEntryRepository
 {
     public async Task AddAsync(JournalEntry entry, CancellationToken ct) => await db.JournalEntries.AddAsync(entry, ct);
+    public async Task AddLineAsync(JournalEntryLine line, CancellationToken ct) => await db.JournalEntryLines.AddAsync(line, ct);
     public async Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
         await db.JournalEntries.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
     public async Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct) =>
@@ -197,14 +200,51 @@ public sealed class EfJournalEntryRepository(FinancialDbContext db) : IJournalEn
         prefix = string.IsNullOrWhiteSpace(prefix) ? "JE" : prefix.Trim().ToUpperInvariant();
         padding = Math.Clamp(padding, 1, 12);
         var key = $"{prefix}-{year}";
-        var sequence = await db.AccountingSequences.FirstOrDefaultAsync(x => x.TenantId == tenantId && x.SequenceKey == key, ct);
-        if (sequence is null)
-        {
-            sequence = new AccountingSequence(tenantId, key, 1);
-            await db.AccountingSequences.AddAsync(sequence, ct);
-        }
-        var value = sequence.TakeNext();
+
+        var connection = db.Database.GetDbConnection();
+        if (connection.State != ConnectionState.Open) await connection.OpenAsync(ct);
+        await using var transaction = await connection.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        await using var ensureCommand = connection.CreateCommand();
+        ensureCommand.Transaction = transaction;
+        ensureCommand.CommandText = """
+IF NOT EXISTS (SELECT 1 FROM financial.accounting_sequences WITH (UPDLOCK, HOLDLOCK) WHERE TenantId = @tenantId AND SequenceKey = @sequenceKey)
+BEGIN
+    INSERT INTO financial.accounting_sequences (Id, TenantId, SequenceKey, NextValue, UpdatedAtUtc)
+    VALUES (NEWID(), @tenantId, @sequenceKey, 1, SYSDATETIMEOFFSET());
+END;
+""";
+        AddParameter(ensureCommand, "@tenantId", tenantId);
+        AddParameter(ensureCommand, "@sequenceKey", key);
+        await ensureCommand.ExecuteNonQueryAsync(ct);
+
+        await using var takeCommand = connection.CreateCommand();
+        takeCommand.Transaction = transaction;
+        takeCommand.CommandText = """
+DECLARE @value bigint;
+SELECT @value = NextValue
+FROM financial.accounting_sequences WITH (UPDLOCK, HOLDLOCK)
+WHERE TenantId = @tenantId AND SequenceKey = @sequenceKey;
+
+UPDATE financial.accounting_sequences
+SET NextValue = NextValue + 1, UpdatedAtUtc = SYSDATETIMEOFFSET()
+WHERE TenantId = @tenantId AND SequenceKey = @sequenceKey;
+
+SELECT @value;
+""";
+        AddParameter(takeCommand, "@tenantId", tenantId);
+        AddParameter(takeCommand, "@sequenceKey", key);
+        var scalar = await takeCommand.ExecuteScalarAsync(ct);
+        await transaction.CommitAsync(ct);
+        var value = Convert.ToInt64(scalar, System.Globalization.CultureInfo.InvariantCulture);
         return $"{prefix}-{year}-{value.ToString().PadLeft(padding, '0')}";
+
+        static void AddParameter(System.Data.Common.DbCommand command, string name, object value)
+        {
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = name;
+            parameter.Value = value;
+            command.Parameters.Add(parameter);
+        }
     }
     public async Task<bool> HasPostedEntriesForAccountAsync(Guid accountId, string tenantId, CancellationToken ct) =>
         await db.JournalEntryLines.AnyAsync(x => x.AccountId == accountId && x.TenantId == tenantId && db.JournalEntries.Any(e => e.Id == x.JournalEntryId && e.Status == JournalEntryStatus.Posted), ct);
@@ -222,8 +262,26 @@ public sealed class EfJournalEntryRepository(FinancialDbContext db) : IJournalEn
 
 public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthCheck
 {
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default) =>
-        await db.Database.CanConnectAsync(ct) ? HealthCheckResult.Healthy() : HealthCheckResult.Unhealthy("Financial SQL is unavailable.");
+    private static readonly string[] CoreTables =
+    [
+        "financial.accounts",
+        "financial.fiscal_years",
+        "financial.fiscal_periods",
+        "financial.journal_entries",
+        "financial.journal_entry_lines",
+        "financial.accounting_sequences"
+    ];
+
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default)
+    {
+        if (!await db.Database.CanConnectAsync(ct)) return HealthCheckResult.Unhealthy("Financial SQL is unavailable.");
+        foreach (var table in CoreTables)
+        {
+            var exists = await db.Database.SqlQueryRaw<int>("SELECT CASE WHEN OBJECT_ID({0}, 'U') IS NULL THEN 0 ELSE 1 END AS Value", table).SingleAsync(ct);
+            if (exists == 0) return HealthCheckResult.Unhealthy($"Financial SQL table is missing: {table}");
+        }
+        return HealthCheckResult.Healthy("Financial SQL core schema is ready.");
+    }
 }
 
 public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, ILogger<DevelopmentPortalAdapters> logger) :
@@ -270,7 +328,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IFiscalRepository, EfFiscalRepository>();
             services.AddScoped<IJournalEntryRepository, EfJournalEntryRepository>();
             services.AddHealthChecks().AddCheck<FinancialSqlHealthCheck>("financial-sql", tags: ["ready"]);
-            if (configuration.GetValue<bool>("Database:Initialize")) services.AddHostedService<FinancialDatabaseInitializer>();
+            if (configuration.GetValue<bool>("Database:Initialize") || configuration.GetValue<bool>("Database:RunMigrations")) services.AddHostedService<FinancialDatabaseInitializer>();
         }
         else
         {
@@ -317,6 +375,7 @@ internal sealed class UnconfiguredJournalEntryRepository : IJournalEntryReposito
 {
     private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
     public Task AddAsync(JournalEntry entry, CancellationToken ct) => Task.FromException(Error);
+    public Task AddLineAsync(JournalEntryLine line, CancellationToken ct) => Task.FromException(Error);
     public Task<JournalEntry?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<JournalEntry?>(Error);
     public Task<JournalEntry?> GetByNumberAsync(string entryNumber, string tenantId, CancellationToken ct) => Task.FromException<JournalEntry?>(Error);
     public Task<(IReadOnlyCollection<JournalEntry> Items, long Total)> SearchAsync(string tenantId, JournalEntryStatus? status, DateOnly? from, DateOnly? to, string? search, int page, int pageSize, CancellationToken ct) => Task.FromException<(IReadOnlyCollection<JournalEntry>, long)>(Error);
@@ -335,8 +394,11 @@ internal sealed class FinancialDatabaseInitializer(IServiceProvider services) : 
     {
         await using var scope = services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<FinancialDbContext>();
-        await db.Database.EnsureCreatedAsync(ct);
-        await db.Database.ExecuteSqlRawAsync("""
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        if (configuration.GetValue<bool>("Database:Initialize"))
+        {
+            await db.Database.EnsureCreatedAsync(ct);
+            await db.Database.ExecuteSqlRawAsync("""
 IF SCHEMA_ID('financial') IS NULL EXEC('CREATE SCHEMA financial');
 IF OBJECT_ID('financial.accounts', 'U') IS NULL
 BEGIN
@@ -440,6 +502,55 @@ BEGIN
     CREATE UNIQUE INDEX IX_accounting_sequences_TenantId_SequenceKey ON financial.accounting_sequences(TenantId, SequenceKey);
 END;
 """, ct);
+        }
+
+        if (configuration.GetValue<bool>("Database:RunMigrations"))
+        {
+            await FinancialDatabaseMigrationRunner.RunAsync(db, AppContext.BaseDirectory, ct);
+        }
     }
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
+}
+
+internal static class FinancialDatabaseMigrationRunner
+{
+    public static async Task RunAsync(FinancialDbContext db, string baseDirectory, CancellationToken ct)
+    {
+        var migrationsDirectory = Path.Combine(baseDirectory, "database", "migrations", "financial");
+        if (!Directory.Exists(migrationsDirectory)) return;
+
+        await db.Database.ExecuteSqlRawAsync("""
+IF SCHEMA_ID('financial') IS NULL EXEC('CREATE SCHEMA financial');
+IF OBJECT_ID('financial.schema_versions', 'U') IS NULL
+BEGIN
+    CREATE TABLE financial.schema_versions (
+        Version nvarchar(32) NOT NULL PRIMARY KEY,
+        ScriptName nvarchar(256) NOT NULL,
+        AppliedAtUtc datetimeoffset NOT NULL
+    );
+END;
+""", ct);
+
+        foreach (var scriptPath in Directory.GetFiles(migrationsDirectory, "*.sql").OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+        {
+            var scriptName = Path.GetFileName(scriptPath);
+            var version = scriptName.Split('_', 2)[0];
+            var alreadyApplied = await db.Database.SqlQueryRaw<int>("SELECT COUNT(1) AS Value FROM financial.schema_versions WHERE Version = {0}", version).SingleAsync(ct);
+            if (alreadyApplied > 0) continue;
+
+            var sql = await File.ReadAllTextAsync(scriptPath, ct);
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                await db.Database.ExecuteSqlRawAsync(sql, ct);
+                await db.Database.ExecuteSqlRawAsync("INSERT INTO financial.schema_versions (Version, ScriptName, AppliedAtUtc) VALUES ({0}, {1}, SYSDATETIMEOFFSET())", version, scriptName);
+                await transaction.CommitAsync(ct);
+            }
+            catch (SqlException ex) when (ex.Number is 2601 or 2627)
+            {
+                await transaction.RollbackAsync(ct);
+                throw new InvalidOperationException($"Financial migration '{scriptName}' hit a duplicate key constraint. Review idempotency and schema state.", ex);
+            }
+        }
+    }
 }

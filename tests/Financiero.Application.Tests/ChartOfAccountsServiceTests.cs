@@ -158,9 +158,11 @@ internal sealed class RecordingAudit : IPortalAuditClient
 internal sealed class RecordingOutbox : IPortalOutboxClient
 {
     public List<string> EventTypes { get; } = [];
+    public List<string> CorrelationIds { get; } = [];
     public Task EnqueueAsync(OutboxEnvelope message, PortalCallContext context, CancellationToken ct)
     {
         EventTypes.Add(message.EventType);
+        CorrelationIds.Add(message.CorrelationId);
         return Task.CompletedTask;
     }
 }
