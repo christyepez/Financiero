@@ -67,9 +67,13 @@ Permisos específicos P1: `financial.chartofaccounts.read`, `create`, `update`, 
 
 Permisos específicos P2: `financial.fiscalyears.*` y `financial.fiscalperiods.*`.
 
+`JournalEntries` queda implementado con `JournalEntry` y `JournalEntryLine`, endpoints `/api/financial/journal-entries`, operaciones Draft/update/líneas/post/reverse/void, búsqueda paginada, búsqueda por número y persistencia EF Core en `financial.journal_entries`, `financial.journal_entry_lines` y `financial.accounting_sequences`.
+
+Permisos específicos P3: `financial.journalentries.read`, `create`, `update`, `post`, `reverse`, `void` y `manage`.
+
 ## Datos lógicos
 
-Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`, `journal_entry_lines`, `accounting_sequences`, `accounting_configurations` y `outbox_messages`. Índices únicos: cuenta `(tenant, code)`, período/rangos controlados, asiento `(tenant, fiscalYear, entryNumber)` y eventId. No se crean migraciones en diseño.
+Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`, `journal_entry_lines`, `accounting_sequences`, `accounting_configurations` y `outbox_messages`. Índices únicos implementados: cuenta `(tenant, code)`, año `(tenant, year)`, período `(tenant, fiscalYear, number)`, asiento `(tenant, entryNumber)` y secuencia `(tenant, sequenceKey)`.
 
 ## Portal
 
