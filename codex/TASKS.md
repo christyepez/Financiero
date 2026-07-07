@@ -34,7 +34,12 @@
 
 ## Sprint 2 — Facturación y documentos tributarios
 
-- [ ] Sprint recomendado: SRI & Electronic Invoicing Foundation.
+- [x] Implementar P1 SRI & Electronic Invoicing Foundation.
+- [x] Modelar documentos electrónicos y factura foundation.
+- [x] Implementar clave de acceso SRI con módulo 11.
+- [x] Implementar XML base de factura.
+- [x] Crear puertos firma/SRI y adapters development/mock.
+- [x] Integrar permisos runtime, Audit/Outbox, migraciones y smoke SRI.
 - [ ] Definir certificado/firma electrónica y estrategia XAdES.
 - [ ] Definir ambientes SRI, RUC/empresa emisora y catálogos SRI.
 - [ ] Diseñar secuencia de documentos tributarios.
@@ -92,5 +97,7 @@ Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OID
 - Herramienta formal de migraciones.
 - Load/concurrency test extendido.
 - SRI/facturación.
+- Firma XAdES productiva y clientes SOAP SRI.
+- Almacenamiento XML/PDF con Portal Content/File.
 - Frontend Angular.
 - Reporting financiero.

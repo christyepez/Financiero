@@ -9,7 +9,7 @@ public sealed class PortalAdapterTests
 {
     [Fact] public async Task Development_adapters_do_not_call_external_services()
     {
-        var adapter = new DevelopmentPortalAdapters(Options.Create(new PortalOptions()), NullLogger<DevelopmentPortalAdapters>.Instance);
+        var adapter = new DevelopmentPortalAdapters(Options.Create(new PortalOptions()), NullLogger<DevelopmentPortalAdapters>.Instance, new ConfigurationBuilder().Build());
         var context = new PortalCallContext("default", "corr-1");
         await adapter.RecordAsync(new("created", "financial.test", "1"), context, default);
         await adapter.RequestAsync(new("test", ["dev@example.test"], new Dictionary<string,string>(), "key"), context, default);
@@ -18,7 +18,7 @@ public sealed class PortalAdapterTests
     }
     [Fact] public async Task Development_security_is_fail_closed()
     {
-        var adapter = new DevelopmentPortalAdapters(Options.Create(new PortalOptions()), NullLogger<DevelopmentPortalAdapters>.Instance);
+        var adapter = new DevelopmentPortalAdapters(Options.Create(new PortalOptions()), NullLogger<DevelopmentPortalAdapters>.Instance, new ConfigurationBuilder().Build());
         Assert.False(await adapter.HasPermissionAsync("financial.test", new("default", "c"), default));
     }
     [Fact] public void Portal_options_bind_feature_flags()

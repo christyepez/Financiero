@@ -70,12 +70,24 @@ public static class FinancialPermissions
     public const string JournalEntriesReverse = "financial.journalentries.reverse";
     public const string JournalEntriesVoid = "financial.journalentries.void";
 
+    public const string ElectronicDocumentsRead = "financial.electronicdocuments.read";
+    public const string ElectronicDocumentsCreate = "financial.electronicdocuments.create";
+    public const string ElectronicDocumentsUpdate = "financial.electronicdocuments.update";
+    public const string ElectronicDocumentsGenerate = "financial.electronicdocuments.generate";
+    public const string ElectronicDocumentsSign = "financial.electronicdocuments.sign";
+    public const string ElectronicDocumentsSend = "financial.electronicdocuments.send";
+    public const string ElectronicDocumentsAuthorize = "financial.electronicdocuments.authorize";
+    public const string ElectronicDocumentsCancel = "financial.electronicdocuments.cancel";
+    public const string ElectronicDocumentsManage = "financial.electronicdocuments.manage";
+
     public static IEnumerable<string> All =>
     [
         AccountsRead, AccountsCreate, AccountsUpdate, AccountsActivate, AccountsDeactivate, AccountsArchive,
         FiscalYearsRead, FiscalYearsCreate, FiscalYearsUpdate, FiscalYearsOpen, FiscalYearsClose, FiscalYearsArchive,
         FiscalPeriodsRead, FiscalPeriodsCreate, FiscalPeriodsUpdate, FiscalPeriodsOpen, FiscalPeriodsClose, FiscalPeriodsLock, FiscalPeriodsReopen, FiscalPeriodsArchive,
-        JournalEntriesRead, JournalEntriesCreate, JournalEntriesUpdate, JournalEntriesPost, JournalEntriesReverse, JournalEntriesVoid
+        JournalEntriesRead, JournalEntriesCreate, JournalEntriesUpdate, JournalEntriesPost, JournalEntriesReverse, JournalEntriesVoid,
+        ElectronicDocumentsRead, ElectronicDocumentsCreate, ElectronicDocumentsUpdate, ElectronicDocumentsGenerate, ElectronicDocumentsSign,
+        ElectronicDocumentsSend, ElectronicDocumentsAuthorize, ElectronicDocumentsCancel, ElectronicDocumentsManage
     ];
 }
 

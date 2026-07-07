@@ -36,6 +36,7 @@ app.MapGet("/", () => Results.Ok(new { service = "Financiero.Api", status = "boo
 app.MapChartOfAccounts();
 app.MapFiscalPeriods();
 app.MapJournalEntries();
+app.MapElectronicDocuments();
 app.Run();
 
 public partial class Program;

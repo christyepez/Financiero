@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 1 Accounting Core cerrado en P6. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, JWT, logging/correlationId, autorización runtime por permisos, migraciones versionadas, adaptadores Portal dev, Plan de Cuentas, Años/Periodos fiscales, Asientos contables, QA integrada y documentación de release están preparados.
+Estado: Sprint 2 P1 SRI & Electronic Invoicing Foundation implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, JWT, logging/correlationId, autorización runtime por permisos, migraciones versionadas, adaptadores Portal dev, Plan de Cuentas, Años/Periodos fiscales, Asientos contables, documentos electrónicos SRI foundation, clave de acceso, XML base, firma dev/mock y clientes SRI dev/mock están preparados.
 
 Documentos principales:
 
@@ -29,8 +29,14 @@ Documentos principales:
 - `docs/releases/financial-sprint-01-accounting-core-closure.md`
 - `docs/releases/financial-sprint-01-release-notes.md`
 - `docs/coordination/financial-sprint-02-backlog-readiness.md`
+- `docs/coordination/financial-sprint-02-sri-electronic-invoicing-foundation.md`
+- `docs/architecture/sri-electronic-invoicing-architecture.md`
+- `docs/architecture/decisions/adr-003-sri-electronic-invoicing-foundation.md`
+- `docs/api/financial-sri-api-contracts.md`
+- `docs/security/sri-certificate-and-secrets-strategy.md`
+- `docs/database/financial-sri-database-inventory.md`
 
-No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. El código actual contiene Plan de Cuentas, Fiscal Periods y Journal Entries; no contiene SRI, facturación o frontend.
+No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF, firma XAdES productiva ni envío real a SRI.
 
 Ejecución y variables: `docs/coordination/financial-local-development.md`.
 
@@ -49,6 +55,7 @@ Smoke local:
 
 ```powershell
 scripts/smoke/financial-smoke.ps1 -BaseUrl http://localhost:8083
+scripts/smoke/financial-sri-smoke.ps1 -BaseUrl http://localhost:8083
 ```
 
 APIs principales:
@@ -57,6 +64,7 @@ APIs principales:
 - `/api/financial/fiscal-years`
 - `/api/financial/fiscal-periods`
 - `/api/financial/journal-entries`
+- `/api/financial/electronic-documents`
 - `/health`, `/health/live`, `/health/ready`
 
-Próximo Sprint recomendado: Sprint 2 — SRI & Electronic Invoicing Foundation, sujeto a definición de firma electrónica, ambientes SRI, catálogos, secuencias tributarias, XML, autorización, contingencia y almacenamiento documental.
+Próximo paso recomendado: Sprint 2 P2 — completar facturación electrónica con validación normativa, firma XAdES productiva, SOAP SRI test, almacenamiento XML/PDF vía Portal Content/File y estrategia RIDE.
