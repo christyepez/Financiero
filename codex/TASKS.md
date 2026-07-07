@@ -19,8 +19,8 @@
 - [x] Implementar P3 Journal Entries.
 - [x] Implementar P4 adaptadores Portal, seguridad runtime y hardening contable.
 - [x] Ejecutar P5 QA integrado, security smoke, concurrencia SQL y migraciones.
-- [ ] Ejecutar P6 documentación/cierre Sprint 1.
-- [ ] Reglas de partida doble, estados, cierre de período y pruebas de dominio.
+- [x] Ejecutar P6 documentación/cierre Sprint 1.
+- [x] Reglas de partida doble, estados, cierre de período y pruebas de dominio base.
 - [x] Extender permisos, Menu y Configuration para Plan de Cuentas mediante metadata.
 - [x] Adaptar Audit y Outbox para Plan de Cuentas mediante contratos existentes.
 - [x] Adaptar Audit y Outbox para Años/Periodos fiscales mediante contratos existentes.
@@ -34,6 +34,12 @@
 
 ## Sprint 2 — Facturación y documentos tributarios
 
+- [ ] Sprint recomendado: SRI & Electronic Invoicing Foundation.
+- [ ] Definir certificado/firma electrónica y estrategia XAdES.
+- [ ] Definir ambientes SRI, RUC/empresa emisora y catálogos SRI.
+- [ ] Diseñar secuencia de documentos tributarios.
+- [ ] Diseñar XML schema, autorización SRI y contingencia.
+- [ ] Integrar Audit/Outbox/Notification y Journal Entries.
 - [ ] Facturas, notas de crédito/débito, retenciones, liquidaciones y guías.
 - [ ] Diferir almacenamiento genérico a Content/File Portal.
 
@@ -67,3 +73,24 @@ Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OID
 - [x] Secuencia SQL usa transacción serializable con `UPDLOCK,HOLDLOCK`.
 - [x] Readiness valida tablas core.
 - [x] Runner básico usa `financial.schema_versions`.
+
+## Sprint 1 P6
+
+- [x] Crear closure document de Sprint 1.
+- [x] Crear release notes.
+- [x] Crear architecture snapshot.
+- [x] Crear API index.
+- [x] Crear permission matrix.
+- [x] Crear database inventory.
+- [x] Crear QA evidence.
+- [x] Crear backlog readiness Sprint 2.
+- [x] Actualizar README y TASKS.
+
+## Deudas técnicas controladas
+
+- Portal HTTP adapters productivos.
+- Herramienta formal de migraciones.
+- Load/concurrency test extendido.
+- SRI/facturación.
+- Frontend Angular.
+- Reporting financiero.
