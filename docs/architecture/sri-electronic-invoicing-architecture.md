@@ -9,7 +9,9 @@ Financiero API
     -> SriAccessKeyGenerator
     -> IElectronicDocumentXmlGenerator
     -> IElectronicSignatureService
+    -> IElectronicDocumentXmlValidator
     -> ISriReceptionClient / ISriAuthorizationClient
+    -> IElectronicDocumentStorageClient
     -> IPortalAuditClient / IPortalOutboxClient
     -> IElectronicDocumentRepository
       -> FinancieroDb / schema financial
@@ -30,11 +32,15 @@ Financiero API
 
 ## Firma
 
-P1 solo define `IElectronicSignatureService` e implementación Development. No lee certificados del repo ni base de datos. La integración productiva deberá usar Key Vault o secret store.
+P2 agrega providers Development, Disabled, External y LocalCertificatePlaceholder. Development se bloquea en Production; providers reales fallan explícitamente hasta tener adapter seguro.
 
 ## Clientes SRI
 
-P1 define `ISriReceptionClient` y `ISriAuthorizationClient` con dev/mock. No se invocan endpoints productivos ni SOAP real.
+P2 normaliza request/response y estados SRI. No se invocan endpoints productivos ni SOAP real.
+
+## Storage
+
+P2 agrega puerto `IElectronicDocumentStorageClient`. El adapter development registra hashes/metadata; producción debe delegar XML/PDF a Portal Content/File.
 
 ## Relación futura con contabilidad
 

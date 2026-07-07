@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
+using System.Security.Cryptography;
 using Financiero.Domain;
 
 namespace Financiero.Application;
@@ -35,6 +36,13 @@ public sealed record ElectronicDocumentDto(
     DateTimeOffset? SriAuthorizationDate,
     string? SriResponseCode,
     string? SriResponseMessage,
+    string? UnsignedXmlStorageId,
+    string? SignedXmlStorageId,
+    string? AuthorizationXmlStorageId,
+    string? SignatureProvider,
+    string? SignatureDigest,
+    string? LastSriStatus,
+    string? LastSriMessage,
     IReadOnlyCollection<ElectronicDocumentLineDto> Lines);
 
 public interface IElectronicDocumentRepository
@@ -50,10 +58,19 @@ public interface IElectronicDocumentRepository
 }
 
 public sealed record IssuerSriOptions(string Ruc, string LegalName, string? TradeName, string Address, bool AccountingRequired);
-public sealed record SignatureContext(string TenantId, string Provider, string? CertificateSecretName, string? KeyVaultName);
-public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds);
-public sealed record SriReceptionResult(string Status, string Code, string Message);
-public sealed record SriAuthorizationResult(bool Authorized, string Code, string Message, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate);
+public enum SignatureProviderType { Development, Disabled, External, LocalCertificatePlaceholder }
+public sealed record SignatureContext(string TenantId, SignatureProviderType Provider, string EnvironmentName, string? CertificateSecretName, string? KeyVaultName, string? LocalCertificatePath, string? LocalCertificatePasswordSecretName, bool RequireTrustedCertificate);
+public sealed record SignatureResult(string SignedXml, string Provider, string? CertificateAlias, DateTimeOffset SignedAtUtc, string SignatureDigest, string SignatureMode);
+public enum SriResponseStatus { Received, Returned, Processing, Authorized, Rejected, NotFound, Error }
+public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds);
+public sealed record SriMessage(string Code, string Message, string? Type = null);
+public sealed record SriReceptionRequest(string AccessKey, string SignedXml, SriClientContext Context);
+public sealed record SriReceptionResponse(SriResponseStatus Status, string Code, string Message, IReadOnlyCollection<SriMessage> Messages);
+public sealed record SriAuthorizationRequest(string AccessKey, SriClientContext Context);
+public sealed record SriAuthorizationResponse(SriResponseStatus Status, string Code, string Message, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string? AuthorizationXml, IReadOnlyCollection<SriMessage> Messages);
+public sealed record XmlValidationResult(bool IsValid, IReadOnlyCollection<string> Errors, IReadOnlyCollection<string> Warnings);
+public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
+public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest);
 
 public interface IElectronicDocumentXmlGenerator
 {
@@ -62,17 +79,35 @@ public interface IElectronicDocumentXmlGenerator
 
 public interface IElectronicSignatureService
 {
-    Task<string> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct);
+    Task<SignatureResult> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct);
 }
 
 public interface ISriReceptionClient
 {
-    Task<SriReceptionResult> SendAsync(string signedXml, SriClientContext context, CancellationToken ct);
+    Task<SriReceptionResponse> SendAsync(SriReceptionRequest request, CancellationToken ct);
 }
 
 public interface ISriAuthorizationClient
 {
-    Task<SriAuthorizationResult> AuthorizeAsync(string accessKey, SriClientContext context, CancellationToken ct);
+    Task<SriAuthorizationResponse> AuthorizeAsync(SriAuthorizationRequest request, CancellationToken ct);
+}
+
+public interface IElectronicDocumentXmlValidator
+{
+    XmlValidationResult ValidateInvoiceXml(string xml);
+}
+
+public interface IXsdSchemaValidator
+{
+    XmlValidationResult Validate(string xml, string schemaName);
+}
+
+public interface IElectronicDocumentStorageClient
+{
+    Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct);
 }
 
 public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenerator
@@ -129,30 +164,93 @@ public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenera
 
 public sealed class DevelopmentElectronicSignatureService : IElectronicSignatureService
 {
-    public Task<string> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct) =>
-        Task.FromResult(unsignedXml.Replace("</factura>", "<firmaSimulada proveedor=\"Development\" />" + "</factura>", StringComparison.Ordinal));
+    public Task<SignatureResult> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct)
+    {
+        if (context.Provider == SignatureProviderType.Disabled) throw new FinancialApplicationException("sri.signature.disabled", "Electronic signature provider is disabled.");
+        if (context.Provider == SignatureProviderType.Development && string.Equals(context.EnvironmentName, "Production", StringComparison.OrdinalIgnoreCase))
+            throw new FinancialApplicationException("sri.signature.development.production", "Development signature provider is not allowed in Production.");
+        if (context.Provider == SignatureProviderType.LocalCertificatePlaceholder)
+            throw new FinancialApplicationException("sri.signature.local_certificate.not_implemented", "Local certificate signature is not implemented. Use secure secret storage before enabling it.");
+        if (context.Provider == SignatureProviderType.External)
+            throw new FinancialApplicationException("sri.signature.external.not_configured", "External signature provider port is defined but no production adapter is configured.");
+        var signed = unsignedXml.Replace("</factura>", "<firmaSimulada proveedor=\"Development\" />" + "</factura>", StringComparison.Ordinal);
+        var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signed)));
+        return Task.FromResult(new SignatureResult(signed, context.Provider.ToString(), context.CertificateSecretName, DateTimeOffset.UtcNow, digest, "DevelopmentSimulation"));
+    }
 }
 
 public sealed class DevelopmentSriReceptionClient(IFinancialConfigurationReader configuration) : ISriReceptionClient
 {
-    public async Task<SriReceptionResult> SendAsync(string signedXml, SriClientContext context, CancellationToken ct)
+    public async Task<SriReceptionResponse> SendAsync(SriReceptionRequest request, CancellationToken ct)
     {
-        var mode = await configuration.GetStringAsync("financial.sri.mock.receptionStatus", "Received", new PortalCallContext(context.TenantId, "sri-reception-dev"), ct);
+        if (!string.Equals(request.Context.Mode, "Mock", StringComparison.OrdinalIgnoreCase) && !string.Equals(request.Context.Mode, "Development", StringComparison.OrdinalIgnoreCase))
+            throw new FinancialApplicationException("sri.reception.real.not_configured", "SRI real/test reception client is not configured in P2.");
+        var mode = await configuration.GetStringAsync("financial.sri.mock.receptionStatus", "Received", new PortalCallContext(request.Context.TenantId, "sri-reception-dev"), ct);
         return string.Equals(mode, "Rejected", StringComparison.OrdinalIgnoreCase)
-            ? new("Rejected", "DEV-REJECTED", "Development SRI reception rejected the document.")
-            : new("Received", "DEV-RECEIVED", "Development SRI reception accepted the document.");
+            ? new(SriResponseStatus.Returned, "DEV-RETURNED", "Development SRI reception returned the document.", [new("DEV-RETURNED", "Mock returned")])
+            : new(SriResponseStatus.Received, "DEV-RECEIVED", "Development SRI reception accepted the document.", []);
     }
 }
 
 public sealed class DevelopmentSriAuthorizationClient(IFinancialConfigurationReader configuration) : ISriAuthorizationClient
 {
-    public async Task<SriAuthorizationResult> AuthorizeAsync(string accessKey, SriClientContext context, CancellationToken ct)
+    public async Task<SriAuthorizationResponse> AuthorizeAsync(SriAuthorizationRequest request, CancellationToken ct)
     {
-        var mode = await configuration.GetStringAsync("financial.sri.mock.authorizationStatus", "Authorized", new PortalCallContext(context.TenantId, "sri-authorization-dev"), ct);
+        if (!string.Equals(request.Context.Mode, "Mock", StringComparison.OrdinalIgnoreCase) && !string.Equals(request.Context.Mode, "Development", StringComparison.OrdinalIgnoreCase))
+            throw new FinancialApplicationException("sri.authorization.real.not_configured", "SRI real/test authorization client is not configured in P2.");
+        var mode = await configuration.GetStringAsync("financial.sri.mock.authorizationStatus", "Authorized", new PortalCallContext(request.Context.TenantId, "sri-authorization-dev"), ct);
         return string.Equals(mode, "Rejected", StringComparison.OrdinalIgnoreCase)
-            ? new(false, "DEV-REJECTED", "Development SRI authorization rejected the document.", null, null)
-            : new(true, "DEV-AUTHORIZED", "Development SRI authorization approved the document.", accessKey, DateTimeOffset.UtcNow);
+            ? new(SriResponseStatus.Rejected, "DEV-REJECTED", "Development SRI authorization rejected the document.", null, null, null, [new("DEV-REJECTED", "Mock rejected")])
+            : new(SriResponseStatus.Authorized, "DEV-AUTHORIZED", "Development SRI authorization approved the document.", request.AccessKey, DateTimeOffset.UtcNow, $"<autorizacion><numeroAutorizacion>{request.AccessKey}</numeroAutorizacion></autorizacion>", []);
     }
+}
+
+public sealed class SriSoapClientPlaceholder : ISriReceptionClient, ISriAuthorizationClient
+{
+    public Task<SriReceptionResponse> SendAsync(SriReceptionRequest request, CancellationToken ct) =>
+        Task.FromException<SriReceptionResponse>(new FinancialApplicationException("sri.soap.placeholder", "SRI SOAP test/production client is a placeholder and is not enabled."));
+    public Task<SriAuthorizationResponse> AuthorizeAsync(SriAuthorizationRequest request, CancellationToken ct) =>
+        Task.FromException<SriAuthorizationResponse>(new FinancialApplicationException("sri.soap.placeholder", "SRI SOAP test/production client is a placeholder and is not enabled."));
+}
+
+public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValidator
+{
+    public XmlValidationResult ValidateInvoiceXml(string xml)
+    {
+        var errors = new List<string>();
+        try
+        {
+            var document = XDocument.Parse(xml);
+            var root = document.Root;
+            if (root?.Name.LocalName != "factura") errors.Add("Root element must be factura.");
+            var infoTributaria = root?.Element("infoTributaria");
+            var infoFactura = root?.Element("infoFactura");
+            var detalles = root?.Element("detalles");
+            if (infoTributaria is null) errors.Add("infoTributaria is required.");
+            if (infoFactura is null) errors.Add("infoFactura is required.");
+            if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
+            var accessKey = infoTributaria?.Element("claveAcceso")?.Value;
+            if (string.IsNullOrWhiteSpace(accessKey) || accessKey.Length != 49 || !accessKey.All(char.IsDigit)) errors.Add("claveAcceso must have 49 digits.");
+            if (infoFactura?.Element("totalSinImpuestos") is null) errors.Add("totalSinImpuestos is required.");
+            if (infoFactura?.Element("importeTotal") is null) errors.Add("importeTotal is required.");
+        }
+        catch (Exception ex) when (ex is System.Xml.XmlException or InvalidOperationException)
+        {
+            errors.Add("XML is not well formed.");
+        }
+        return new(errors.Count == 0, errors, []);
+    }
+}
+
+public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocumentStorageClient
+{
+    public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync("unsigned-xml", xml, "application/xml");
+    public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync("signed-xml", xml, "application/xml");
+    public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync("authorization-xml", xml, "application/xml");
+    public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) =>
+        Task.FromResult(new StoredDocumentFile($"dev://ride-pdf/{Guid.NewGuid():N}", Convert.ToHexString(SHA256.HashData(pdf)), "Development", DateTimeOffset.UtcNow, "application/pdf", "ride-pdf"));
+    private static Task<StoredDocumentFile> SaveAsync(string purpose, string content, string contentType) =>
+        Task.FromResult(new StoredDocumentFile($"dev://{purpose}/{Guid.NewGuid():N}", Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))), "Development", DateTimeOffset.UtcNow, contentType, purpose));
 }
 
 public sealed class ElectronicDocumentsService(
@@ -162,6 +260,8 @@ public sealed class ElectronicDocumentsService(
     IElectronicSignatureService signature,
     ISriReceptionClient reception,
     ISriAuthorizationClient authorization,
+    IElectronicDocumentXmlValidator xmlValidator,
+    IElectronicDocumentStorageClient storage,
     IPortalAuditClient audit,
     IPortalOutboxClient outbox)
 {
@@ -199,10 +299,25 @@ public sealed class ElectronicDocumentsService(
         var numericCode = await configuration.GetStringAsync("financial.sri.accessKey.numericCode", DeterministicNumericCode(document.Id), context, ct);
         var accessKey = SriAccessKeyGenerator.Generate(new(document.IssueDate, SriDocumentCodes.ToCode(document.DocumentType), issuer.Ruc, document.Environment, document.EstablishmentCode, document.EmissionPointCode, sequential, numericCode, document.EmissionType));
         var xml = GenerateUnsignedInvoiceXml(document, issuer, sequential, accessKey.Value);
+        var validation = xmlValidator.ValidateInvoiceXml(xml);
+        if (!validation.IsValid) throw new FinancialApplicationException("sri.xml.validation.failed", string.Join("; ", validation.Errors));
         document.Generate(sequential, accessKey, xml, DateTimeOffset.UtcNow);
+        var stored = await storage.SaveUnsignedXmlAsync(document, xml, context, ct);
+        document.RegisterUnsignedXmlStorage(stored.StorageId, DateTimeOffset.UtcNow);
         await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("ElectronicDocumentXmlValidated", "ElectronicDocumentXmlValidated", document, context, ct);
+        await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
         await AuditOutboxAsync("ElectronicDocumentXmlGenerated", "ElectronicDocumentXmlGenerated", document, context, ct);
         return ToDto(document);
+    }
+
+    public async Task<XmlValidationResult> ValidateInvoiceXmlAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        var xml = xmlGenerator.GenerateInvoiceXml(document, await GetIssuerAsync(context, ct));
+        var result = xmlValidator.ValidateInvoiceXml(xml);
+        if (result.IsValid) await AuditOutboxAsync("ElectronicDocumentXmlValidated", "ElectronicDocumentXmlValidated", document, context, ct);
+        return result;
     }
 
     public async Task<ElectronicDocumentDto> SignElectronicDocumentAsync(Guid id, PortalCallContext context, CancellationToken ct)
@@ -211,9 +326,25 @@ public sealed class ElectronicDocumentsService(
         document.EnsureCanSign();
         var issuer = await GetIssuerAsync(context, ct);
         var xml = xmlGenerator.GenerateInvoiceXml(document, issuer);
-        var signed = await signature.SignAsync(xml, await GetSignatureContextAsync(context, ct), ct);
-        document.MarkSigned(signed, DateTimeOffset.UtcNow);
+        var validation = xmlValidator.ValidateInvoiceXml(xml);
+        if (!validation.IsValid) throw new FinancialApplicationException("sri.xml.validation.failed", string.Join("; ", validation.Errors));
+        SignatureResult signed;
+        try
+        {
+            signed = await signature.SignAsync(xml, await GetSignatureContextAsync(context, ct), ct);
+        }
+        catch (FinancialApplicationException ex)
+        {
+            document.MarkError(ex.Code, ex.Message, DateTimeOffset.UtcNow);
+            await documents.SaveChangesAsync(ct);
+            await AuditOutboxAsync("ElectronicDocumentSignatureFailed", "ElectronicDocumentSignatureFailed", document, context, ct);
+            throw;
+        }
+        document.MarkSigned(signed.SignedXml, signed.Provider, signed.SignatureDigest, signed.SignedAtUtc);
+        var stored = await storage.SaveSignedXmlAsync(document, signed.SignedXml, context, ct);
+        document.RegisterSignedXmlStorage(stored.StorageId, DateTimeOffset.UtcNow);
         await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
         await AuditOutboxAsync("ElectronicDocumentSigned", "ElectronicDocumentSigned", document, context, ct);
         return ToDto(document);
     }
@@ -223,9 +354,20 @@ public sealed class ElectronicDocumentsService(
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         document.EnsureCanSend();
         var issuer = await GetIssuerAsync(context, ct);
-        var signedXml = await signature.SignAsync(xmlGenerator.GenerateInvoiceXml(document, issuer), await GetSignatureContextAsync(context, ct), ct);
-        var result = await reception.SendAsync(signedXml, await GetSriClientContextAsync(document.Environment, context, ct), ct);
-        if (string.Equals(result.Status, "Rejected", StringComparison.OrdinalIgnoreCase)) document.MarkRejected(result.Code, result.Message, DateTimeOffset.UtcNow);
+        var signedXml = (await signature.SignAsync(xmlGenerator.GenerateInvoiceXml(document, issuer), await GetSignatureContextAsync(context, ct), ct)).SignedXml;
+        SriReceptionResponse result;
+        try
+        {
+            result = await reception.SendAsync(new(document.AccessKey!, signedXml, await GetSriClientContextAsync(document.Environment, context, ct)), ct);
+        }
+        catch (FinancialApplicationException ex)
+        {
+            document.MarkError(ex.Code, ex.Message, DateTimeOffset.UtcNow);
+            await documents.SaveChangesAsync(ct);
+            await AuditOutboxAsync("ElectronicDocumentSriSendFailed", "ElectronicDocumentSriSendFailed", document, context, ct);
+            throw;
+        }
+        if (result.Status is SriResponseStatus.Returned or SriResponseStatus.Rejected or SriResponseStatus.Error) document.MarkRejected(result.Code, result.Message, DateTimeOffset.UtcNow);
         else document.MarkSent(result.Code, result.Message, DateTimeOffset.UtcNow);
         await documents.SaveChangesAsync(ct);
         await AuditOutboxAsync(document.Status == ElectronicDocumentStatus.Rejected ? "ElectronicDocumentRejected" : "ElectronicDocumentSent",
@@ -237,15 +379,35 @@ public sealed class ElectronicDocumentsService(
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         if (document.AccessKey is null) throw new FinancialApplicationException("sri.authorization.access_key.required", "Access key is required.");
-        var result = await authorization.AuthorizeAsync(document.AccessKey, await GetSriClientContextAsync(document.Environment, context, ct), ct);
-        if (result.Authorized) document.MarkAuthorized(result.AuthorizationNumber ?? document.AccessKey, result.AuthorizationDate ?? DateTimeOffset.UtcNow, result.Code, result.Message, DateTimeOffset.UtcNow);
+        var result = await authorization.AuthorizeAsync(new(document.AccessKey, await GetSriClientContextAsync(document.Environment, context, ct)), ct);
+        if (result.Status == SriResponseStatus.Authorized)
+        {
+            document.MarkAuthorized(result.AuthorizationNumber ?? document.AccessKey, result.AuthorizationDate ?? DateTimeOffset.UtcNow, result.Code, result.Message, DateTimeOffset.UtcNow);
+            if (!string.IsNullOrWhiteSpace(result.AuthorizationXml))
+            {
+                var stored = await storage.SaveAuthorizationXmlAsync(document, result.AuthorizationXml, context, ct);
+                document.RegisterAuthorizationXmlStorage(stored.StorageId, DateTimeOffset.UtcNow);
+                await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
+            }
+        }
         else document.MarkRejected(result.Code, result.Message, DateTimeOffset.UtcNow);
         await documents.SaveChangesAsync(ct);
-        await AuditOutboxAsync(result.Authorized ? "ElectronicDocumentAuthorized" : "ElectronicDocumentRejected", result.Authorized ? "ElectronicDocumentAuthorized" : "ElectronicDocumentRejected", document, context, ct);
+        var authorized = result.Status == SriResponseStatus.Authorized;
+        await AuditOutboxAsync(authorized ? "ElectronicDocumentAuthorized" : "ElectronicDocumentRejected", authorized ? "ElectronicDocumentAuthorized" : "ElectronicDocumentRejected", document, context, ct);
         return ToDto(document);
     }
 
     public async Task<ElectronicDocumentDto> GetByIdAsync(Guid id, PortalCallContext context, CancellationToken ct) => ToDto(await GetRequiredAsync(id, context.TenantId, ct));
+    public async Task<object> GetStatusAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        return new { document.Id, Status = document.Status.ToString(), document.AccessKey, document.LastSriStatus, document.LastSriMessage, document.SriResponseCode, document.SriResponseMessage, document.LastErrorCode, document.LastErrorMessage };
+    }
+    public async Task<ElectronicDocumentStorageMetadataDto> GetStorageMetadataAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        return new(document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.RidePdfStorageId, document.XmlContentHash, document.SignedXmlContentHash, document.SignatureDigest);
+    }
     public async Task<ElectronicDocumentDto> GetByAccessKeyAsync(string accessKey, PortalCallContext context, CancellationToken ct) =>
         ToDto(await documents.GetByAccessKeyAsync(accessKey.Trim(), context.TenantId, ct) ?? throw new FinancialApplicationException("electronic_document.not_found", "Electronic document was not found."));
     public async Task<object> SearchAsync(SearchElectronicDocumentsRequest request, PortalCallContext context, CancellationToken ct)
@@ -272,15 +434,21 @@ public sealed class ElectronicDocumentsService(
         Enum.TryParse<SriEmissionType>(await configuration.GetStringAsync("financial.sri.emissionType", "Normal", context, ct), true, out var value) ? value : SriEmissionType.Normal;
     private async Task<SignatureContext> GetSignatureContextAsync(PortalCallContext context, CancellationToken ct) =>
         new(context.TenantId,
-            await configuration.GetStringAsync("financial.sri.signature.provider", "Development", context, ct),
+            Enum.TryParse<SignatureProviderType>(await configuration.GetStringAsync("financial.sri.signature.provider", "Development", context, ct), true, out var provider) ? provider : SignatureProviderType.Disabled,
+            await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct),
             await configuration.GetStringAsync("financial.sri.signature.certificateSecretName", "", context, ct),
-            await configuration.GetStringAsync("financial.sri.signature.keyVaultName", "", context, ct));
+            await configuration.GetStringAsync("financial.sri.signature.keyVaultName", "", context, ct),
+            await configuration.GetStringAsync("financial.sri.signature.localCertificatePath", "", context, ct),
+            await configuration.GetStringAsync("financial.sri.signature.localCertificatePasswordSecretName", "", context, ct),
+            await configuration.GetBoolAsync("financial.sri.signature.requireTrustedCertificate", true, context, ct));
     private async Task<SriClientContext> GetSriClientContextAsync(SriEnvironment environment, PortalCallContext context, CancellationToken ct) =>
         new(context.TenantId, environment,
             await configuration.GetStringAsync("financial.sri.integration.mode", "Development", context, ct),
             await configuration.GetStringAsync("financial.sri.receptionUrl", "", context, ct),
             await configuration.GetStringAsync("financial.sri.authorizationUrl", "", context, ct),
-            await configuration.GetIntAsync("financial.sri.timeoutSeconds", 30, context, ct));
+            await configuration.GetIntAsync("financial.sri.timeoutSeconds", 30, context, ct),
+            await configuration.GetIntAsync("financial.sri.maxRetries", 3, context, ct),
+            await configuration.GetIntAsync("financial.sri.retryDelaySeconds", 5, context, ct));
     private async Task AuditOnlyAsync(string auditAction, ElectronicDocument document, PortalCallContext context, CancellationToken ct) =>
         await audit.RecordAsync(new(auditAction, "financial.electronic-document", document.Id.ToString(), new { document.Id, document.AccessKey, document.Status }), context, ct);
     private async Task AuditOutboxAsync(string auditAction, string outboxType, ElectronicDocument document, PortalCallContext context, CancellationToken ct)
@@ -302,6 +470,7 @@ public sealed class ElectronicDocumentsService(
     public static ElectronicDocumentDto ToDto(ElectronicDocument document) => new(document.Id, document.TenantId, document.DocumentType.ToString(), document.Environment.ToString(), document.EmissionType.ToString(), document.Status.ToString(),
         document.EstablishmentCode, document.EmissionPointCode, document.Sequential, document.AccessKey, document.IssueDate, document.CustomerIdentificationType, document.CustomerIdentification, document.CustomerName, document.Currency,
         document.SubtotalWithoutTaxes, document.TotalDiscount, document.TotalTaxes, document.TotalAmount, document.SriAuthorizationNumber, document.SriAuthorizationDate, document.SriResponseCode, document.SriResponseMessage,
+        document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.SignatureProvider, document.SignatureDigest, document.LastSriStatus, document.LastSriMessage,
         document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray());
 }
 
@@ -332,7 +501,11 @@ public static class SriPortalMetadata
         "financial.sri.issuer.specialTaxpayerNumber", "financial.sri.issuer.accountingRequired", "financial.sri.environment",
         "financial.sri.integration.mode", "financial.sri.emissionType", "financial.sri.defaultEstablishmentCode",
         "financial.sri.defaultEmissionPointCode", "financial.sri.signature.provider", "financial.sri.signature.certificateSecretName",
-        "financial.sri.signature.keyVaultName", "financial.sri.receptionUrl", "financial.sri.authorizationUrl",
-        "financial.sri.timeoutSeconds", "financial.sri.xml.version.invoice", "financial.sri.xml.includeOptionalFields"
+        "financial.sri.signature.keyVaultName", "financial.sri.signature.localCertificatePath", "financial.sri.signature.localCertificatePasswordSecretName",
+        "financial.sri.signature.requireTrustedCertificate", "financial.sri.receptionUrl", "financial.sri.authorizationUrl",
+        "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
+        "financial.sri.xml.version.invoice", "financial.sri.xml.includeOptionalFields", "financial.sri.xml.validation.mode",
+        "financial.sri.xml.validation.failOnWarning", "financial.sri.storage.provider", "financial.sri.storage.portalBaseUrl",
+        "financial.sri.storage.container", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"
     ];
 }

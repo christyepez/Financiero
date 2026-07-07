@@ -40,6 +40,9 @@
 - [x] Implementar XML base de factura.
 - [x] Crear puertos firma/SRI y adapters development/mock.
 - [x] Integrar permisos runtime, Audit/Outbox, migraciones y smoke SRI.
+- [x] Implementar P2 contrato XAdES, SRI test/mock y storage strategy.
+- [x] Agregar validación XML básica.
+- [x] Agregar metadata de firma/storage y migración 009.
 - [ ] Definir certificado/firma electrónica y estrategia XAdES.
 - [ ] Definir ambientes SRI, RUC/empresa emisora y catálogos SRI.
 - [ ] Diseñar secuencia de documentos tributarios.

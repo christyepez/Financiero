@@ -30,8 +30,14 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal("Sent", sent.Status);
         Assert.Equal("Authorized", authorized.Status);
         Assert.Equal(authorized.Id, byAccessKey.Id);
+        Assert.NotNull(authorized.UnsignedXmlStorageId);
+        Assert.NotNull(authorized.SignedXmlStorageId);
+        Assert.NotNull(authorized.AuthorizationXmlStorageId);
+        Assert.Equal("Development", authorized.SignatureProvider);
+        Assert.NotNull(authorized.SignatureDigest);
         Assert.Contains("ElectronicDocumentXmlGenerated", audit.Actions);
         Assert.Contains("ElectronicDocumentAuthorized", outbox.EventTypes);
+        Assert.Contains("ElectronicDocumentStorageRegistered", outbox.EventTypes);
         Assert.All(outbox.CorrelationIds, x => Assert.Equal(Context.CorrelationId, x));
     }
 
@@ -80,7 +86,30 @@ public sealed class SriElectronicDocumentsServiceTests
             ["financial.sri.defaultEmissionPointCode"] = "001",
             ["financial.sri.accessKey.numericCode"] = "12345678"
         });
-        return new(repo, config, new ElectronicInvoiceXmlGenerator(), new DevelopmentElectronicSignatureService(), new DevelopmentSriReceptionClient(config), new DevelopmentSriAuthorizationClient(config), audit, outbox);
+        return new(repo, config, new ElectronicInvoiceXmlGenerator(), new DevelopmentElectronicSignatureService(), new DevelopmentSriReceptionClient(config),
+            new DevelopmentSriAuthorizationClient(config), new ElectronicDocumentXmlValidator(), new DevelopmentElectronicDocumentStorageClient(), audit, outbox);
+    }
+
+    [Fact]
+    public void Xml_validator_rejects_malformed_or_missing_access_key()
+    {
+        var validator = new ElectronicDocumentXmlValidator();
+        Assert.False(validator.ValidateInvoiceXml("<factura>").IsValid);
+        Assert.False(validator.ValidateInvoiceXml("<factura><infoTributaria></infoTributaria><infoFactura><totalSinImpuestos>1</totalSinImpuestos><importeTotal>1</importeTotal></infoFactura><detalles><detalle /></detalles></factura>").IsValid);
+    }
+
+    [Fact]
+    public async Task Signature_placeholder_fails_with_clear_error()
+    {
+        var service = new DevelopmentElectronicSignatureService();
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.SignAsync("<factura />", new("default", SignatureProviderType.LocalCertificatePlaceholder, "Development", "", "", "", "", true), default));
+    }
+
+    [Fact]
+    public async Task Development_signature_is_rejected_in_production()
+    {
+        var service = new DevelopmentElectronicSignatureService();
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.SignAsync("<factura />", new("default", SignatureProviderType.Development, "Production", "", "", "", "", true), default));
     }
 }
 

@@ -42,7 +42,7 @@ public sealed class SriElectronicDocumentDomainTests
         invoice.AddLine("SKU", "Item", 1, 10, 0, DateTimeOffset.UtcNow);
         var key = SriAccessKeyGenerator.Generate(new(new DateOnly(2026, 1, 1), "01", "0999999999001", SriEnvironment.Test, "001", "001", "000000001", "12345678", SriEmissionType.Normal));
         invoice.Generate("000000001", key, "<factura />", DateTimeOffset.UtcNow);
-        invoice.MarkSigned("<factura><firmaSimulada /></factura>", DateTimeOffset.UtcNow);
+        invoice.MarkSigned("<factura><firmaSimulada /></factura>", "Development", "digest", DateTimeOffset.UtcNow);
         invoice.MarkSent("DEV-RECEIVED", "ok", DateTimeOffset.UtcNow);
         invoice.MarkAuthorized(key.Value, DateTimeOffset.UtcNow, "DEV-AUTHORIZED", "ok", DateTimeOffset.UtcNow);
 

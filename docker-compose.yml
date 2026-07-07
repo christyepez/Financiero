@@ -26,7 +26,19 @@ services:
       financial__sri__signature__provider: ${SRI_SIGNATURE_PROVIDER:-Development}
       financial__sri__signature__certificateSecretName: ${SRI_SIGNATURE_CERTIFICATE_SECRET_NAME:-}
       financial__sri__signature__keyVaultName: ${SRI_SIGNATURE_KEY_VAULT_NAME:-}
+      financial__sri__signature__localCertificatePath: ${SRI_SIGNATURE_LOCAL_CERTIFICATE_PATH:-}
+      financial__sri__signature__localCertificatePasswordSecretName: ${SRI_SIGNATURE_LOCAL_CERTIFICATE_PASSWORD_SECRET_NAME:-}
+      financial__sri__signature__requireTrustedCertificate: ${SRI_SIGNATURE_REQUIRE_TRUSTED_CERTIFICATE:-true}
       financial__sri__timeoutSeconds: ${SRI_TIMEOUT_SECONDS:-30}
+      financial__sri__maxRetries: ${SRI_MAX_RETRIES:-3}
+      financial__sri__retryDelaySeconds: ${SRI_RETRY_DELAY_SECONDS:-5}
+      financial__sri__xml__validation__mode: ${SRI_XML_VALIDATION_MODE:-Basic}
+      financial__sri__xml__validation__failOnWarning: ${SRI_XML_VALIDATION_FAIL_ON_WARNING:-true}
+      financial__sri__storage__provider: ${SRI_STORAGE_PROVIDER:-Development}
+      financial__sri__storage__portalBaseUrl: ${SRI_STORAGE_PORTAL_BASE_URL:-}
+      financial__sri__storage__container: ${SRI_STORAGE_CONTAINER:-financial-electronic-documents}
+      financial__sri__storage__retainXml: ${SRI_STORAGE_RETAIN_XML:-true}
+      financial__sri__storage__retainPdf: ${SRI_STORAGE_RETAIN_PDF:-false}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}
       Jwt__Audience: ${JWT_AUDIENCE:-portal-corporativo-clients}
       Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}

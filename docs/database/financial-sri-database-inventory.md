@@ -12,6 +12,7 @@
 
 - `007_sri_electronic_documents.sql`
 - `008_sri_sequences_catalogs.sql`
+- `009_sri_signature_storage_metadata.sql`
 
 ## Reglas
 
@@ -21,6 +22,7 @@
 - Secuencia tributaria separada de secuencia contable.
 - Unicidad de access key.
 - Unicidad de secuencial por tenant/tipo/ambiente/establecimiento/punto.
+- Metadata de firma/storage en `financial.electronic_documents`.
 
 ## Catálogos seed mínimos
 
