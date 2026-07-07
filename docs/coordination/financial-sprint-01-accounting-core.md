@@ -26,6 +26,12 @@ Estado: P0 completado con solución .NET 8, proyectos Clean Architecture, SQL ai
 
 Incluye entidad `Account`, reglas de jerarquía/código/estado, endpoints `/api/financial/accounts`, persistencia `FinancieroDb.financial.accounts`, metadata Portal Security/Menu/Configuration y adaptación Audit/Outbox. No incluye frontend, asientos, SRI ni facturación.
 
+## P2 Fiscal Periods
+
+Incluye entidades `FiscalYear` y `FiscalPeriod`, reglas de unicidad, rangos de fechas, no solapamiento, apertura/cierre/reapertura/bloqueo/archivo, endpoints `/api/financial/fiscal-years` y `/api/financial/fiscal-periods`, persistencia `FinancieroDb.financial.fiscal_years` y `financial.fiscal_periods`, metadata Portal y adaptación Audit/Outbox.
+
+Además endurece P1: no se permite desactivar ni archivar cuentas padre con hijos activos.
+
 ## Permisos propuestos
 
 - `financial.accounts.read|manage`

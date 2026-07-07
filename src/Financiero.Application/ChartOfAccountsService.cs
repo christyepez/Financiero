@@ -73,6 +73,7 @@ public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalA
     public async Task<AccountDto> DeactivateAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var account = await GetRequiredAsync(id, context.TenantId, ct);
+        if (await accounts.HasChildrenAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.parent.has_active_children", "Parent accounts with active children cannot be deactivated.");
         account.Deactivate(DateTimeOffset.UtcNow);
         await accounts.SaveChangesAsync(ct);
         await AuditAndOutboxAsync("AccountDeactivated", "FinancialAccountStatusChanged", account, context, ct);
@@ -82,6 +83,7 @@ public sealed class ChartOfAccountsService(IAccountRepository accounts, IPortalA
     public async Task<AccountDto> ArchiveAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var account = await GetRequiredAsync(id, context.TenantId, ct);
+        if (await accounts.HasChildrenAsync(id, context.TenantId, ct)) throw new FinancialApplicationException("account.parent.has_active_children", "Parent accounts with active children cannot be archived.");
         account.Archive(DateTimeOffset.UtcNow);
         await accounts.SaveChangesAsync(ct);
         await AuditAndOutboxAsync("AccountArchived", "FinancialAccountStatusChanged", account, context, ct);

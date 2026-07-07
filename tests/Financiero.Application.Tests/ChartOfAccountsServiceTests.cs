@@ -73,6 +73,20 @@ public sealed class ChartOfAccountsServiceTests
     }
 
     [Fact]
+    public async Task Rejects_deactivate_or_archive_parent_with_active_children()
+    {
+        var repo = new InMemoryAccountRepository();
+        var service = NewService(repo);
+        var parent = await service.CreateAsync(new("1", "Activos", "Asset", 1, null), Context, default);
+        await service.ActivateAsync(parent.Id, Context, default);
+        var child = await service.CreateAsync(new("1.1", "Caja", "Asset", 2, parent.Id), Context, default);
+        await service.ActivateAsync(child.Id, Context, default);
+
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.DeactivateAsync(parent.Id, Context, default));
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => service.ArchiveAsync(parent.Id, Context, default));
+    }
+
+    [Fact]
     public async Task Search_is_paginated()
     {
         var service = NewService(new InMemoryAccountRepository());
@@ -138,7 +152,7 @@ internal sealed class InMemoryAccountRepository : IAccountRepository
     public Task<bool> ExistsByCodeAsync(string code, string tenantId, Guid? excludingId, CancellationToken ct) =>
         Task.FromResult(_accounts.Any(x => x.Code == code && x.TenantId == tenantId && (!excludingId.HasValue || x.Id != excludingId)));
     public Task<bool> HasChildrenAsync(Guid id, string tenantId, CancellationToken ct) =>
-        Task.FromResult(_accounts.Any(x => x.ParentAccountId == id && x.TenantId == tenantId && x.Status != AccountStatus.Archived));
+        Task.FromResult(_accounts.Any(x => x.ParentAccountId == id && x.TenantId == tenantId && x.Status == AccountStatus.Active));
     public Task<(IReadOnlyCollection<Account> Items, long Total)> SearchAsync(string tenantId, string? search, AccountType? type, AccountStatus? status, int page, int pageSize, CancellationToken ct)
     {
         var query = _accounts.Where(x => x.TenantId == tenantId);

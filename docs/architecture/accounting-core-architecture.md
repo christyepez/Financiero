@@ -63,6 +63,10 @@ Todos incluyen tenant derivado de identidad, expectedVersion en mutaciones, acto
 
 Permisos específicos P1: `financial.chartofaccounts.read`, `create`, `update`, `activate`, `deactivate`, `archive` y `manage`.
 
+`FiscalPeriods` queda implementado con `FiscalYear` y `FiscalPeriod`, endpoints `/api/financial/fiscal-years` y `/api/financial/fiscal-periods`, búsqueda paginada, periodo abierto por fecha y persistencia EF Core en `financial.fiscal_years` y `financial.fiscal_periods`.
+
+Permisos específicos P2: `financial.fiscalyears.*` y `financial.fiscalperiods.*`.
+
 ## Datos lógicos
 
 Tablas `financial.accounts`, `fiscal_years`, `fiscal_periods`, `journal_entries`, `journal_entry_lines`, `accounting_sequences`, `accounting_configurations` y `outbox_messages`. Índices únicos: cuenta `(tenant, code)`, período/rangos controlados, asiento `(tenant, fiscalYear, entryNumber)` y eventId. No se crean migraciones en diseño.
