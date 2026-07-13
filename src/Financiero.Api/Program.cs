@@ -32,6 +32,7 @@ app.UseAuthorization();
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
 app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains("ready") }).AllowAnonymous();
+app.MapHealthChecks("/health/sri", new HealthCheckOptions { Predicate = x => x.Tags.Contains("sri") }).AllowAnonymous();
 app.MapGet("/", () => Results.Ok(new { service = "Financiero.Api", status = "bootstrap" })).AllowAnonymous();
 app.MapChartOfAccounts();
 app.MapFiscalPeriods();

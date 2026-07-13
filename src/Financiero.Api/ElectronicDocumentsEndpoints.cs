@@ -37,8 +37,12 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => service.GetStorageMetadataAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/{id:guid}/ride-metadata", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetRideMetadataAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/{id:guid}/integration-status", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.GetIntegrationStatusAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/by-access-key/{accessKey}", async (string accessKey, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetByAccessKeyAsync(accessKey, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/sri/readiness", async (SriIntegrationReadinessService readiness, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => readiness.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
 
         return app;
     }

@@ -11,6 +11,7 @@ function PostJson($url, $body) {
 }
 
 Invoke-RestMethod -Method Get -Uri "$BaseUrl/health/ready" | Out-Null
+Invoke-RestMethod -Method Get -Uri "$BaseUrl/health/sri" | Out-Null
 
 $suffix = Get-Date -Format "HHmmss"
 $invoice = PostJson "$BaseUrl/api/financial/electronic-documents/invoices" @{
@@ -65,6 +66,19 @@ if (-not $storage.data.unsignedXmlStorageId -or -not $storage.data.signedXmlStor
 $rideMetadata = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/ride-metadata" -Headers $headers
 if (-not $rideMetadata.data.ridePdfHash) {
     throw "RIDE metadata endpoint failed."
+}
+
+$readiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/sri/readiness" -Headers $headers
+if ($readiness.data.status -ne "Healthy") {
+    throw "Unexpected SRI readiness status: $($readiness.data.status)"
+}
+
+$integrationStatus = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/integration-status" -Headers $headers
+if ($integrationStatus.data.accessKey -eq $accessKey) {
+    throw "Integration status exposed full access key."
+}
+if ($integrationStatus.data.customerIdentification -eq $invoice.customerIdentification) {
+    throw "Integration status exposed full customer identification."
 }
 
 Write-Host "Financial SRI smoke OK. Id=$id AccessKey=$accessKey Status=$($authorized.data.status)"

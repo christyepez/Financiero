@@ -36,3 +36,7 @@ RIDE queda placeholder; no se genera PDF final en P2.
 ## Sprint 2 P3
 
 Se agrega `PortalContentFileStorageClient` como contrato hacia Portal Content/File. Si `financial.sri.storage.provider=PortalContentFile`, `financial.sri.storage.portalBaseUrl` es obligatorio. Financiero no crea storage documental propio; solo conserva ids, hash, provider y correlación.
+
+## Sprint 2 P4
+
+El contrato incluye metadata: purpose, content type, hash, container, tenant y correlationId. `financial.sri.storage.sendPayloads=false` mantiene el adapter en modo readiness hasta confirmar el API real de Portal Content/File.

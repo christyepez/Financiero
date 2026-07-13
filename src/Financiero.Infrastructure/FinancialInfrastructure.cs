@@ -456,6 +456,20 @@ public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthChec
     }
 }
 
+public sealed class SriReadinessHealthCheck(SriIntegrationReadinessService readiness) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default)
+    {
+        var result = await readiness.CheckAsync(new(FinancialTenant.Default, "health-sri"), ct);
+        return result.Status switch
+        {
+            "Healthy" => HealthCheckResult.Healthy("SRI integration readiness is healthy.", new Dictionary<string, object> { ["checks"] = result.Checks.ToArray() }),
+            "Degraded" => HealthCheckResult.Degraded("SRI integration readiness is degraded.", null, new Dictionary<string, object> { ["issues"] = result.Issues.ToArray(), ["checks"] = result.Checks.ToArray() }),
+            _ => HealthCheckResult.Unhealthy("SRI integration readiness is unhealthy.", null, new Dictionary<string, object> { ["issues"] = result.Issues.ToArray(), ["checks"] = result.Checks.ToArray() })
+        };
+    }
+}
+
 public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, ILogger<DevelopmentPortalAdapters> logger, IConfiguration configuration) :
     IPortalAuditClient, IPortalNotificationClient, IPortalOutboxClient, IPortalConfigurationClient,
     IPortalSecurityClient, IPortalMenuRegistrationClient
@@ -496,8 +510,10 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<FiscalPeriodsService>();
         services.AddScoped<JournalEntriesService>();
         services.AddScoped<ElectronicDocumentsService>();
+        services.AddScoped<SriIntegrationReadinessService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
         services.AddScoped<IElectronicSignatureService, DevelopmentElectronicSignatureService>();
+        services.AddScoped<ISecretStoreClient, ConfiguredSecretStoreClient>();
         services.AddScoped<ICertificateProvider, KeyVaultCertificateProviderPlaceholder>();
         services.AddScoped<ISriReceptionClient, DevelopmentSriReceptionClient>();
         services.AddScoped<ISriAuthorizationClient, DevelopmentSriAuthorizationClient>();
@@ -524,6 +540,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IJournalEntryRepository, UnconfiguredJournalEntryRepository>();
             services.AddScoped<IElectronicDocumentRepository, UnconfiguredElectronicDocumentRepository>();
         }
+        services.AddHealthChecks().AddCheck<SriReadinessHealthCheck>("financial-sri", tags: ["sri"]);
         return services;
     }
 }

@@ -28,6 +28,10 @@
 
 Migración `010_sri_ride_and_integration_metadata.sql` agrega `RideGeneratedAtUtc`, `RidePdfHash`, `StorageProvider`, `SriReceptionAttempts`, `SriAuthorizationAttempts` y `LastIntegrationCorrelationId`.
 
+## Sprint 2 P4
+
+P4 no agrega campos persistentes: readiness se calcula desde configuración runtime para evitar persistir secretos o estados sensibles.
+
 ## Catálogos seed mínimos
 
 Tipos de comprobante, identificación, IVA e impuestos mínimos para foundation. Deben validarse contra normativa vigente antes de producción.

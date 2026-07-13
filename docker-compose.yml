@@ -22,12 +22,15 @@ services:
       financial__sri__integration__mode: ${SRI_INTEGRATION_MODE:-Development}
       financial__sri__allowProduction: ${SRI_ALLOW_PRODUCTION:-false}
       financial__sri__logPayloads: ${SRI_LOG_PAYLOADS:-false}
+      financial__sri__maskPayloads: ${SRI_MASK_PAYLOADS:-true}
+      financial__sri__test__dryRun: ${SRI_TEST_DRY_RUN:-true}
       financial__sri__emissionType: ${SRI_EMISSION_TYPE:-Normal}
       financial__sri__defaultEstablishmentCode: ${SRI_DEFAULT_ESTABLISHMENT_CODE:-001}
       financial__sri__defaultEmissionPointCode: ${SRI_DEFAULT_EMISSION_POINT_CODE:-001}
       financial__sri__signature__provider: ${SRI_SIGNATURE_PROVIDER:-Development}
-      financial__sri__signature__certificateSource: ${SRI_SIGNATURE_CERTIFICATE_SOURCE:-KeyVault}
+      financial__sri__signature__certificateSource: ${SRI_SIGNATURE_CERTIFICATE_SOURCE:-SecretStore}
       financial__sri__signature__certificateSecretName: ${SRI_SIGNATURE_CERTIFICATE_SECRET_NAME:-}
+      financial__sri__signature__certificatePasswordSecretName: ${SRI_SIGNATURE_CERTIFICATE_PASSWORD_SECRET_NAME:-}
       financial__sri__signature__keyVaultName: ${SRI_SIGNATURE_KEY_VAULT_NAME:-}
       financial__sri__signature__timestampPolicy: ${SRI_SIGNATURE_TIMESTAMP_POLICY:-}
       financial__sri__signature__requireOcsp: ${SRI_SIGNATURE_REQUIRE_OCSP:-false}
@@ -43,12 +46,18 @@ services:
       financial__sri__storage__portalBaseUrl: ${SRI_STORAGE_PORTAL_BASE_URL:-}
       financial__sri__storage__container: ${SRI_STORAGE_CONTAINER:-financial-electronic-documents}
       financial__sri__storage__timeoutSeconds: ${SRI_STORAGE_TIMEOUT_SECONDS:-30}
+      financial__sri__storage__sendPayloads: ${SRI_STORAGE_SEND_PAYLOADS:-false}
+      financial__sri__storage__maskPayloads: ${SRI_STORAGE_MASK_PAYLOADS:-true}
       financial__sri__storage__retainXml: ${SRI_STORAGE_RETAIN_XML:-true}
       financial__sri__storage__retainPdf: ${SRI_STORAGE_RETAIN_PDF:-false}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}
       Jwt__Audience: ${JWT_AUDIENCE:-portal-corporativo-clients}
       Jwt__Secret: ${JWT_SECRET:?Set JWT_SECRET in .env}
       Seq__ServerUrl: ${SEQ_SERVER_URL:-http://host.docker.internal:5341}
+      financial__secrets__provider: ${FINANCIAL_SECRETS_PROVIDER:-Disabled}
+      financial__secrets__keyVaultName: ${FINANCIAL_SECRETS_KEY_VAULT_NAME:-}
+      financial__secrets__allowDevelopmentSecrets: ${FINANCIAL_SECRETS_ALLOW_DEVELOPMENT_SECRETS:-false}
+      financial__secrets__maskSecretsInLogs: ${FINANCIAL_SECRETS_MASK_SECRETS_IN_LOGS:-true}
     ports: ["${FINANCIAL_API_PORT:-8081}:8080"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health/ready"]
