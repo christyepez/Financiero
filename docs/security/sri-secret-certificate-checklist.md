@@ -45,3 +45,7 @@
 ## Sprint 3 P1
 
 NC, ND y retenciones foundation no agregan nuevos secretos ni certificados. Los datos de smoke y tests deben seguir siendo sintéticos. La firma real, la carga de certificados y el envío SRI Test/Production continúan sujetos a aprobación manual y custodia fuera del repositorio.
+
+## Sprint 3 P2
+
+Catálogos y reglas tributarias foundation no agregan secretos, certificados ni XML reales. No descargar catálogos automáticamente desde runtime; cualquier catálogo oficial revisado debe entrar por proceso controlado, PR y evidencia normativa.

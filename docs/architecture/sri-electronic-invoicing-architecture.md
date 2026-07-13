@@ -68,3 +68,14 @@ P5 fortalece Key Vault wiring, probe manual SRI Test y observabilidad sanitizada
 - `electronic_document_withholding_taxes`: impuestos retenidos por periodo fiscal.
 
 Los generadores y validadores XML son foundation. Antes de producción deben compararse contra XSD y reglas SRI vigentes.
+
+## Catálogos y reglas Sprint 3 P2
+
+P2 agrega catálogos internos foundation versionables y validadores tributarios:
+
+- `SriCatalogService` y `DevelopmentSriCatalogProvider`.
+- `SriTaxRuleValidator`.
+- `TaxCalculationValidator`.
+- `MoneyRoundingPolicy`.
+
+La política de redondeo usa `decimal`, 2 posiciones, `AwayFromZero` y tolerancia `0.01`. No reemplaza un motor fiscal completo ni catálogos oficiales revisados.

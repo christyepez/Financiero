@@ -61,6 +61,7 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal("04", generated.AccessKey![8..10]);
         Assert.NotNull(generated.UnsignedXmlStorageId);
         Assert.Contains("CreditNoteCreated", audit.Actions);
+        Assert.Contains("CreditNoteRulesValidated", outbox.EventTypes);
         Assert.Contains("CreditNoteXmlGenerated", outbox.EventTypes);
     }
 
@@ -79,6 +80,7 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal("DebitNote", generated.DocumentType);
         Assert.Equal("05", generated.AccessKey![8..10]);
         Assert.Equal(2.50m, generated.TotalAmount);
+        Assert.Contains("DebitNoteRulesValidated", outbox.EventTypes);
         Assert.Contains("DebitNoteReasonAdded", outbox.EventTypes);
         Assert.Contains("DebitNoteXmlGenerated", outbox.EventTypes);
     }
@@ -98,8 +100,32 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal("Withholding", generated.DocumentType);
         Assert.Equal("07", generated.AccessKey![8..10]);
         Assert.Equal(1.75m, generated.TotalAmount);
+        Assert.Contains("WithholdingRulesValidated", outbox.EventTypes);
         Assert.Contains("WithholdingTaxAdded", outbox.EventTypes);
         Assert.Contains("WithholdingXmlGenerated", outbox.EventTypes);
+    }
+
+    [Fact]
+    public async Task Generate_withholding_xml_fails_when_tax_rules_are_incomplete()
+    {
+        var service = NewService(new InMemoryElectronicDocumentRepository(), new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Proveedor", "01/2026", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => service.GenerateWithholdingXmlAsync(draft.Id, Context, default));
+
+        Assert.Equal("sri.xml.validation.failed", ex.Code);
+        Assert.Contains("impuestos", ex.Message);
+    }
+
+    [Fact]
+    public void Development_catalog_provider_exposes_foundation_catalog_version()
+    {
+        var provider = new DevelopmentSriCatalogProvider();
+
+        Assert.Equal(SriCatalogService.FoundationVersion, provider.Version);
+        Assert.True(provider.Contains("documentType", "04"));
+        Assert.True(provider.Contains("withholdingCode", "312"));
+        Assert.False(provider.Contains("documentType", "99"));
     }
 
     [Fact]

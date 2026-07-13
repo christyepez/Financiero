@@ -48,6 +48,10 @@ Migración `011_tax_documents_foundation.sql` agrega:
 
 No almacena XML reales, certificados, secretos ni payloads de Portal Content/File.
 
+## Sprint 3 P2 tax rules
+
+No se crea migración `012`: los catálogos/reglas foundation se implementan en dominio y aplicación. No se agregan tablas, columnas, datos reales ni seeds oficiales.
+
 ## Catálogos seed mínimos
 
 Tipos de comprobante, identificación, IVA e impuestos mínimos para foundation. Deben validarse contra normativa vigente antes de producción.

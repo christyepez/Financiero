@@ -75,6 +75,18 @@
 - [x] Extender smoke SRI mock para NC/ND/retenciones.
 - [x] Documentar ADR-006 y coordinación Sprint 3 P1.
 
+## Sprint 3 P2
+
+- [x] Implementar catálogo SRI foundation versionable.
+- [x] Implementar provider `DevelopmentSriCatalogProvider`.
+- [x] Endurecer reglas NC: documento relacionado, motivo, fecha, líneas y total > 0.
+- [x] Endurecer reglas ND: documento relacionado, motivo/cargo y total > 0.
+- [x] Endurecer reglas retenciones: periodo, taxCode, withholdingCode, base, porcentaje y cálculo.
+- [x] Documentar redondeo decimal y tolerancia.
+- [x] Reforzar XML validators por tipo documental.
+- [x] Mantener Audit/Outbox y permisos runtime.
+- [x] Documentar ADR-007 y coordinación Sprint 3 P2.
+
 ## Sprint 4 — Reporting financiero/fiscal
 
 - [ ] RIDE, ATS y reportes fiscales; requiere Reporting y Content/File.

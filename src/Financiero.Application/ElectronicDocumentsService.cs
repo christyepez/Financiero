@@ -111,6 +111,18 @@ public sealed record SriReceptionResponse(SriResponseStatus Status, string Code,
 public sealed record SriAuthorizationRequest(string AccessKey, SriClientContext Context);
 public sealed record SriAuthorizationResponse(SriResponseStatus Status, string Code, string Message, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string? AuthorizationXml, IReadOnlyCollection<SriMessage> Messages);
 public sealed record XmlValidationResult(bool IsValid, IReadOnlyCollection<string> Errors, IReadOnlyCollection<string> Warnings);
+public interface ISriCatalogProvider
+{
+    string Version { get; }
+    IReadOnlyCollection<SriCatalogItem> GetCatalogItems();
+    bool Contains(string catalog, string code);
+}
+public sealed class DevelopmentSriCatalogProvider : ISriCatalogProvider
+{
+    public string Version => SriCatalogService.FoundationVersion;
+    public IReadOnlyCollection<SriCatalogItem> GetCatalogItems() => SriCatalogService.FoundationCatalogs;
+    public bool Contains(string catalog, string code) => SriCatalogService.Contains(catalog, code);
+}
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
 public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true);
 public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata, bool IncludePayload, string? PayloadBase64);
@@ -602,9 +614,14 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
         if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
         Require(info, "codDocModificado", errors);
         Require(info, "numDocModificado", errors);
+        Require(info, "fechaEmisionDocSustento", errors);
         Require(info, "motivo", errors);
         ValidateDecimal(info, "totalSinImpuestos", errors);
         ValidateDecimal(info, "valorModificacion", errors);
+        ValidatePositiveDecimal(info, "valorModificacion", errors);
+        ValidateRelatedDocumentType(info, "codDocModificado", errors);
+        ValidateDocumentNumber(info, "numDocModificado", errors);
+        ValidateNonEmptyMaxLength(info, "motivo", 300, errors);
         return new(errors.Count == 0, errors, result.Warnings);
     }
 
@@ -620,8 +637,17 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
         if (motivos is null || !motivos.Elements("motivo").Any()) errors.Add("motivos with at least one motivo is required.");
         Require(info, "codDocModificado", errors);
         Require(info, "numDocModificado", errors);
+        Require(info, "fechaEmisionDocSustento", errors);
         ValidateDecimal(info, "totalSinImpuestos", errors);
         ValidateDecimal(info, "valorTotal", errors);
+        ValidatePositiveDecimal(info, "valorTotal", errors);
+        ValidateRelatedDocumentType(info, "codDocModificado", errors);
+        ValidateDocumentNumber(info, "numDocModificado", errors);
+        foreach (var motivo in motivos?.Elements("motivo") ?? [])
+        {
+            ValidateNonEmptyMaxLength(motivo, "razon", 300, errors);
+            ValidatePositiveDecimal(motivo, "valor", errors);
+        }
         return new(errors.Count == 0, errors, result.Warnings);
     }
 
@@ -638,6 +664,17 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
         Require(info, "tipoIdentificacionSujetoRetenido", errors);
         Require(info, "identificacionSujetoRetenido", errors);
         Require(info, "periodoFiscal", errors);
+        ValidateFiscalPeriod(info, "periodoFiscal", errors);
+        foreach (var impuesto in impuestos?.Elements("impuesto") ?? [])
+        {
+            ValidateTaxCode(impuesto, "codigo", errors);
+            ValidateWithholdingCode(impuesto, "codigoRetencion", errors);
+            ValidatePositiveDecimal(impuesto, "baseImponible", errors);
+            ValidatePositiveDecimal(impuesto, "porcentajeRetener", errors);
+            ValidateDecimal(impuesto, "valorRetenido", errors);
+            ValidateRelatedDocumentType(impuesto, "codDocSustento", errors);
+            ValidateDocumentNumber(impuesto, "numDocSustento", errors);
+        }
         return new(errors.Count == 0, errors, result.Warnings);
     }
 
@@ -653,6 +690,9 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
             if (infoTributaria is null) errors.Add("infoTributaria is required.");
             var accessKey = infoTributaria?.Element("claveAcceso")?.Value;
             if (string.IsNullOrWhiteSpace(accessKey) || accessKey.Length != 49 || !accessKey.All(char.IsDigit)) errors.Add("claveAcceso must have 49 digits.");
+            if (accessKey?.Length >= 10 && accessKey[8..10] != expectedCodDoc) errors.Add("claveAcceso document code does not match codDoc.");
+            if (accessKey?.Length >= 23 && infoTributaria?.Element("ruc")?.Value is { } xmlRuc && accessKey[10..23] != xmlRuc) errors.Add("claveAcceso RUC does not match infoTributaria/ruc.");
+            if (accessKey?.Length >= 24 && infoTributaria?.Element("ambiente")?.Value is { } xmlAmbiente && accessKey[23..24] != xmlAmbiente) errors.Add("claveAcceso ambiente does not match infoTributaria/ambiente.");
             ValidateCode(infoTributaria, "ambiente", ["1", "2"], "ambiente must be 1 or 2.", errors);
             ValidateCode(infoTributaria, "tipoEmision", ["1", "2"], "tipoEmision must be 1 or 2.", errors);
             ValidateCode(infoTributaria, "codDoc", [expectedCodDoc], $"codDoc must be {expectedCodDoc}.", errors);
@@ -698,6 +738,43 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
         var value = parent?.Element(name)?.Value;
         if (string.IsNullOrWhiteSpace(value)) { errors.Add($"{name} is required."); return; }
         if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out _)) errors.Add($"{name} must be numeric.");
+    }
+    private static void ValidatePositiveDecimal(XElement? parent, string name, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value)) { errors.Add($"{name} is required."); return; }
+        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var number) || number <= 0) errors.Add($"{name} must be greater than zero.");
+    }
+    private static void ValidateRelatedDocumentType(XElement? parent, string name, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value) || !SriCatalogService.IsSupportDocumentTypeAllowed(value)) errors.Add($"{name} is not allowed by foundation catalog.");
+    }
+    private static void ValidateTaxCode(XElement? parent, string name, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value) || !SriCatalogService.IsTaxCodeAllowed(value)) errors.Add($"{name} is not allowed by foundation catalog.");
+    }
+    private static void ValidateWithholdingCode(XElement? parent, string name, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value) || !SriCatalogService.IsWithholdingCodeAllowed(value)) errors.Add($"{name} is not allowed by foundation catalog.");
+    }
+    private static void ValidateDocumentNumber(XElement? parent, string name, List<string> errors)
+    {
+        try { SriTaxRuleValidator.ValidateDocumentNumber(parent?.Element(name)?.Value ?? ""); }
+        catch (FinancialDomainException ex) { errors.Add($"{name}: {ex.Message}"); }
+    }
+    private static void ValidateFiscalPeriod(XElement? parent, string name, List<string> errors)
+    {
+        try { SriTaxRuleValidator.ValidateFiscalPeriod(parent?.Element(name)?.Value ?? ""); }
+        catch (FinancialDomainException ex) { errors.Add($"{name}: {ex.Message}"); }
+    }
+    private static void ValidateNonEmptyMaxLength(XElement? parent, string name, int maxLength, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value)) errors.Add($"{name} is required.");
+        else if (value.Length > maxLength) errors.Add($"{name} must be {maxLength} characters or fewer.");
     }
 }
 
@@ -1045,6 +1122,8 @@ public sealed class ElectronicDocumentsService(
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         if (document.DocumentType != expectedType) throw new FinancialApplicationException("electronic_document.type.invalid", $"Document must be {expectedType}.");
         var issuer = await GetIssuerAsync(context, ct);
+        SriTaxRuleValidator.ValidateBeforeGenerate(document, DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime));
+        await AuditOutboxAsync($"{expectedType}RulesValidated", $"{expectedType}RulesValidated", document, context, ct);
         var sequential = await documents.GetNextSequentialAsync(context.TenantId, document.DocumentType, document.Environment, document.EstablishmentCode, document.EmissionPointCode, ct);
         if (await documents.SequenceDocumentExistsAsync(context.TenantId, document.DocumentType, document.Environment, document.EstablishmentCode, document.EmissionPointCode, sequential, document.Id, ct))
             throw new FinancialApplicationException("sri.sequence.duplicate", "SRI sequence already exists for this document scope.");

@@ -27,3 +27,5 @@
 | GET | `/health/sri` | anonymous | Dev/Test | Bajo | No secretos/XML | implemented |
 
 Production SRI, XAdES real, RIDE final por tipo documental y Content/File payload real permanecen bloqueados.
+
+Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
