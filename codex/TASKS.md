@@ -44,6 +44,7 @@
 - [x] Implementar P3 XAdES adapter foundation, SRI SOAP Test contract, Portal Content/File contract, RIDE/PDF foundation y migración 010.
 - [x] Implementar P4 Secret Store, SRI Test dry-run/readiness, sanitización y Portal Content/File productive-readiness.
 - [x] Implementar P5 wiring Key Vault, probe manual SRI Test, observabilidad sanitizada y contrato Content/File estabilizado.
+- [x] Ejecutar P6 cierre Sprint 2 SRI readiness, release notes, QA evidence, checklist seguridad, runbook manual y backlog Sprint 3.
 - [x] Agregar validación XML básica.
 - [x] Agregar metadata de firma/storage y migración 009.
 - [ ] Definir certificado/firma electrónica y estrategia XAdES.
@@ -56,8 +57,10 @@
 
 ## Sprint 3 — Integración SRI
 
-- [ ] XML, validación, firma, autorización, reintentos e Inbox.
-- [ ] Requiere diseño de custodia segura e Integration API productiva.
+- [ ] Opción A: NC/ND/Retenciones foundation si no hay credenciales/certificado SRI no productivos.
+- [ ] Opción B: Key Vault + XAdES real controlado + SRI Test manual si ya existe custodia segura aprobada fuera del repositorio.
+- [ ] Opción C: adapter productivo Portal Content/File + RIDE hardening cuando Portal exponga contrato productivo estable.
+- [ ] Requiere decisión explícita antes de activar envío real o firma productiva.
 
 ## Sprint 4 — Reporting financiero/fiscal
 
