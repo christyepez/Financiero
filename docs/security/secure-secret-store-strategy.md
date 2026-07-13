@@ -19,6 +19,13 @@ Providers:
 - `financial.secrets.keyVaultName`.
 - `financial.secrets.allowDevelopmentSecrets`.
 - `financial.secrets.maskSecretsInLogs`.
+- `financial.secrets.useDefaultAzureCredential`.
+- `financial.secrets.requireManagedIdentity`.
+- `financial.secrets.failFastOnStartup`.
+
+## Sprint 2 P5
+
+Azure Key Vault queda preparado con opciones operativas, pero sin SDK/credenciales activas en repo. Si `AzureKeyVault` está activo sin `keyVaultName` o sin cadena de identidad válida, readiness reporta `Unhealthy`/`Degraded` sin romper startup por defecto.
 
 ## Reglas
 

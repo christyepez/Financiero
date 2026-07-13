@@ -511,6 +511,7 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<JournalEntriesService>();
         services.AddScoped<ElectronicDocumentsService>();
         services.AddScoped<SriIntegrationReadinessService>();
+        services.AddScoped<SriManualTestConnectivityService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
         services.AddScoped<IElectronicSignatureService, DevelopmentElectronicSignatureService>();
         services.AddScoped<ISecretStoreClient, ConfiguredSecretStoreClient>();

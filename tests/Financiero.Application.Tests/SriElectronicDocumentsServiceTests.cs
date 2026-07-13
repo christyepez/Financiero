@@ -185,9 +185,18 @@ public sealed class SriElectronicDocumentsServiceTests
     [Fact]
     public async Task Azure_key_vault_placeholder_requires_configuration()
     {
-        var result = await new AzureKeyVaultSecretStoreClientPlaceholder("").GetSecretAsync(new("SRI_CERT", SecretStoreProviderType.AzureKeyVault), Context, default);
+        var result = await new AzureKeyVaultSecretStoreClientPlaceholder(new("", false, false, false)).GetSecretAsync(new("SRI_CERT", SecretStoreProviderType.AzureKeyVault), Context, default);
         Assert.False(result.Success);
         Assert.Equal("secret_store.azure_keyvault.missing_configuration", result.ErrorCode);
+    }
+
+    [Fact]
+    public void Azure_key_vault_readiness_masks_secret_name_and_validates_identity_options()
+    {
+        var readiness = AzureKeyVaultSecretStoreClientPlaceholder.CheckReadiness(new("kv-financial-test", false, true, false), new("SUPER_SECRET_CERT", SecretStoreProviderType.AzureKeyVault));
+        Assert.Equal("Unhealthy", readiness.Status);
+        Assert.Contains(readiness.Issues, x => x.Contains("Managed identity"));
+        Assert.DoesNotContain("SUPER_SECRET_CERT", string.Join(";", readiness.Checks.Concat(readiness.Issues)));
     }
 
     [Fact]
@@ -211,6 +220,24 @@ public sealed class SriElectronicDocumentsServiceTests
     }
 
     [Fact]
+    public async Task Sri_manual_connectivity_blocks_document_send_by_default()
+    {
+        var configuration = new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.sri.integration.mode"] = "Test",
+            ["financial.sri.receptionUrl"] = "https://celcer.sri.gob.ec/reception",
+            ["financial.sri.authorizationUrl"] = "https://celcer.sri.gob.ec/authorization",
+            ["financial.sri.test.dryRun"] = "false",
+            ["financial.sri.test.allowConnectivityProbe"] = "true",
+            ["financial.sri.test.allowDocumentSend"] = "false"
+        });
+        var result = await new SriManualTestConnectivityService(configuration).CheckAsync(Context, default);
+        Assert.Equal(SriConnectivityMode.TestSendDisabled, result.Mode);
+        Assert.False(result.DocumentSendAllowed);
+        Assert.DoesNotContain("celcer.sri.gob.ec/reception", result.ToString());
+    }
+
+    [Fact]
     public void Sanitizer_masks_sensitive_values_and_xml()
     {
         Assert.Equal("*********************************************6789", SriSensitiveDataSanitizer.MaskAccessKey("1234567890123456789012345678901234567890123456789"));
@@ -218,6 +245,25 @@ public sealed class SriElectronicDocumentsServiceTests
         var masked = SriSensitiveDataSanitizer.MaskXmlPayload("<factura><claveAcceso>123</claveAcceso></factura>");
         Assert.Contains("redacted", masked);
         Assert.DoesNotContain("claveAcceso", masked);
+    }
+
+    [Fact]
+    public void Observability_sanitizer_removes_sensitive_payloads()
+    {
+        var telemetry = SriIntegrationLogSanitizer.Sanitize(new SriObservabilityEvent("corr", "default", Guid.NewGuid(), "Invoice", "Error", "SRI", "Test", 12, 1, "1234567890123456789012345678901234567890123456789", null, "ERR", "<factura>secret</factura>"));
+        Assert.EndsWith("6789", telemetry.AccessKeyMasked);
+        Assert.DoesNotContain("<factura>", telemetry.SanitizedMessage);
+    }
+
+    [Fact]
+    public void Portal_content_file_request_excludes_payload_by_default_and_contains_metadata_hash()
+    {
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+        var request = PortalContentFileStorageClient.BuildRequest(doc, System.Text.Encoding.UTF8.GetBytes("<xml />"), "unsigned-xml", "application/xml", Context, new("PortalContentFile", "https://portal.test", "financial", 30, true, false));
+        Assert.False(request.IncludePayload);
+        Assert.Null(request.PayloadBase64);
+        Assert.Equal(request.Hash, request.Metadata["hash"]);
+        Assert.Equal("unsigned-xml", request.Metadata["purpose"]);
     }
 
     [Fact]
@@ -234,6 +280,21 @@ public sealed class SriElectronicDocumentsServiceTests
         });
         var blocked = await new SriIntegrationReadinessService(blockedConfig).CheckAsync(Context, default);
         Assert.Equal("Unhealthy", blocked.Status);
+    }
+
+    [Fact]
+    public async Task Sri_readiness_test_mode_is_degraded_and_sanitized()
+    {
+        var config = new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.sri.integration.mode"] = "Test",
+            ["financial.sri.receptionUrl"] = "https://celcer.sri.gob.ec/reception",
+            ["financial.sri.authorizationUrl"] = "https://celcer.sri.gob.ec/authorization",
+            ["financial.sri.test.manualValidationRequired"] = "true"
+        });
+        var result = await new SriIntegrationReadinessService(config).CheckAsync(Context, default);
+        Assert.Equal("Degraded", result.Status);
+        Assert.DoesNotContain("celcer.sri.gob.ec", string.Join(";", result.Checks.Concat(result.Issues)));
     }
 }
 

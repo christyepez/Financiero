@@ -24,6 +24,13 @@ services:
       financial__sri__logPayloads: ${SRI_LOG_PAYLOADS:-false}
       financial__sri__maskPayloads: ${SRI_MASK_PAYLOADS:-true}
       financial__sri__test__dryRun: ${SRI_TEST_DRY_RUN:-true}
+      financial__sri__test__allowConnectivityProbe: ${SRI_TEST_ALLOW_CONNECTIVITY_PROBE:-false}
+      financial__sri__test__allowDocumentSend: ${SRI_TEST_ALLOW_DOCUMENT_SEND:-false}
+      financial__sri__test__manualValidationRequired: ${SRI_TEST_MANUAL_VALIDATION_REQUIRED:-true}
+      financial__sri__test__useSyntheticDocumentOnly: ${SRI_TEST_USE_SYNTHETIC_DOCUMENT_ONLY:-true}
+      financial__sri__test__syntheticIssuerRuc: ${SRI_TEST_SYNTHETIC_ISSUER_RUC:-9999999999999}
+      financial__sri__test__syntheticCustomerIdentification: ${SRI_TEST_SYNTHETIC_CUSTOMER_IDENTIFICATION:-9999999999}
+      financial__sri__test__maxManualAttempts: ${SRI_TEST_MAX_MANUAL_ATTEMPTS:-1}
       financial__sri__emissionType: ${SRI_EMISSION_TYPE:-Normal}
       financial__sri__defaultEstablishmentCode: ${SRI_DEFAULT_ESTABLISHMENT_CODE:-001}
       financial__sri__defaultEmissionPointCode: ${SRI_DEFAULT_EMISSION_POINT_CODE:-001}
@@ -56,8 +63,11 @@ services:
       Seq__ServerUrl: ${SEQ_SERVER_URL:-http://host.docker.internal:5341}
       financial__secrets__provider: ${FINANCIAL_SECRETS_PROVIDER:-Disabled}
       financial__secrets__keyVaultName: ${FINANCIAL_SECRETS_KEY_VAULT_NAME:-}
+      financial__secrets__useDefaultAzureCredential: ${FINANCIAL_SECRETS_USE_DEFAULT_AZURE_CREDENTIAL:-false}
+      financial__secrets__requireManagedIdentity: ${FINANCIAL_SECRETS_REQUIRE_MANAGED_IDENTITY:-false}
       financial__secrets__allowDevelopmentSecrets: ${FINANCIAL_SECRETS_ALLOW_DEVELOPMENT_SECRETS:-false}
       financial__secrets__maskSecretsInLogs: ${FINANCIAL_SECRETS_MASK_SECRETS_IN_LOGS:-true}
+      financial__secrets__failFastOnStartup: ${FINANCIAL_SECRETS_FAIL_FAST_ON_STARTUP:-false}
     ports: ["${FINANCIAL_API_PORT:-8081}:8080"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health/ready"]

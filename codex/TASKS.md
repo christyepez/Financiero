@@ -43,6 +43,7 @@
 - [x] Implementar P2 contrato XAdES, SRI test/mock y storage strategy.
 - [x] Implementar P3 XAdES adapter foundation, SRI SOAP Test contract, Portal Content/File contract, RIDE/PDF foundation y migración 010.
 - [x] Implementar P4 Secret Store, SRI Test dry-run/readiness, sanitización y Portal Content/File productive-readiness.
+- [x] Implementar P5 wiring Key Vault, probe manual SRI Test, observabilidad sanitizada y contrato Content/File estabilizado.
 - [x] Agregar validación XML básica.
 - [x] Agregar metadata de firma/storage y migración 009.
 - [ ] Definir certificado/firma electrónica y estrategia XAdES.
