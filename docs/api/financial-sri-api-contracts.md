@@ -133,3 +133,11 @@
 ## Nota
 
 Los endpoints `sign`, `send` y `authorize` son dev/mock en P1/P2/P3. No usan certificados reales ni SRI productivo.
+
+Sprint 3 P2 agrega hardening funcional:
+
+- documentos relacionados/sustento deben usar formato `###-###-#########`;
+- NC y ND requieren total mayor a cero;
+- retenciones requieren periodo fiscal `MM/YYYY` o `YYYY-MM`;
+- taxCode/withholdingCode deben existir en catálogo foundation;
+- valor retenido debe coincidir con `base * porcentaje / 100` dentro de tolerancia documentada.

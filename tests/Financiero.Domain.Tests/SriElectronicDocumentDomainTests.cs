@@ -105,6 +105,56 @@ public sealed class SriElectronicDocumentDomainTests
         Assert.Throws<FinancialDomainException>(() => SriAccessKeyGenerator.Generate(new(new DateOnly(2026, 1, 1), "01", ruc, SriEnvironment.Test, establishment, "001", sequential, "12345678", SriEmissionType.Normal)));
     }
 
+    [Theory]
+    [InlineData("01")]
+    [InlineData("04")]
+    [InlineData("05")]
+    [InlineData("07")]
+    public void Sri_catalog_accepts_foundation_document_types(string code) =>
+        Assert.True(SriCatalogService.IsDocumentTypeAllowed(code));
+
+    [Fact]
+    public void Sri_catalog_rejects_invalid_document_type() =>
+        Assert.False(SriCatalogService.IsDocumentTypeAllowed("99"));
+
+    [Fact]
+    public void Credit_note_rejects_future_related_date_and_zero_total()
+    {
+        var now = new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero);
+        Assert.Throws<FinancialDomainException>(() => ElectronicDocument.CreateCreditNote("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "USD", "01", "001-001-000000001", new DateOnly(2026, 1, 3), "Devolución", now));
+        var creditNote = ElectronicDocument.CreateCreditNote("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "USD", "01", "001-001-000000001", new DateOnly(2026, 1, 1), "Devolución", now);
+        creditNote.AddLine("SKU", "Item sin valor", 1, 0, 0, now);
+        var key = SriAccessKeyGenerator.Generate(new(new DateOnly(2026, 1, 2), "04", "0999999999001", SriEnvironment.Test, "001", "001", "000000001", "12345678", SriEmissionType.Normal));
+        Assert.Throws<FinancialDomainException>(() => creditNote.Generate("000000001", key, "<notaCredito />", now));
+    }
+
+    [Fact]
+    public void Debit_note_rejects_zero_total()
+    {
+        var now = new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero);
+        var debitNote = ElectronicDocument.CreateDebitNote("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "USD", "01", "001-001-000000001", new DateOnly(2026, 1, 1), now);
+        var key = SriAccessKeyGenerator.Generate(new(new DateOnly(2026, 1, 2), "05", "0999999999001", SriEnvironment.Test, "001", "001", "000000001", "12345678", SriEmissionType.Normal));
+        Assert.Throws<FinancialDomainException>(() => debitNote.Generate("000000001", key, "<notaDebito />", now));
+    }
+
+    [Fact]
+    public void Withholding_rejects_invalid_period_tax_code_and_amounts()
+    {
+        var now = new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero);
+        Assert.Throws<FinancialDomainException>(() => ElectronicDocument.CreateWithholding("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 2), "04", "0999999999001", "Proveedor", "USD", "2026/99", "01", "001-001-000000001", new DateOnly(2026, 1, 1), now));
+        var withholding = ElectronicDocument.CreateWithholding("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 2), "04", "0999999999001", "Proveedor", "USD", "2026-01", "01", "001-001-000000001", new DateOnly(2026, 1, 1), now);
+        Assert.Throws<FinancialDomainException>(() => withholding.AddWithholdingTax("99", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 1, 1), "2026-01", now));
+        Assert.Throws<FinancialDomainException>(() => withholding.AddWithholdingTax("1", "312", 100, 1.75m, 101m, "001-001-000000001", new DateOnly(2026, 1, 1), "2026-01", now));
+        Assert.Throws<FinancialDomainException>(() => withholding.AddWithholdingTax("1", "312", 100, 1.75m, 1.70m, "001-001-000000001", new DateOnly(2026, 1, 1), "2026-01", now));
+    }
+
+    [Fact]
+    public void Money_rounding_policy_allows_documented_tolerance()
+    {
+        Assert.Equal(1.75m, TaxCalculationValidator.CalculateTax(100, 1.75m));
+        Assert.True(MoneyRoundingPolicy.Equivalent(1.75m, 1.751m));
+    }
+
     private static ElectronicDocument NewInvoice() =>
         ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
 }

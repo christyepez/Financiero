@@ -557,6 +557,7 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<SriIntegrationReadinessService>();
         services.AddScoped<SriManualTestConnectivityService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
+        services.AddSingleton<ISriCatalogProvider, DevelopmentSriCatalogProvider>();
         services.AddScoped<IElectronicSignatureService, DevelopmentElectronicSignatureService>();
         services.AddScoped<ISecretStoreClient, ConfiguredSecretStoreClient>();
         services.AddScoped<ICertificateProvider, KeyVaultCertificateProviderPlaceholder>();

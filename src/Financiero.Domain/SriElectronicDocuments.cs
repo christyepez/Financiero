@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Financiero.Domain;
 
@@ -38,14 +39,17 @@ public sealed class ElectronicDocument
         DocumentType = documentType;
         Environment = environment;
         EmissionType = emissionType;
+        SriTaxRuleValidator.ValidateEnvironment(environment);
+        SriTaxRuleValidator.ValidateEmissionType(emissionType);
         Status = ElectronicDocumentStatus.Draft;
         EstablishmentCode = ValidateFixedDigits(establishmentCode, 3, "electronic_document.establishment.invalid", "Establishment code must have 3 digits.");
         EmissionPointCode = ValidateFixedDigits(emissionPointCode, 3, "electronic_document.emission_point.invalid", "Emission point code must have 3 digits.");
         IssueDate = issueDate;
-        CustomerIdentificationType = Required(customerIdentificationType, nameof(CustomerIdentificationType));
-        CustomerIdentification = Required(customerIdentification, nameof(CustomerIdentification));
+        CustomerIdentificationType = SriTaxRuleValidator.ValidateIdentificationType(customerIdentificationType);
+        CustomerIdentification = SriTaxRuleValidator.ValidateIdentification(customerIdentificationType, customerIdentification);
         CustomerName = Required(customerName, nameof(CustomerName));
         Currency = Required(currency, nameof(Currency));
+        if (issueDate > DateOnly.FromDateTime(now.UtcDateTime)) throw new FinancialDomainException("electronic_document.issue_date.future", "IssueDate cannot be in the future.");
         CreatedAtUtc = now;
         UpdatedAtUtc = now;
     }
@@ -182,6 +186,7 @@ public sealed class ElectronicDocument
         DateOnly supportDocumentIssueDate,
         DateTimeOffset now)
     {
+        fiscalPeriod = SriTaxRuleValidator.ValidateFiscalPeriod(fiscalPeriod);
         var document = new ElectronicDocument(Guid.NewGuid(), tenantId, ElectronicDocumentType.Withholding, environment, emissionType, establishmentCode, emissionPointCode, issueDate,
             subjectIdentificationType, subjectIdentification, subjectName, currency, now);
         document.AddRelatedDocument(supportDocumentTypeCode, supportDocumentNumber, supportDocumentIssueDate, fiscalPeriod, now);
@@ -212,6 +217,7 @@ public sealed class ElectronicDocument
     {
         EnsureEditable();
         _taxes.Add(ElectronicDocumentTax.Create(Guid.NewGuid(), TenantId, Id, lineId, taxCode, taxPercentageCode, taxRate, taxBase, taxAmount, now));
+        SriTaxRuleValidator.ValidateDocumentTaxes(this);
         RecalculateTotals(now);
     }
 
@@ -243,7 +249,7 @@ public sealed class ElectronicDocument
     public void Generate(string sequential, SriAccessKey accessKey, string unsignedXml, DateTimeOffset now)
     {
         EnsureEditable();
-        ValidateBeforeGenerate();
+        ValidateBeforeGenerate(DateOnly.FromDateTime(now.UtcDateTime));
         Sequential = ValidateFixedDigits(sequential, 9, "electronic_document.sequential.invalid", "Sequential must have 9 digits.");
         AccessKey = accessKey.Value;
         XmlContentHash = Sha256(unsignedXml);
@@ -252,20 +258,23 @@ public sealed class ElectronicDocument
         UpdatedAtUtc = now;
     }
 
-    private void ValidateBeforeGenerate()
+    private void ValidateBeforeGenerate(DateOnly today)
     {
+        SriTaxRuleValidator.ValidateBeforeGenerate(this, today);
         if (DocumentType == ElectronicDocumentType.Invoice && _lines.Count == 0) throw new FinancialDomainException("electronic_document.invoice.lines.required", "Invoice requires at least one line.");
         if (DocumentType == ElectronicDocumentType.CreditNote)
         {
             if (_references.Count == 0) throw new FinancialDomainException("electronic_document.credit_note.reference.required", "Credit note requires related document.");
             if (string.IsNullOrWhiteSpace(_references[0].ReasonOrPeriod)) throw new FinancialDomainException("electronic_document.credit_note.reason.required", "Credit note reason is required.");
             if (_lines.Count == 0) throw new FinancialDomainException("electronic_document.credit_note.lines.required", "Credit note requires at least one line.");
+            if (TotalAmount <= 0) throw new FinancialDomainException("electronic_document.credit_note.total.invalid", "Credit note total must be greater than zero in this foundation.");
         }
         if (DocumentType == ElectronicDocumentType.DebitNote)
         {
             if (_references.Count == 0) throw new FinancialDomainException("electronic_document.debit_note.reference.required", "Debit note requires related document.");
             if (_debitNoteReasons.Count == 0) throw new FinancialDomainException("electronic_document.debit_note.reason.required", "Debit note requires at least one reason.");
             if (_debitNoteReasons.Any(x => x.Amount <= 0)) throw new FinancialDomainException("electronic_document.debit_note.amount.invalid", "Debit note adjustment amount must be greater than zero.");
+            if (TotalAmount <= 0) throw new FinancialDomainException("electronic_document.debit_note.total.invalid", "Debit note total must be greater than zero.");
         }
         if (DocumentType == ElectronicDocumentType.Withholding)
         {
@@ -490,9 +499,12 @@ public sealed class ElectronicDocumentReference
         TenantId = Required(tenantId, nameof(TenantId));
         ElectronicDocumentId = electronicDocumentId;
         DocumentTypeCode = ElectronicDocument.ValidateFixedDigits(documentTypeCode, 2, "electronic_document.reference.document_type.invalid", "Related document type must have 2 digits.");
-        Number = Required(number, nameof(Number));
+        if (!SriCatalogService.IsSupportDocumentTypeAllowed(DocumentTypeCode)) throw new FinancialDomainException("electronic_document.reference.document_type.unsupported", "Related/support document type is not allowed by the foundation catalog.");
+        Number = SriTaxRuleValidator.ValidateDocumentNumber(number);
         IssueDate = issueDate;
         ReasonOrPeriod = Required(reasonOrPeriod, nameof(ReasonOrPeriod));
+        if (ReasonOrPeriod.Length > 300) throw new FinancialDomainException("electronic_document.reference.reason.length", "Reason or fiscal period must be 300 characters or fewer.");
+        if (issueDate > DateOnly.FromDateTime(now.UtcDateTime)) throw new FinancialDomainException("electronic_document.reference.issue_date.future", "Related/support document date cannot be in the future.");
         CreatedAtUtc = now;
     }
 
@@ -519,6 +531,7 @@ public sealed class ElectronicDocumentDebitNoteReason
         TenantId = Required(tenantId, nameof(TenantId));
         ElectronicDocumentId = electronicDocumentId;
         Reason = Required(reason, nameof(Reason));
+        if (Reason.Length > 300) throw new FinancialDomainException("electronic_document.debit_note.reason.length", "Debit note reason must be 300 characters or fewer.");
         Amount = amount > 0 ? FinancialPrecision.Normalize(amount) : throw new FinancialDomainException("electronic_document.debit_note.amount.invalid", "Debit note amount must be greater than zero.");
         CreatedAtUtc = now;
     }
@@ -543,14 +556,17 @@ public sealed class ElectronicDocumentWithholdingTax
         Id = id;
         TenantId = Required(tenantId, nameof(TenantId));
         ElectronicDocumentId = electronicDocumentId;
-        TaxCode = Required(taxCode, nameof(TaxCode));
-        WithholdingCode = Required(withholdingCode, nameof(WithholdingCode));
-        TaxBase = taxBase >= 0 ? FinancialPrecision.Normalize(taxBase) : throw new FinancialDomainException("electronic_document.withholding.base.invalid", "Withholding tax base cannot be negative.");
-        WithholdingPercentage = withholdingPercentage >= 0 ? FinancialPrecision.Normalize(withholdingPercentage) : throw new FinancialDomainException("electronic_document.withholding.percentage.invalid", "Withholding percentage cannot be negative.");
+        TaxCode = SriTaxRuleValidator.ValidateTaxCode(taxCode);
+        WithholdingCode = SriTaxRuleValidator.ValidateWithholdingCode(withholdingCode);
+        TaxBase = taxBase > 0 ? FinancialPrecision.Normalize(taxBase) : throw new FinancialDomainException("electronic_document.withholding.base.invalid", "Withholding tax base must be greater than zero.");
+        WithholdingPercentage = withholdingPercentage > 0 ? FinancialPrecision.Normalize(withholdingPercentage) : throw new FinancialDomainException("electronic_document.withholding.percentage.invalid", "Withholding percentage must be greater than zero.");
         WithheldAmount = withheldAmount >= 0 ? FinancialPrecision.Normalize(withheldAmount) : throw new FinancialDomainException("electronic_document.withholding.amount.invalid", "Withheld amount cannot be negative.");
-        SupportDocumentNumber = Required(supportDocumentNumber, nameof(SupportDocumentNumber));
+        if (WithheldAmount > TaxBase) throw new FinancialDomainException("electronic_document.withholding.amount.exceeds_base", "Withheld amount cannot exceed taxable base.");
+        TaxCalculationValidator.EnsureWithholdingAmount(TaxBase, WithholdingPercentage, WithheldAmount);
+        SupportDocumentNumber = SriTaxRuleValidator.ValidateDocumentNumber(supportDocumentNumber);
         SupportDocumentIssueDate = supportDocumentIssueDate;
-        FiscalPeriod = Required(fiscalPeriod, nameof(FiscalPeriod));
+        if (supportDocumentIssueDate > DateOnly.FromDateTime(now.UtcDateTime)) throw new FinancialDomainException("electronic_document.withholding.support_date.future", "Support document date cannot be in the future.");
+        FiscalPeriod = SriTaxRuleValidator.ValidateFiscalPeriod(fiscalPeriod);
         CreatedAtUtc = now;
     }
 
@@ -651,14 +667,24 @@ public sealed record SriCatalogItem(string Catalog, string Code, string Name, bo
         new("documentType", "01", "Factura"),
         new("documentType", "04", "Nota de crédito"),
         new("documentType", "05", "Nota de débito"),
-        new("documentType", "06", "Guía de remisión"),
         new("documentType", "07", "Comprobante de retención"),
         new("identificationType", "04", "RUC"),
         new("identificationType", "05", "Cédula"),
         new("identificationType", "06", "Pasaporte"),
         new("identificationType", "07", "Consumidor final"),
         new("identificationType", "08", "Identificación del exterior"),
+        new("environment", "1", "Test"),
+        new("environment", "2", "Production"),
+        new("emissionType", "1", "Normal"),
+        new("tax", "1", "Renta"),
         new("tax", "2", "IVA"),
+        new("tax", "3", "ICE foundation"),
+        new("withholdingCode", "312", "Retención renta foundation 1.75%"),
+        new("withholdingCode", "332", "Retención renta foundation 1.75%"),
+        new("withholdingCode", "3440", "Retención IVA foundation"),
+        new("supportDocumentType", "01", "Factura"),
+        new("supportDocumentType", "04", "Nota de crédito"),
+        new("supportDocumentType", "05", "Nota de débito"),
         new("ivaRate", "0", "0%"),
         new("ivaRate", "2", "12%"),
         new("ivaRate", "3", "14%"),
@@ -666,4 +692,154 @@ public sealed record SriCatalogItem(string Catalog, string Code, string Name, bo
         new("ivaRate", "6", "No objeto de impuesto"),
         new("ivaRate", "7", "Exento de IVA")
     ];
+}
+
+public static class SriCatalogService
+{
+    public const string FoundationVersion = "2026-07-sprint-3-p2-foundation";
+    public static IReadOnlyCollection<SriCatalogItem> FoundationCatalogs => SriCatalogItem.Minimum;
+    public static bool Contains(string catalog, string code) =>
+        FoundationCatalogs.Any(x => x.Catalog.Equals(catalog, StringComparison.OrdinalIgnoreCase) && x.Code == code && x.IsActive);
+    public static bool IsDocumentTypeAllowed(string code) => Contains("documentType", code);
+    public static bool IsSupportDocumentTypeAllowed(string code) => Contains("supportDocumentType", code) || code is "01" or "04" or "05";
+    public static bool IsTaxCodeAllowed(string code) => Contains("tax", code);
+    public static bool IsWithholdingCodeAllowed(string code) => Contains("withholdingCode", code);
+    public static bool IsIdentificationTypeAllowed(string code) => Contains("identificationType", code);
+}
+
+public static class MoneyRoundingPolicy
+{
+    public const int DecimalPlaces = 2;
+    public const decimal Tolerance = 0.01m;
+    public static decimal Round(decimal value) => Math.Round(value, DecimalPlaces, MidpointRounding.AwayFromZero);
+    public static bool Equivalent(decimal expected, decimal actual) => Math.Abs(Round(expected) - Round(actual)) <= Tolerance;
+}
+
+public static class TaxCalculationValidator
+{
+    public static decimal CalculateTax(decimal taxableBase, decimal percentage) => MoneyRoundingPolicy.Round(taxableBase * percentage / 100m);
+    public static void EnsureWithholdingAmount(decimal taxableBase, decimal percentage, decimal withheldAmount)
+    {
+        var expected = CalculateTax(taxableBase, percentage);
+        if (!MoneyRoundingPolicy.Equivalent(expected, withheldAmount))
+            throw new FinancialDomainException("electronic_document.withholding.amount.calculation_invalid", "Withheld amount must match taxable base * percentage / 100 within the documented rounding tolerance.");
+    }
+}
+
+public static partial class SriTaxRuleValidator
+{
+    public static void ValidateEnvironment(SriEnvironment environment)
+    {
+        if (!SriCatalogService.Contains("environment", ((int)environment).ToString())) throw new FinancialDomainException("sri.environment.invalid", "SRI environment is not allowed by the foundation catalog.");
+    }
+
+    public static void ValidateEmissionType(SriEmissionType emissionType)
+    {
+        if (emissionType != SriEmissionType.Normal) throw new FinancialDomainException("sri.emission_type.unsupported", "Only normal emission type is supported in this foundation.");
+    }
+
+    public static string ValidateIdentificationType(string code)
+    {
+        code = Required(code, "identificationType");
+        if (!SriCatalogService.IsIdentificationTypeAllowed(code)) throw new FinancialDomainException("sri.identification_type.invalid", "Identification type is not allowed by the foundation catalog.");
+        return code;
+    }
+
+    public static string ValidateIdentification(string identificationType, string identification)
+    {
+        identification = Required(identification, "identification");
+        return identificationType switch
+        {
+            "04" when identification.Length == 13 && identification.All(char.IsDigit) => identification,
+            "05" when identification.Length == 10 && identification.All(char.IsDigit) => identification,
+            "06" when identification.Length is >= 3 and <= 20 => identification,
+            "07" when identification == "9999999999999" || identification == "9999999999" => identification,
+            "08" when identification.Length is >= 3 and <= 20 => identification,
+            _ => throw new FinancialDomainException("sri.identification.invalid", "Identification does not match the selected SRI identification type.")
+        };
+    }
+
+    public static string ValidateTaxCode(string code)
+    {
+        code = Required(code, "taxCode");
+        if (!SriCatalogService.IsTaxCodeAllowed(code)) throw new FinancialDomainException("sri.tax_code.invalid", "Tax code is not allowed by the foundation catalog.");
+        return code;
+    }
+
+    public static string ValidateWithholdingCode(string code)
+    {
+        code = Required(code, "withholdingCode");
+        if (!SriCatalogService.IsWithholdingCodeAllowed(code)) throw new FinancialDomainException("sri.withholding_code.invalid", "Withholding code is not allowed by the foundation catalog.");
+        return code;
+    }
+
+    public static string ValidateDocumentNumber(string number)
+    {
+        number = Required(number, "documentNumber");
+        if (!DocumentNumberRegex().IsMatch(number)) throw new FinancialDomainException("sri.document_number.invalid", "Related/support document number must use ###-###-######### format.");
+        return number;
+    }
+
+    public static string ValidateFiscalPeriod(string fiscalPeriod)
+    {
+        fiscalPeriod = Required(fiscalPeriod, "fiscalPeriod");
+        if (!FiscalPeriodSlashRegex().IsMatch(fiscalPeriod) && !FiscalPeriodDashRegex().IsMatch(fiscalPeriod))
+            throw new FinancialDomainException("sri.fiscal_period.invalid", "Fiscal period must use MM/YYYY or YYYY-MM format.");
+        if (FiscalPeriodSlashRegex().IsMatch(fiscalPeriod))
+        {
+            var month = int.Parse(fiscalPeriod[..2]);
+            if (month is < 1 or > 12) throw new FinancialDomainException("sri.fiscal_period.month.invalid", "Fiscal period month must be between 01 and 12.");
+        }
+        if (FiscalPeriodDashRegex().IsMatch(fiscalPeriod))
+        {
+            var month = int.Parse(fiscalPeriod[^2..]);
+            if (month is < 1 or > 12) throw new FinancialDomainException("sri.fiscal_period.month.invalid", "Fiscal period month must be between 01 and 12.");
+        }
+        return fiscalPeriod;
+    }
+
+    public static void ValidateBeforeGenerate(ElectronicDocument document, DateOnly today)
+    {
+        if (string.IsNullOrWhiteSpace(document.TenantId)) throw new FinancialDomainException("electronic_document.tenant.required", "TenantId is required.");
+        ValidateEnvironment(document.Environment);
+        ValidateEmissionType(document.EmissionType);
+        ValidateIdentification(document.CustomerIdentificationType, document.CustomerIdentification);
+        if (document.IssueDate > today) throw new FinancialDomainException("electronic_document.issue_date.future", "IssueDate cannot be in the future.");
+        foreach (var reference in document.References)
+        {
+            if (reference.IssueDate > today) throw new FinancialDomainException("electronic_document.reference.issue_date.future", "Related/support document date cannot be in the future.");
+            ValidateDocumentNumber(reference.Number);
+            if (!SriCatalogService.IsSupportDocumentTypeAllowed(reference.DocumentTypeCode)) throw new FinancialDomainException("electronic_document.reference.document_type.unsupported", "Related/support document type is not allowed by the foundation catalog.");
+        }
+        ValidateDocumentTaxes(document);
+        if (document.DocumentType == ElectronicDocumentType.Withholding)
+        {
+            foreach (var tax in document.WithholdingTaxes)
+            {
+                ValidateTaxCode(tax.TaxCode);
+                ValidateWithholdingCode(tax.WithholdingCode);
+                ValidateFiscalPeriod(tax.FiscalPeriod);
+                TaxCalculationValidator.EnsureWithholdingAmount(tax.TaxBase, tax.WithholdingPercentage, tax.WithheldAmount);
+            }
+        }
+    }
+
+    public static void ValidateDocumentTaxes(ElectronicDocument document)
+    {
+        foreach (var tax in document.Taxes)
+        {
+            ValidateTaxCode(tax.TaxCode);
+            if (tax.TaxAmount > tax.TaxBase && tax.TaxRate <= 100m) throw new FinancialDomainException("electronic_document.tax.amount.invalid", "Tax amount cannot exceed tax base for foundation rates.");
+            var expected = TaxCalculationValidator.CalculateTax(tax.TaxBase, tax.TaxRate);
+            if (!MoneyRoundingPolicy.Equivalent(expected, tax.TaxAmount)) throw new FinancialDomainException("electronic_document.tax.amount.calculation_invalid", "Tax amount must match tax base * rate / 100 within tolerance.");
+        }
+    }
+
+    private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new FinancialDomainException($"sri.{name}.required", $"{name} is required.") : value.Trim();
+    [GeneratedRegex(@"^\d{3}-\d{3}-\d{9}$")]
+    private static partial Regex DocumentNumberRegex();
+    [GeneratedRegex(@"^\d{2}/\d{4}$")]
+    private static partial Regex FiscalPeriodSlashRegex();
+    [GeneratedRegex(@"^\d{4}-\d{2}$")]
+    private static partial Regex FiscalPeriodDashRegex();
 }

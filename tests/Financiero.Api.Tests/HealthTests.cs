@@ -116,6 +116,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     }
+
 }
 
 public sealed class MigrationInventoryTests
