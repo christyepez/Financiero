@@ -87,9 +87,17 @@
 - [x] Mantener Audit/Outbox y permisos runtime.
 - [x] Documentar ADR-007 y coordinación Sprint 3 P2.
 
+## Sprint 3 P3
+
+- [x] Implementar RIDE foundation por factura, nota de crédito, nota de débito y retención.
+- [x] Agregar preview RIDE sanitizado protegido por `financial.electronicdocuments.read`.
+- [x] Implementar reporting tributario foundation: summary, documents, tax totals y withholding totals.
+- [x] Extender smoke SRI mock con RIDE por tipo y reporting.
+- [x] Documentar ADR-008 y coordinación Sprint 3 P3.
+
 ## Sprint 4 — Reporting financiero/fiscal
 
-- [ ] RIDE, ATS y reportes fiscales; requiere Reporting y Content/File.
+- [ ] RIDE legal final, ATS oficial y adapter productivo Content/File; requiere contrato productivo Portal y revisión fiscal/manual.
 
 ## Sprint 5 — Frontend financiero
 

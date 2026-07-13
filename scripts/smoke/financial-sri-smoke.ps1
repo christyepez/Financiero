@@ -17,7 +17,7 @@ $suffix = Get-Date -Format "HHmmss"
 $invoice = PostJson "$BaseUrl/api/financial/electronic-documents/invoices" @{
     issueDate = "2026-01-15"
     customerIdentificationType = "04"
-    customerIdentification = "0999999999001"
+    customerIdentification = "1790012345001"
     customerName = "Cliente Smoke SRI $suffix"
     currency = "USD"
     establishmentCode = "001"
@@ -67,6 +67,10 @@ $rideMetadata = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/elect
 if (-not $rideMetadata.data.ridePdfHash) {
     throw "RIDE metadata endpoint failed."
 }
+$ridePreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/ride-preview" -Headers $headers
+if (($ridePreview | ConvertTo-Json -Depth 10) -match "<factura|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE|1790012345001") {
+    throw "RIDE preview exposed XML, certificate material, or full customer identification."
+}
 
 $readiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/sri/readiness" -Headers $headers
 if ($readiness.data.status -ne "Healthy") {
@@ -83,7 +87,7 @@ if (($probe | ConvertTo-Json -Depth 10) -match "<factura|claveAcceso>|PRIVATE KE
 $creditNote = PostJson "$BaseUrl/api/financial/electronic-documents/credit-notes" @{
     issueDate = "2026-01-16"
     customerIdentificationType = "04"
-    customerIdentification = "0999999999001"
+    customerIdentification = "1790012345001"
     customerName = "Cliente Smoke NC $suffix"
     relatedDocumentTypeCode = "01"
     relatedDocumentNumber = "001-001-000000001"
@@ -103,11 +107,14 @@ PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/credit-note-
 } | Out-Null
 $creditGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/generate-credit-note-xml" @{}
 if ($creditGenerated.data.accessKey.Substring(8, 2) -ne "04") { throw "Credit note access key codDoc is invalid." }
+PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/generate-ride" @{} | Out-Null
+$creditPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$creditNoteId/ride-preview" -Headers $headers
+if (($creditPreview | ConvertTo-Json -Depth 10) -match "<notaCredito|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Credit note RIDE preview exposed sensitive payload." }
 
 $debitNote = PostJson "$BaseUrl/api/financial/electronic-documents/debit-notes" @{
     issueDate = "2026-01-16"
     customerIdentificationType = "04"
-    customerIdentification = "0999999999001"
+    customerIdentification = "1790012345001"
     customerName = "Cliente Smoke ND $suffix"
     relatedDocumentTypeCode = "01"
     relatedDocumentNumber = "001-001-000000001"
@@ -120,11 +127,14 @@ $debitNoteId = $debitNote.data.id
 PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/debit-note-reasons" @{ reason = "Interés smoke"; amount = 1.25 } | Out-Null
 $debitGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/generate-debit-note-xml" @{}
 if ($debitGenerated.data.accessKey.Substring(8, 2) -ne "05") { throw "Debit note access key codDoc is invalid." }
+PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/generate-ride" @{} | Out-Null
+$debitPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$debitNoteId/ride-preview" -Headers $headers
+if (($debitPreview | ConvertTo-Json -Depth 10) -match "<notaDebito|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Debit note RIDE preview exposed sensitive payload." }
 
 $withholding = PostJson "$BaseUrl/api/financial/electronic-documents/withholdings" @{
     issueDate = "2026-01-16"
     subjectIdentificationType = "04"
-    subjectIdentification = "0999999999001"
+    subjectIdentification = "1790012345001"
     subjectName = "Proveedor Smoke $suffix"
     fiscalPeriod = "01/2026"
     supportDocumentTypeCode = "01"
@@ -147,6 +157,18 @@ PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/withholding
 } | Out-Null
 $withholdingGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/generate-withholding-xml" @{}
 if ($withholdingGenerated.data.accessKey.Substring(8, 2) -ne "07") { throw "Withholding access key codDoc is invalid." }
+PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/generate-ride" @{} | Out-Null
+$withholdingPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$withholdingId/ride-preview" -Headers $headers
+if (($withholdingPreview | ConvertTo-Json -Depth 10) -match "<comprobanteRetencion|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Withholding RIDE preview exposed sensitive payload." }
+
+$reportSummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/summary?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
+if (-not $reportSummary.data.totals -or $reportSummary.data.totals.count -lt 4) {
+    throw "Tax reporting summary did not include smoke documents."
+}
+$reportPayload = $reportSummary | ConvertTo-Json -Depth 20
+if ($reportPayload -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE") {
+    throw "Tax reporting exposed XML or certificate material."
+}
 
 $integrationStatus = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/integration-status" -Headers $headers
 if ($integrationStatus.data.accessKey -eq $accessKey) {

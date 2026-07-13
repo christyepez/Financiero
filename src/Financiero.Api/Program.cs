@@ -38,6 +38,7 @@ app.MapChartOfAccounts();
 app.MapFiscalPeriods();
 app.MapJournalEntries();
 app.MapElectronicDocuments();
+app.MapTaxReporting();
 app.Run();
 
 public partial class Program;

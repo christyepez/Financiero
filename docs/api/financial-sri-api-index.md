@@ -19,6 +19,11 @@
 | POST | `/{id}/send` | send | Mock/dry-run | Alto | SRI metadata | mock/dev |
 | POST | `/{id}/authorize` | authorize | Mock/dry-run | Alto | SRI metadata | mock/dev |
 | POST | `/{id}/generate-ride` | generate | Dev | Medio | PDF placeholder | implemented |
+| GET | `/{id}/ride-preview` | read | Dev/Test | Medio | HTML sanitizado | implemented Sprint 3 P3 |
+| GET | `/api/financial/tax-reporting/summary` | read | Dev/Test | Medio | Totales agregados | implemented Sprint 3 P3 |
+| GET | `/api/financial/tax-reporting/documents` | read | Dev/Test | Medio | Datos enmascarados | implemented Sprint 3 P3 |
+| GET | `/api/financial/tax-reporting/tax-totals` | read | Dev/Test | Medio | Totales impuestos | implemented Sprint 3 P3 |
+| GET | `/api/financial/tax-reporting/withholding-totals` | read | Dev/Test | Medio | Totales retenciones | implemented Sprint 3 P3 |
 | GET | `/{id}/ride-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
 | GET | `/{id}/storage-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
 | GET | `/{id}/integration-status` | read | Dev/Test | Bajo | Sanitizado | implemented |

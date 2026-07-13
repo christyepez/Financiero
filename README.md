@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 3 P2 SRI Catalogs / Tax Rules Hardening implementado sobre Sprint 3 P1. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development, foundation de Nota de Crédito, Nota de Débito y Retenciones, catálogos internos foundation y reglas tributarias básicas quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 3 P3 RIDE / Tax Reporting Foundation implementado sobre Sprint 3 P2. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development por tipo documental, foundation de Nota de Crédito, Nota de Débito y Retenciones, catálogos internos foundation, reglas tributarias básicas y reporting tributario foundation quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -85,4 +85,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 3 P3. Persistir/versionar catálogos revisados o activar XAdES/SRI Test controlado solo si la custodia segura y aprobación manual existen fuera del repositorio.
+Próximo paso recomendado: Sprint 3 P4/Sprint 4. Definir RIDE legal final, ATS oficial y adapter productivo Portal Content/File solo cuando exista contrato estable y aprobación manual fuera del repositorio.

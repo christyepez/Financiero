@@ -67,6 +67,11 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-credit-note-xml")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-debit-note-xml")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-withholding-xml")]
+    [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-preview")]
+    [InlineData("GET", "/api/financial/tax-reporting/summary")]
+    [InlineData("GET", "/api/financial/tax-reporting/documents")]
+    [InlineData("GET", "/api/financial/tax-reporting/tax-totals")]
+    [InlineData("GET", "/api/financial/tax-reporting/withholding-totals")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
     {
         var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -100,6 +105,11 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/electronic-documents/sri/readiness", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/integration-status", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-preview", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/summary", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/documents", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/tax-totals", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/withholding-totals", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
     {
         using var request = new HttpRequestMessage(new HttpMethod(method), url);
