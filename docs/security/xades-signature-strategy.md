@@ -49,6 +49,10 @@ Se agrega `XadesElectronicSignatureService` y providers placeholder:
 
 `SecretStoreCertificateProvider` usa `SecretReference` contra `ISecretStoreClient`. P4 no firma con certificado real: si el secreto se resuelve, el provider conserva el contrato y falla con `sri.certificate.xades.not_enabled` hasta implementar firma XAdES real.
 
+## Sprint 2 P5
+
+La ruta esperada queda documentada como Secret Store -> Certificate Provider -> XAdES Service. No se cargan archivos locales ni certificados reales. `certificatePasswordSecretName` es una referencia, no un valor plano.
+
 - Certificado válido en secret store.
 - Password en secret store.
 - Adapter XAdES probado.

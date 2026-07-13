@@ -72,6 +72,13 @@ $readiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electron
 if ($readiness.data.status -ne "Healthy") {
     throw "Unexpected SRI readiness status: $($readiness.data.status)"
 }
+$probe = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/sri/connectivity-probe" -Headers $headers
+if (-not $probe.data.status) {
+    throw "SRI connectivity probe endpoint failed."
+}
+if (($probe | ConvertTo-Json -Depth 10) -match "<factura|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") {
+    throw "SRI connectivity probe exposed sensitive payload."
+}
 
 $integrationStatus = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/integration-status" -Headers $headers
 if ($integrationStatus.data.accessKey -eq $accessKey) {

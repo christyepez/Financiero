@@ -44,6 +44,10 @@ Se agregan `SriSoapReceptionClient` y `SriSoapAuthorizationClient` como foundati
 
 SRI Test soporta `financial.sri.test.dryRun=true`: valida URLs/configuración y devuelve respuestas normalizadas sin enviar XML. Production sigue bloqueado si `financial.sri.allowProduction=false`.
 
+## Sprint 2 P5
+
+Se agrega `SriManualTestConnectivityService` y endpoint de probe manual. `allowDocumentSend=false` bloquea envío real; `allowConnectivityProbe=false` exige aprobación explícita. El resultado usa URLs enmascaradas.
+
 - Confirmar URLs oficiales vigentes.
 - Validar certificados TLS.
 - Probar con ambiente Test.

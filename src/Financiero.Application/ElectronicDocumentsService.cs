@@ -85,9 +85,15 @@ public sealed record SecretStoreResult(bool Success, SecretValue? Value, SecretM
 {
     public override string ToString() => $"SecretStoreResult(Success={Success}, Metadata={Metadata}, ErrorCode={ErrorCode}, ErrorMessage={SecretMaskingHelper.Mask(ErrorMessage)})";
 }
+public sealed record AzureKeyVaultSecretStoreOptions(string? KeyVaultName, bool UseDefaultAzureCredential, bool RequireManagedIdentity, bool FailFastOnStartup);
+public sealed record SecretStoreReadinessResult(string Status, string Provider, IReadOnlyCollection<string> Checks, IReadOnlyCollection<string> Issues);
 public enum SriResponseStatus { Received, Returned, Processing, Authorized, Rejected, NotFound, Error }
+public enum SriConnectivityMode { Mock, TestDryRun, TestConnectivityProbe, TestSendDisabled, ProductionBlocked, ManualRequired }
 public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool AllowProduction = false, bool LogPayloads = false, bool DryRun = true, bool MaskPayloads = true);
 public sealed record SriSoapOptions(string Mode, bool AllowProduction, bool DryRun, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool LogPayloads, bool MaskPayloads);
+public sealed record SriConnectivityProbeResult(SriConnectivityMode Mode, string Status, string SanitizedMessage, string? ReceptionEndpointMasked, string? AuthorizationEndpointMasked, bool DocumentSendAllowed);
+public sealed record SriObservabilityEvent(string CorrelationId, string TenantId, Guid? DocumentId, string? DocumentType, string Status, string Provider, string Mode, long DurationMs, int AttemptNumber, string? AccessKeyMasked, string? Hash, string? ErrorCode, string? SanitizedMessage);
+public sealed record IntegrationAttemptTelemetry(string CorrelationId, string Provider, string Mode, long DurationMs, int AttemptNumber, string Status, string? SanitizedMessage);
 public sealed record SriMessage(string Code, string Message, string? Type = null);
 public sealed record SriReceptionRequest(string AccessKey, string SignedXml, SriClientContext Context);
 public sealed record SriReceptionResponse(SriResponseStatus Status, string Code, string Message, IReadOnlyCollection<SriMessage> Messages);
@@ -96,7 +102,7 @@ public sealed record SriAuthorizationResponse(SriResponseStatus Status, string C
 public sealed record XmlValidationResult(bool IsValid, IReadOnlyCollection<string> Errors, IReadOnlyCollection<string> Warnings);
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
 public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true);
-public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata);
+public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata, bool IncludePayload, string? PayloadBase64);
 public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
 public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
 public sealed record InvoiceRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string AccessKey, DateOnly IssueDate, string CustomerName, string CustomerIdentification, IReadOnlyCollection<ElectronicDocumentLineDto> Lines, decimal Subtotal, decimal Taxes, decimal Total, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status);
@@ -252,13 +258,24 @@ public sealed class DevelopmentSecretStoreClient(string environmentName = "Devel
     }
 }
 
-public sealed class AzureKeyVaultSecretStoreClientPlaceholder(string? keyVaultName) : ISecretStoreClient
+public sealed class AzureKeyVaultSecretStoreClientPlaceholder(AzureKeyVaultSecretStoreOptions options) : ISecretStoreClient
 {
     public Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(keyVaultName))
-            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.azure_keyvault.missing_configuration", "Key Vault name is required. No secret value was read."));
-        return Task.FromResult(new SecretStoreResult(false, null, new(reference.Name, "AzureKeyVault", null), "secret_store.azure_keyvault.placeholder", "Azure Key Vault adapter is a secure placeholder until SDK credentials are configured."));
+        var readiness = CheckReadiness(options, reference);
+        if (readiness.Status == "Unhealthy")
+            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.azure_keyvault.missing_configuration", string.Join("; ", readiness.Issues)));
+        return Task.FromResult(new SecretStoreResult(false, null, new(SecretMaskingHelper.Mask(reference.Name) ?? "secret", "AzureKeyVault", null), "secret_store.azure_keyvault.placeholder", "Azure Key Vault wiring is ready, but SDK credential execution is disabled until explicit operational validation."));
+    }
+
+    public static SecretStoreReadinessResult CheckReadiness(AzureKeyVaultSecretStoreOptions options, SecretReference? reference = null)
+    {
+        var checks = new List<string> { "provider=AzureKeyVault", $"useDefaultAzureCredential={options.UseDefaultAzureCredential}", $"requireManagedIdentity={options.RequireManagedIdentity}", $"failFastOnStartup={options.FailFastOnStartup}" };
+        var issues = new List<string>();
+        if (string.IsNullOrWhiteSpace(options.KeyVaultName)) issues.Add("Key Vault name is required.");
+        if (reference is not null && string.IsNullOrWhiteSpace(reference.Name)) issues.Add("Secret reference name is required.");
+        if (options.RequireManagedIdentity && !options.UseDefaultAzureCredential) issues.Add("Managed identity requires DefaultAzureCredential or an external credential chain.");
+        return new(issues.Count == 0 ? "Degraded" : "Unhealthy", "AzureKeyVault", checks, issues);
     }
 }
 
@@ -281,12 +298,15 @@ public sealed class ConfiguredSecretStoreClient(IFinancialConfigurationReader co
         var providerText = await configuration.GetStringAsync("financial.secrets.provider", "Disabled", context, ct);
         var environment = await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct);
         var keyVault = await configuration.GetStringAsync("financial.secrets.keyVaultName", reference.VaultName ?? "", context, ct);
+        var useDefaultAzureCredential = await configuration.GetBoolAsync("financial.secrets.useDefaultAzureCredential", false, context, ct);
+        var requireManagedIdentity = await configuration.GetBoolAsync("financial.secrets.requireManagedIdentity", false, context, ct);
+        var failFastOnStartup = await configuration.GetBoolAsync("financial.secrets.failFastOnStartup", false, context, ct);
         var allowDev = await configuration.GetBoolAsync("financial.secrets.allowDevelopmentSecrets", false, context, ct);
         var provider = Enum.TryParse<SecretStoreProviderType>(providerText, true, out var parsed) ? parsed : SecretStoreProviderType.Disabled;
         ISecretStoreClient client = provider switch
         {
             SecretStoreProviderType.Development => new DevelopmentSecretStoreClient(environment, allowDev),
-            SecretStoreProviderType.AzureKeyVault => new AzureKeyVaultSecretStoreClientPlaceholder(keyVault),
+            SecretStoreProviderType.AzureKeyVault => new AzureKeyVaultSecretStoreClientPlaceholder(new(keyVault, useDefaultAzureCredential, requireManagedIdentity, failFastOnStartup)),
             SecretStoreProviderType.External => new ExternalSecretStoreClientPlaceholder(),
             _ => new DisabledSecretStoreClient()
         };
@@ -514,8 +534,12 @@ public sealed class PortalContentFileStorageClient(PortalContentFileOptions opti
                 ["documentId"] = document.Id.ToString(),
                 ["documentType"] = document.DocumentType.ToString(),
                 ["status"] = document.Status.ToString(),
-                ["accessKeyMasked"] = SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey) ?? ""
-            });
+                ["accessKeyMasked"] = SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey) ?? "",
+                ["hash"] = hash,
+                ["purpose"] = purpose
+            },
+            options.SendPayloads,
+            options.SendPayloads ? Convert.ToBase64String(content) : null);
     }
 
     public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context);
@@ -590,6 +614,11 @@ public static class SriSensitiveDataSanitizer
 {
     public static string? MaskAccessKey(string? accessKey) => MaskDigits(accessKey, 4);
     public static string? MaskCustomerIdentification(string? identification) => MaskDigits(identification, 4);
+    public static string? MaskUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return url;
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri) ? $"{uri.Scheme}://{uri.Host}/***" : SecretMaskingHelper.Mask(url);
+    }
     public static string MaskXmlPayload(string? xml) => string.IsNullOrWhiteSpace(xml) ? "" : $"<xml redacted=\"true\" sha256=\"{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(xml)))[..16]}\" />";
     public static string SanitizeMessage(string? message)
     {
@@ -604,6 +633,49 @@ public static class SriSensitiveDataSanitizer
         var trimmed = value.Trim();
         if (trimmed.Length <= visible) return "****";
         return new string('*', Math.Max(0, trimmed.Length - visible)) + trimmed[^visible..];
+    }
+}
+
+public static class SriIntegrationLogSanitizer
+{
+    public static SriObservabilityEvent Sanitize(SriObservabilityEvent value) =>
+        value with
+        {
+            AccessKeyMasked = SriSensitiveDataSanitizer.MaskAccessKey(value.AccessKeyMasked),
+            SanitizedMessage = SriSensitiveDataSanitizer.SanitizeMessage(value.SanitizedMessage)
+        };
+
+    public static IntegrationAttemptTelemetry Sanitize(IntegrationAttemptTelemetry value) =>
+        value with { SanitizedMessage = SriSensitiveDataSanitizer.SanitizeMessage(value.SanitizedMessage) };
+}
+
+public sealed record FinancialCorrelationContext(string TenantId, string CorrelationId);
+
+public sealed class SriManualTestConnectivityService(IFinancialConfigurationReader configuration)
+{
+    public async Task<SriConnectivityProbeResult> CheckAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var mode = await configuration.GetStringAsync("financial.sri.integration.mode", "Development", context, ct);
+        var allowProduction = await configuration.GetBoolAsync("financial.sri.allowProduction", false, context, ct);
+        var dryRun = await configuration.GetBoolAsync("financial.sri.test.dryRun", true, context, ct);
+        var allowProbe = await configuration.GetBoolAsync("financial.sri.test.allowConnectivityProbe", false, context, ct);
+        var allowDocumentSend = await configuration.GetBoolAsync("financial.sri.test.allowDocumentSend", false, context, ct);
+        var receptionUrl = await configuration.GetStringAsync("financial.sri.receptionUrl", "", context, ct);
+        var authorizationUrl = await configuration.GetStringAsync("financial.sri.authorizationUrl", "", context, ct);
+
+        if (string.Equals(mode, "Production", StringComparison.OrdinalIgnoreCase) && !allowProduction)
+            return new(SriConnectivityMode.ProductionBlocked, "Blocked", "SRI Production connectivity is blocked.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), false);
+        if (!string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase))
+            return new(SriConnectivityMode.Mock, "Healthy", "Mock/Development mode does not require SRI Test connectivity.", null, null, false);
+        if (string.IsNullOrWhiteSpace(receptionUrl) || string.IsNullOrWhiteSpace(authorizationUrl))
+            return new(SriConnectivityMode.ManualRequired, "Degraded", "SRI Test URLs must be configured before manual validation.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), false);
+        if (dryRun)
+            return new(SriConnectivityMode.TestDryRun, "Degraded", "SRI Test dry-run is active; no document is sent.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), false);
+        if (!allowProbe)
+            return new(SriConnectivityMode.ManualRequired, "Degraded", "Connectivity probe requires explicit approval.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), false);
+        return allowDocumentSend
+            ? new(SriConnectivityMode.TestConnectivityProbe, "Degraded", "Connectivity probe is enabled; document send remains a manual operation.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), true)
+            : new(SriConnectivityMode.TestSendDisabled, "Degraded", "Connectivity probe may run, but document send is disabled.", SriSensitiveDataSanitizer.MaskUrl(receptionUrl), SriSensitiveDataSanitizer.MaskUrl(authorizationUrl), false);
     }
 }
 
@@ -624,6 +696,16 @@ public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader
         var storageProvider = await configuration.GetStringAsync("financial.sri.storage.provider", "Development", context, ct);
         var receptionUrl = await configuration.GetStringAsync("financial.sri.receptionUrl", "", context, ct);
         var authorizationUrl = await configuration.GetStringAsync("financial.sri.authorizationUrl", "", context, ct);
+        var useDefaultAzureCredential = await configuration.GetBoolAsync("financial.secrets.useDefaultAzureCredential", false, context, ct);
+        var requireManagedIdentity = await configuration.GetBoolAsync("financial.secrets.requireManagedIdentity", false, context, ct);
+        var failFastOnStartup = await configuration.GetBoolAsync("financial.secrets.failFastOnStartup", false, context, ct);
+        var keyVaultName = await configuration.GetStringAsync("financial.secrets.keyVaultName", "", context, ct);
+        var dryRun = await configuration.GetBoolAsync("financial.sri.test.dryRun", true, context, ct);
+        var allowProbe = await configuration.GetBoolAsync("financial.sri.test.allowConnectivityProbe", false, context, ct);
+        var allowDocumentSend = await configuration.GetBoolAsync("financial.sri.test.allowDocumentSend", false, context, ct);
+        var manualRequired = await configuration.GetBoolAsync("financial.sri.test.manualValidationRequired", true, context, ct);
+        var logPayloads = await configuration.GetBoolAsync("financial.sri.logPayloads", false, context, ct);
+        var maskPayloads = await configuration.GetBoolAsync("financial.sri.maskPayloads", true, context, ct);
         var localCertificatePath = await configuration.GetStringAsync("financial.sri.signature.localCertificatePath", "", context, ct);
 
         checks.Add($"mode={mode}");
@@ -631,13 +713,26 @@ public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader
         checks.Add($"signature={signatureProvider}");
         checks.Add($"storage={storageProvider}");
         checks.Add($"sriEnvironment={sriEnvironment}");
+        checks.Add($"dryRun={dryRun}");
+        checks.Add($"manualValidationRequired={manualRequired}");
+        checks.Add($"connectivityProbe={allowProbe}");
+        checks.Add($"documentSend={allowDocumentSend}");
 
         if (string.Equals(sriEnvironment, "Production", StringComparison.OrdinalIgnoreCase) && !allowProduction) issues.Add("SRI Production is blocked because allowProduction=false.");
         if (string.Equals(mode, "Production", StringComparison.OrdinalIgnoreCase) && !allowProduction) issues.Add("Integration mode Production is blocked.");
         if (string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) && (string.IsNullOrWhiteSpace(receptionUrl) || string.IsNullOrWhiteSpace(authorizationUrl))) issues.Add("SRI Test mode requires receptionUrl and authorizationUrl.");
+        if (string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) && manualRequired) issues.Add("SRI Test manual validation is required before enabling real send.");
         if (string.Equals(storageProvider, "PortalContentFile", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(await configuration.GetStringAsync("financial.sri.storage.portalBaseUrl", "", context, ct))) issues.Add("PortalContentFile storage requires portalBaseUrl.");
         if (string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(localCertificatePath)) issues.Add("Local certificate path is not allowed in Production.");
         if (string.Equals(secretProvider, "Development", StringComparison.OrdinalIgnoreCase) && string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase)) issues.Add("Development secret store is not allowed in Production.");
+        if (string.Equals(secretProvider, "AzureKeyVault", StringComparison.OrdinalIgnoreCase))
+        {
+            var secretReadiness = AzureKeyVaultSecretStoreClientPlaceholder.CheckReadiness(new(keyVaultName, useDefaultAzureCredential, requireManagedIdentity, failFastOnStartup));
+            checks.AddRange(secretReadiness.Checks.Select(x => $"secret.{x}"));
+            issues.AddRange(secretReadiness.Issues.Select(x => $"SecretStore: {x}"));
+        }
+        if (logPayloads && !maskPayloads) issues.Add("Payload logging without masking is not allowed.");
+        if (string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase) && logPayloads) issues.Add("Payload logging is not allowed in Production.");
 
         var status = issues.Count == 0 ? "Healthy" : string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) ? "Degraded" : "Unhealthy";
         return new(status, checks, issues);
@@ -942,7 +1037,8 @@ public static class SriPortalMetadata
     ];
     public static readonly string[] ConfigurationKeys =
     [
-        "financial.secrets.provider", "financial.secrets.keyVaultName", "financial.secrets.allowDevelopmentSecrets", "financial.secrets.maskSecretsInLogs",
+        "financial.secrets.provider", "financial.secrets.keyVaultName", "financial.secrets.useDefaultAzureCredential", "financial.secrets.requireManagedIdentity",
+        "financial.secrets.allowDevelopmentSecrets", "financial.secrets.maskSecretsInLogs", "financial.secrets.failFastOnStartup",
         "financial.sri.issuer.ruc", "financial.sri.issuer.legalName", "financial.sri.issuer.tradeName", "financial.sri.issuer.address",
         "financial.sri.issuer.specialTaxpayerNumber", "financial.sri.issuer.accountingRequired", "financial.sri.environment",
         "financial.sri.integration.mode", "financial.sri.emissionType", "financial.sri.defaultEstablishmentCode",
@@ -951,7 +1047,10 @@ public static class SriPortalMetadata
         "financial.sri.signature.keyVaultName", "financial.sri.signature.certificateSource", "financial.sri.signature.timestampPolicy",
         "financial.sri.signature.requireOcsp", "financial.sri.signature.localCertificatePath", "financial.sri.signature.localCertificatePasswordSecretName",
         "financial.sri.signature.requireTrustedCertificate", "financial.sri.receptionUrl", "financial.sri.authorizationUrl",
-        "financial.sri.allowProduction", "financial.sri.logPayloads", "financial.sri.maskPayloads", "financial.sri.test.dryRun", "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
+        "financial.sri.allowProduction", "financial.sri.logPayloads", "financial.sri.maskPayloads", "financial.sri.test.dryRun",
+        "financial.sri.test.allowConnectivityProbe", "financial.sri.test.allowDocumentSend", "financial.sri.test.manualValidationRequired",
+        "financial.sri.test.useSyntheticDocumentOnly", "financial.sri.test.syntheticIssuerRuc", "financial.sri.test.syntheticCustomerIdentification",
+        "financial.sri.test.maxManualAttempts", "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
         "financial.sri.xml.version.invoice", "financial.sri.xml.includeOptionalFields", "financial.sri.xml.validation.mode",
         "financial.sri.xml.validation.failOnWarning", "financial.sri.storage.provider", "financial.sri.storage.portalBaseUrl",
         "financial.sri.storage.container", "financial.sri.storage.timeoutSeconds", "financial.sri.storage.sendPayloads", "financial.sri.storage.maskPayloads", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"

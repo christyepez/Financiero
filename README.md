@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 2 P4 Secure Secret Store / SRI Test / Portal Content-File Readiness implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run, Secret Store, sanitización, storage placeholder delegado a Portal Content/File y RIDE/PDF Development están preparados.
+Estado: Sprint 2 P5 Real Secret Store Wiring / SRI Test Manual Connectivity / Observability Hardening implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File y RIDE/PDF Development están preparados.
 
 Documentos principales:
 
@@ -70,4 +70,4 @@ APIs principales:
 - `/api/financial/electronic-documents`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 2 P5 — activar SRI Test real con endpoints verificados y provider de secretos real.
+Próximo paso recomendado: Sprint 2 P6 — ejecutar validación SRI Test controlada con credenciales no productivas fuera del repositorio.

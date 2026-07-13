@@ -46,6 +46,8 @@ P3 agrega foundation para XAdES, SOAP Test, Portal Content/File y RIDE. Todos lo
 
 P4 agrega Secret Store, sanitización y readiness SRI. Los adapters productivos siguen bloqueados por gates explícitos.
 
+P5 fortalece Key Vault wiring, probe manual SRI Test y observabilidad sanitizada. Production y envío real permanecen bloqueados.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

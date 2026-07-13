@@ -40,3 +40,7 @@ Se agrega `PortalContentFileStorageClient` como contrato hacia Portal Content/Fi
 ## Sprint 2 P4
 
 El contrato incluye metadata: purpose, content type, hash, container, tenant y correlationId. `financial.sri.storage.sendPayloads=false` mantiene el adapter en modo readiness hasta confirmar el API real de Portal Content/File.
+
+## Sprint 2 P5
+
+`PortalContentFileRequest` estabiliza `IncludePayload` y `PayloadBase64`. Con `sendPayloads=false`, no se incluyen bytes/XML/PDF en el contrato.

@@ -43,6 +43,8 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => service.GetByAccessKeyAsync(accessKey, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/sri/readiness", async (SriIntegrationReadinessService readiness, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => readiness.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
+        group.MapGet("/sri/connectivity-probe", async (SriManualTestConnectivityService connectivity, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => connectivity.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
 
         return app;
     }
