@@ -80,6 +80,74 @@ if (($probe | ConvertTo-Json -Depth 10) -match "<factura|claveAcceso>|PRIVATE KE
     throw "SRI connectivity probe exposed sensitive payload."
 }
 
+$creditNote = PostJson "$BaseUrl/api/financial/electronic-documents/credit-notes" @{
+    issueDate = "2026-01-16"
+    customerIdentificationType = "04"
+    customerIdentification = "0999999999001"
+    customerName = "Cliente Smoke NC $suffix"
+    relatedDocumentTypeCode = "01"
+    relatedDocumentNumber = "001-001-000000001"
+    relatedDocumentIssueDate = "2026-01-15"
+    reason = "Devolución smoke"
+    currency = "USD"
+    establishmentCode = "001"
+    emissionPointCode = "001"
+}
+$creditNoteId = $creditNote.data.id
+PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/credit-note-lines" @{
+    productCode = "NC-$suffix"
+    description = "Nota de crédito smoke"
+    quantity = 1
+    unitPrice = 1
+    discount = 0
+} | Out-Null
+$creditGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/generate-credit-note-xml" @{}
+if ($creditGenerated.data.accessKey.Substring(8, 2) -ne "04") { throw "Credit note access key codDoc is invalid." }
+
+$debitNote = PostJson "$BaseUrl/api/financial/electronic-documents/debit-notes" @{
+    issueDate = "2026-01-16"
+    customerIdentificationType = "04"
+    customerIdentification = "0999999999001"
+    customerName = "Cliente Smoke ND $suffix"
+    relatedDocumentTypeCode = "01"
+    relatedDocumentNumber = "001-001-000000001"
+    relatedDocumentIssueDate = "2026-01-15"
+    currency = "USD"
+    establishmentCode = "001"
+    emissionPointCode = "001"
+}
+$debitNoteId = $debitNote.data.id
+PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/debit-note-reasons" @{ reason = "Interés smoke"; amount = 1.25 } | Out-Null
+$debitGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/generate-debit-note-xml" @{}
+if ($debitGenerated.data.accessKey.Substring(8, 2) -ne "05") { throw "Debit note access key codDoc is invalid." }
+
+$withholding = PostJson "$BaseUrl/api/financial/electronic-documents/withholdings" @{
+    issueDate = "2026-01-16"
+    subjectIdentificationType = "04"
+    subjectIdentification = "0999999999001"
+    subjectName = "Proveedor Smoke $suffix"
+    fiscalPeriod = "01/2026"
+    supportDocumentTypeCode = "01"
+    supportDocumentNumber = "001-001-000000001"
+    supportDocumentIssueDate = "2026-01-15"
+    currency = "USD"
+    establishmentCode = "001"
+    emissionPointCode = "001"
+}
+$withholdingId = $withholding.data.id
+PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/withholding-taxes" @{
+    taxCode = "1"
+    withholdingCode = "312"
+    taxBase = 100
+    withholdingPercentage = 1.75
+    withheldAmount = 1.75
+    supportDocumentNumber = "001-001-000000001"
+    supportDocumentIssueDate = "2026-01-15"
+    fiscalPeriod = "01/2026"
+} | Out-Null
+$withholdingGenerated = PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/generate-withholding-xml" @{}
+if ($withholdingGenerated.data.accessKey.Substring(8, 2) -ne "07") { throw "Withholding access key codDoc is invalid." }
+
 $integrationStatus = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/integration-status" -Headers $headers
 if ($integrationStatus.data.accessKey -eq $accessKey) {
     throw "Integration status exposed full access key."
@@ -88,4 +156,4 @@ if ($integrationStatus.data.customerIdentification -eq $invoice.customerIdentifi
     throw "Integration status exposed full customer identification."
 }
 
-Write-Host "Financial SRI smoke OK. Id=$id AccessKey=$accessKey Status=$($authorized.data.status)"
+Write-Host "Financial SRI smoke OK. Invoice=$id NC=$creditNoteId ND=$debitNoteId RET=$withholdingId AccessKey=$accessKey Status=$($authorized.data.status)"

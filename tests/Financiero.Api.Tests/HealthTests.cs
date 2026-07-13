@@ -61,6 +61,12 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/readiness")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe")]
+    [InlineData("POST", "/api/financial/electronic-documents/credit-notes")]
+    [InlineData("POST", "/api/financial/electronic-documents/debit-notes")]
+    [InlineData("POST", "/api/financial/electronic-documents/withholdings")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-credit-note-xml")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-debit-note-xml")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-withholding-xml")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
     {
         var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -84,7 +90,13 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/journal-entries/00000000-0000-0000-0000-000000000001/post", "financial.journalentries.post")]
     [InlineData("GET", "/api/financial/electronic-documents", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/electronic-documents/invoices", "financial.electronicdocuments.create")]
+    [InlineData("POST", "/api/financial/electronic-documents/credit-notes", "financial.electronicdocuments.create")]
+    [InlineData("POST", "/api/financial/electronic-documents/debit-notes", "financial.electronicdocuments.create")]
+    [InlineData("POST", "/api/financial/electronic-documents/withholdings", "financial.electronicdocuments.create")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride", "financial.electronicdocuments.generate")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-credit-note-xml", "financial.electronicdocuments.generate")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-debit-note-xml", "financial.electronicdocuments.generate")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-withholding-xml", "financial.electronicdocuments.generate")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/readiness", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/integration-status", "financial.electronicdocuments.read")]
@@ -103,5 +115,27 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
         request.Headers.Add("X-Dev-Permissions", "financial.*");
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+}
+
+public sealed class MigrationInventoryTests
+{
+    [Fact]
+    public void Migration_011_tax_documents_foundation_is_idempotent()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..",
+            "database",
+            "migrations",
+            "financial",
+            "011_tax_documents_foundation.sql"));
+
+        var sql = File.ReadAllText(path);
+
+        Assert.Contains("IF OBJECT_ID('financial.electronic_document_references'", sql);
+        Assert.Contains("IF OBJECT_ID('financial.electronic_document_debit_note_reasons'", sql);
+        Assert.Contains("IF OBJECT_ID('financial.electronic_document_withholding_taxes'", sql);
+        Assert.Contains("IF NOT EXISTS", sql);
     }
 }

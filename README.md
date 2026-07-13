@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 2 P6 SRI Readiness Closure implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File y RIDE/PDF Development quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 3 P1 Tax Documents Foundation implementado sobre Sprint 2 SRI Readiness. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development y foundation de Nota de Crédito, Nota de Débito y Retenciones quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -46,8 +46,10 @@ Documentos principales:
 - `docs/api/financial-sri-api-index.md`
 - `docs/qa/financial-sprint-02-qa-evidence.md`
 - `docs/coordination/financial-sprint-03-backlog-readiness.md`
+- `docs/coordination/financial-sprint-03-p1-tax-documents-foundation.md`
+- `docs/architecture/decisions/adr-006-tax-documents-foundation.md`
 
-No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF, firma XAdES productiva ni envío real a SRI.
+No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF final, firma XAdES productiva ni envío real a SRI.
 
 Ejecución y variables: `docs/coordination/financial-local-development.md`.
 
@@ -76,6 +78,9 @@ APIs principales:
 - `/api/financial/fiscal-periods`
 - `/api/financial/journal-entries`
 - `/api/financial/electronic-documents`
+- `/api/financial/electronic-documents/credit-notes`
+- `/api/financial/electronic-documents/debit-notes`
+- `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: decidir Sprint 3. Usar la opción A (NC/ND/Retenciones foundation) si aún no hay credenciales/certificado SRI no productivos; usar la opción B (Key Vault + XAdES/SRI Test controlado) solo si la custodia segura y aprobación manual ya existen fuera del repositorio.
+Próximo paso recomendado: Sprint 3 P2. Endurecer catálogos/reglas tributarias de NC/ND/retenciones o activar XAdES/SRI Test controlado solo si la custodia segura y aprobación manual existen fuera del repositorio.

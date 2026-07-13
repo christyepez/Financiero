@@ -41,3 +41,7 @@
 - Incident response: revocar secreto, rotar certificado, invalidar tokens, revisar Audit/Outbox.
 - Rollback: volver a Development/Mock, dry-run true y send false.
 - Producción futura: requiere aprobación de Security, DevOps, QA y owner funcional.
+
+## Sprint 3 P1
+
+NC, ND y retenciones foundation no agregan nuevos secretos ni certificados. Los datos de smoke y tests deben seguir siendo sintéticos. La firma real, la carga de certificados y el envío SRI Test/Production continúan sujetos a aprobación manual y custodia fuera del repositorio.

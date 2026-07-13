@@ -23,6 +23,9 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
     public DbSet<ElectronicDocument> ElectronicDocuments => Set<ElectronicDocument>();
     public DbSet<ElectronicDocumentLine> ElectronicDocumentLines => Set<ElectronicDocumentLine>();
     public DbSet<ElectronicDocumentTax> ElectronicDocumentTaxes => Set<ElectronicDocumentTax>();
+    public DbSet<ElectronicDocumentReference> ElectronicDocumentReferences => Set<ElectronicDocumentReference>();
+    public DbSet<ElectronicDocumentDebitNoteReason> ElectronicDocumentDebitNoteReasons => Set<ElectronicDocumentDebitNoteReason>();
+    public DbSet<ElectronicDocumentWithholdingTax> ElectronicDocumentWithholdingTaxes => Set<ElectronicDocumentWithholdingTax>();
     public DbSet<SriDocumentSequence> SriDocumentSequences => Set<SriDocumentSequence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -136,8 +139,14 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.Status, x.IssueDate });
             entity.Navigation(x => x.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.Navigation(x => x.Taxes).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.References).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.DebitNoteReasons).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.WithholdingTaxes).UsePropertyAccessMode(PropertyAccessMode.Field);
             entity.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(x => x.Taxes).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.References).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.DebitNoteReasons).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.WithholdingTaxes).WithOne().HasForeignKey(x => x.ElectronicDocumentId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<ElectronicDocumentLine>(entity =>
         {
@@ -164,6 +173,41 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.Property(x => x.TaxBase).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
             entity.Property(x => x.TaxAmount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
             entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId });
+        });
+        modelBuilder.Entity<ElectronicDocumentReference>(entity =>
+        {
+            entity.ToTable("electronic_document_references");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DocumentTypeCode).HasMaxLength(2).IsRequired();
+            entity.Property(x => x.Number).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReasonOrPeriod).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId });
+            entity.HasIndex(x => new { x.TenantId, x.Number });
+        });
+        modelBuilder.Entity<ElectronicDocumentDebitNoteReason>(entity =>
+        {
+            entity.ToTable("electronic_document_debit_note_reasons");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Amount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId });
+        });
+        modelBuilder.Entity<ElectronicDocumentWithholdingTax>(entity =>
+        {
+            entity.ToTable("electronic_document_withholding_taxes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TenantId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TaxCode).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.WithholdingCode).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.TaxBase).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.WithholdingPercentage).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.WithheldAmount).HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.SupportDocumentNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FiscalPeriod).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.ElectronicDocumentId });
+            entity.HasIndex(x => new { x.TenantId, x.FiscalPeriod });
         });
         modelBuilder.Entity<SriDocumentSequence>(entity =>
         {
@@ -353,12 +397,12 @@ public sealed class EfElectronicDocumentRepository(FinancialDbContext db) : IEle
     public async Task AddAsync(ElectronicDocument document, CancellationToken ct) => await db.ElectronicDocuments.AddAsync(document, ct);
     public async Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => await db.ElectronicDocumentLines.AddAsync(line, ct);
     public async Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
-        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
+        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).Include(x => x.References).Include(x => x.DebitNoteReasons).Include(x => x.WithholdingTaxes).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
     public async Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) =>
-        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).FirstOrDefaultAsync(x => x.AccessKey == accessKey && x.TenantId == tenantId, ct);
+        await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).Include(x => x.References).Include(x => x.DebitNoteReasons).Include(x => x.WithholdingTaxes).FirstOrDefaultAsync(x => x.AccessKey == accessKey && x.TenantId == tenantId, ct);
     public async Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct)
     {
-        var query = db.ElectronicDocuments.Include(x => x.Lines).AsNoTracking().Where(x => x.TenantId == tenantId);
+        var query = db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.References).Include(x => x.DebitNoteReasons).Include(x => x.WithholdingTaxes).AsNoTracking().Where(x => x.TenantId == tenantId);
         if (status.HasValue) query = query.Where(x => x.Status == status);
         if (!string.IsNullOrWhiteSpace(accessKey)) query = query.Where(x => x.AccessKey == accessKey);
         var total = await query.LongCountAsync(ct);

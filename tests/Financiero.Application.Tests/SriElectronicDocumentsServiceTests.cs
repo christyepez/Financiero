@@ -46,6 +46,63 @@ public sealed class SriElectronicDocumentsServiceTests
     }
 
     [Fact]
+    public async Task Runs_credit_note_foundation_flow()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var audit = new RecordingAudit();
+        var outbox = new RecordingOutbox();
+        var service = NewService(repo, audit, outbox);
+
+        var draft = await service.CreateCreditNoteDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "01", "001-001-000000001", new DateOnly(2026, 1, 1), "Devolución"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU-NC", "Devolución", 1, 5, 0), Context, default);
+        var generated = await service.GenerateCreditNoteXmlAsync(draft.Id, Context, default);
+
+        Assert.Equal("CreditNote", generated.DocumentType);
+        Assert.Equal("04", generated.AccessKey![8..10]);
+        Assert.NotNull(generated.UnsignedXmlStorageId);
+        Assert.Contains("CreditNoteCreated", audit.Actions);
+        Assert.Contains("CreditNoteXmlGenerated", outbox.EventTypes);
+    }
+
+    [Fact]
+    public async Task Runs_debit_note_foundation_flow()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var audit = new RecordingAudit();
+        var outbox = new RecordingOutbox();
+        var service = NewService(repo, audit, outbox);
+
+        var draft = await service.CreateDebitNoteDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+        await service.AddDebitNoteReasonAsync(draft.Id, new("Interés", 2.50m), Context, default);
+        var generated = await service.GenerateDebitNoteXmlAsync(draft.Id, Context, default);
+
+        Assert.Equal("DebitNote", generated.DocumentType);
+        Assert.Equal("05", generated.AccessKey![8..10]);
+        Assert.Equal(2.50m, generated.TotalAmount);
+        Assert.Contains("DebitNoteReasonAdded", outbox.EventTypes);
+        Assert.Contains("DebitNoteXmlGenerated", outbox.EventTypes);
+    }
+
+    [Fact]
+    public async Task Runs_withholding_foundation_flow()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var audit = new RecordingAudit();
+        var outbox = new RecordingOutbox();
+        var service = NewService(repo, audit, outbox);
+
+        var draft = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Proveedor", "01/2026", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+        await service.AddWithholdingTaxAsync(draft.Id, new("1", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 1, 1), "01/2026"), Context, default);
+        var generated = await service.GenerateWithholdingXmlAsync(draft.Id, Context, default);
+
+        Assert.Equal("Withholding", generated.DocumentType);
+        Assert.Equal("07", generated.AccessKey![8..10]);
+        Assert.Equal(1.75m, generated.TotalAmount);
+        Assert.Contains("WithholdingTaxAdded", outbox.EventTypes);
+        Assert.Contains("WithholdingXmlGenerated", outbox.EventTypes);
+    }
+
+    [Fact]
     public async Task Rejected_sri_mock_marks_document_rejected()
     {
         var service = NewService(new InMemoryElectronicDocumentRepository(), new RecordingAudit(), new RecordingOutbox(), new StaticFinancialConfigurationReader(new Dictionary<string, string> { ["financial.sri.mock.authorizationStatus"] = "Rejected" }));
@@ -111,7 +168,7 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Contains(result.Errors, x => x.Contains("ambiente"));
         Assert.Contains(result.Errors, x => x.Contains("ruc"));
         Assert.Contains(result.Errors, x => x.Contains("codDoc"));
-        Assert.Contains(result.Errors, x => x.Contains("numeric"));
+        Assert.Contains(result.Errors, x => x.Contains("secuencial"));
     }
 
     [Fact]

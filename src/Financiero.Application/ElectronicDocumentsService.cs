@@ -9,9 +9,17 @@ using Financiero.Domain;
 namespace Financiero.Application;
 
 public sealed record CreateInvoiceRequest(DateOnly IssueDate, string CustomerIdentificationType, string CustomerIdentification, string CustomerName, string Currency = "USD", string? EstablishmentCode = null, string? EmissionPointCode = null);
+public sealed record CreateCreditNoteRequest(DateOnly IssueDate, string CustomerIdentificationType, string CustomerIdentification, string CustomerName, string RelatedDocumentTypeCode, string RelatedDocumentNumber, DateOnly RelatedDocumentIssueDate, string Reason, string Currency = "USD", string? EstablishmentCode = null, string? EmissionPointCode = null);
+public sealed record CreateDebitNoteRequest(DateOnly IssueDate, string CustomerIdentificationType, string CustomerIdentification, string CustomerName, string RelatedDocumentTypeCode, string RelatedDocumentNumber, DateOnly RelatedDocumentIssueDate, string Currency = "USD", string? EstablishmentCode = null, string? EmissionPointCode = null);
+public sealed record CreateWithholdingRequest(DateOnly IssueDate, string SubjectIdentificationType, string SubjectIdentification, string SubjectName, string FiscalPeriod, string SupportDocumentTypeCode, string SupportDocumentNumber, DateOnly SupportDocumentIssueDate, string Currency = "USD", string? EstablishmentCode = null, string? EmissionPointCode = null);
 public sealed record AddElectronicDocumentLineRequest(string ProductCode, string Description, decimal Quantity, decimal UnitPrice, decimal Discount = 0);
+public sealed record AddDebitNoteReasonRequest(string Reason, decimal Amount);
+public sealed record AddWithholdingTaxRequest(string TaxCode, string WithholdingCode, decimal TaxBase, decimal WithholdingPercentage, decimal WithheldAmount, string SupportDocumentNumber, DateOnly SupportDocumentIssueDate, string FiscalPeriod);
 public sealed record SearchElectronicDocumentsRequest(string? Status = null, string? AccessKey = null, int Page = 1, int PageSize = 20);
 public sealed record ElectronicDocumentLineDto(Guid Id, int LineNumber, string ProductCode, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Subtotal, decimal Total);
+public sealed record ElectronicDocumentReferenceDto(string DocumentTypeCode, string Number, DateOnly IssueDate, string ReasonOrPeriod);
+public sealed record ElectronicDocumentDebitNoteReasonDto(string Reason, decimal Amount);
+public sealed record ElectronicDocumentWithholdingTaxDto(string TaxCode, string WithholdingCode, decimal TaxBase, decimal WithholdingPercentage, decimal WithheldAmount, string SupportDocumentNumber, DateOnly SupportDocumentIssueDate, string FiscalPeriod);
 public sealed record ElectronicDocumentDto(
     Guid Id,
     string TenantId,
@@ -44,7 +52,10 @@ public sealed record ElectronicDocumentDto(
     string? SignatureDigest,
     string? LastSriStatus,
     string? LastSriMessage,
-    IReadOnlyCollection<ElectronicDocumentLineDto> Lines);
+    IReadOnlyCollection<ElectronicDocumentLineDto> Lines,
+    IReadOnlyCollection<ElectronicDocumentReferenceDto>? References = null,
+    IReadOnlyCollection<ElectronicDocumentDebitNoteReasonDto>? DebitNoteReasons = null,
+    IReadOnlyCollection<ElectronicDocumentWithholdingTaxDto>? WithholdingTaxes = null);
 
 public interface IElectronicDocumentRepository
 {
@@ -111,7 +122,11 @@ public sealed record RideMetadataDto(string? RidePdfStorageId, string? RidePdfHa
 
 public interface IElectronicDocumentXmlGenerator
 {
+    string GenerateXml(ElectronicDocument document, IssuerSriOptions issuer);
     string GenerateInvoiceXml(ElectronicDocument document, IssuerSriOptions issuer);
+    string GenerateCreditNoteXml(ElectronicDocument document, IssuerSriOptions issuer);
+    string GenerateDebitNoteXml(ElectronicDocument document, IssuerSriOptions issuer);
+    string GenerateWithholdingXml(ElectronicDocument document, IssuerSriOptions issuer);
 }
 
 public interface IElectronicSignatureService
@@ -141,7 +156,11 @@ public interface ISriAuthorizationClient
 
 public interface IElectronicDocumentXmlValidator
 {
+    XmlValidationResult ValidateXml(ElectronicDocumentType type, string xml);
     XmlValidationResult ValidateInvoiceXml(string xml);
+    XmlValidationResult ValidateCreditNoteXml(string xml);
+    XmlValidationResult ValidateDebitNoteXml(string xml);
+    XmlValidationResult ValidateWithholdingXml(string xml);
 }
 
 public interface IXsdSchemaValidator
@@ -164,22 +183,19 @@ public interface IRidePdfGenerator
 
 public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenerator
 {
+    public string GenerateXml(ElectronicDocument document, IssuerSriOptions issuer) => document.DocumentType switch
+    {
+        ElectronicDocumentType.Invoice => GenerateInvoiceXml(document, issuer),
+        ElectronicDocumentType.CreditNote => GenerateCreditNoteXml(document, issuer),
+        ElectronicDocumentType.DebitNote => GenerateDebitNoteXml(document, issuer),
+        ElectronicDocumentType.Withholding => GenerateWithholdingXml(document, issuer),
+        _ => throw new FinancialApplicationException("sri.xml.document_type.unsupported", "Unsupported SRI document type.")
+    };
+
     public string GenerateInvoiceXml(ElectronicDocument document, IssuerSriOptions issuer)
     {
-        if (document.DocumentType != ElectronicDocumentType.Invoice) throw new FinancialApplicationException("sri.xml.document_type.unsupported", "Only invoice XML is supported in P1.");
         if (document.AccessKey is null || document.Sequential is null) throw new FinancialApplicationException("sri.xml.access_key.required", "Access key and sequential are required.");
-        var infoTributaria = new XElement("infoTributaria",
-            new XElement("ambiente", ((int)document.Environment).ToString(CultureInfo.InvariantCulture)),
-            new XElement("tipoEmision", ((int)document.EmissionType).ToString(CultureInfo.InvariantCulture)),
-            new XElement("razonSocial", issuer.LegalName),
-            new XElement("nombreComercial", issuer.TradeName ?? issuer.LegalName),
-            new XElement("ruc", issuer.Ruc),
-            new XElement("claveAcceso", document.AccessKey),
-            new XElement("codDoc", SriDocumentCodes.ToCode(document.DocumentType)),
-            new XElement("estab", document.EstablishmentCode),
-            new XElement("ptoEmi", document.EmissionPointCode),
-            new XElement("secuencial", document.Sequential),
-            new XElement("dirMatriz", issuer.Address));
+        var infoTributaria = InfoTributaria(document, issuer);
 
         var detalles = new XElement("detalles", document.Lines.Select(line => new XElement("detalle",
             new XElement("codigoPrincipal", line.ProductCode),
@@ -211,6 +227,105 @@ public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenera
         return new XDocument(new XDeclaration("1.0", "UTF-8", null), invoice).ToString(SaveOptions.DisableFormatting);
     }
 
+    public string GenerateCreditNoteXml(ElectronicDocument document, IssuerSriOptions issuer)
+    {
+        if (document.AccessKey is null || document.Sequential is null) throw new FinancialApplicationException("sri.xml.access_key.required", "Access key and sequential are required.");
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.credit_note.reference.required", "Credit note related document is required.");
+        var detalles = new XElement("detalles", document.Lines.Select(line => new XElement("detalle",
+            new XElement("codigoInterno", line.ProductCode),
+            new XElement("descripcion", line.Description),
+            new XElement("cantidad", Format(line.Quantity)),
+            new XElement("precioUnitario", Format(line.UnitPrice)),
+            new XElement("descuento", Format(line.Discount)),
+            new XElement("precioTotalSinImpuesto", Format(line.Subtotal)))));
+        var infoNotaCredito = new XElement("infoNotaCredito",
+            new XElement("fechaEmision", document.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)),
+            new XElement("dirEstablecimiento", issuer.Address),
+            new XElement("tipoIdentificacionComprador", document.CustomerIdentificationType),
+            new XElement("razonSocialComprador", document.CustomerName),
+            new XElement("identificacionComprador", document.CustomerIdentification),
+            new XElement("codDocModificado", related.DocumentTypeCode),
+            new XElement("numDocModificado", related.Number),
+            new XElement("fechaEmisionDocSustento", related.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)),
+            new XElement("totalSinImpuestos", Format(document.SubtotalWithoutTaxes)),
+            new XElement("valorModificacion", Format(document.TotalAmount)),
+            new XElement("moneda", document.Currency),
+            new XElement("motivo", related.ReasonOrPeriod));
+        var xml = new XElement("notaCredito", new XAttribute("id", "comprobante"), new XAttribute("version", "1.0.0"), InfoTributaria(document, issuer), infoNotaCredito, detalles);
+        return new XDocument(new XDeclaration("1.0", "UTF-8", null), xml).ToString(SaveOptions.DisableFormatting);
+    }
+
+    public string GenerateDebitNoteXml(ElectronicDocument document, IssuerSriOptions issuer)
+    {
+        if (document.AccessKey is null || document.Sequential is null) throw new FinancialApplicationException("sri.xml.access_key.required", "Access key and sequential are required.");
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.debit_note.reference.required", "Debit note related document is required.");
+        var motivos = new XElement("motivos", document.DebitNoteReasons.Select(x => new XElement("motivo",
+            new XElement("razon", x.Reason),
+            new XElement("valor", Format(x.Amount)))));
+        var impuestos = new XElement("impuestos", document.Taxes.Select(x => new XElement("impuesto",
+            new XElement("codigo", x.TaxCode),
+            new XElement("codigoPorcentaje", x.TaxPercentageCode),
+            new XElement("tarifa", Format(x.TaxRate)),
+            new XElement("baseImponible", Format(x.TaxBase)),
+            new XElement("valor", Format(x.TaxAmount)))));
+        var infoNotaDebito = new XElement("infoNotaDebito",
+            new XElement("fechaEmision", document.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)),
+            new XElement("dirEstablecimiento", issuer.Address),
+            new XElement("tipoIdentificacionComprador", document.CustomerIdentificationType),
+            new XElement("razonSocialComprador", document.CustomerName),
+            new XElement("identificacionComprador", document.CustomerIdentification),
+            new XElement("codDocModificado", related.DocumentTypeCode),
+            new XElement("numDocModificado", related.Number),
+            new XElement("fechaEmisionDocSustento", related.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)),
+            new XElement("totalSinImpuestos", Format(document.SubtotalWithoutTaxes)),
+            new XElement("valorTotal", Format(document.TotalAmount)));
+        var xml = new XElement("notaDebito", new XAttribute("id", "comprobante"), new XAttribute("version", "1.0.0"), InfoTributaria(document, issuer), infoNotaDebito, motivos, impuestos);
+        return new XDocument(new XDeclaration("1.0", "UTF-8", null), xml).ToString(SaveOptions.DisableFormatting);
+    }
+
+    public string GenerateWithholdingXml(ElectronicDocument document, IssuerSriOptions issuer)
+    {
+        if (document.AccessKey is null || document.Sequential is null) throw new FinancialApplicationException("sri.xml.access_key.required", "Access key and sequential are required.");
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.withholding.support.required", "Withholding support document is required.");
+        var impuestos = new XElement("impuestos", document.WithholdingTaxes.Select(x => new XElement("impuesto",
+            new XElement("codigo", x.TaxCode),
+            new XElement("codigoRetencion", x.WithholdingCode),
+            new XElement("baseImponible", Format(x.TaxBase)),
+            new XElement("porcentajeRetener", Format(x.WithholdingPercentage)),
+            new XElement("valorRetenido", Format(x.WithheldAmount)),
+            new XElement("codDocSustento", related.DocumentTypeCode),
+            new XElement("numDocSustento", x.SupportDocumentNumber),
+            new XElement("fechaEmisionDocSustento", x.SupportDocumentIssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)))));
+        var infoCompRetencion = new XElement("infoCompRetencion",
+            new XElement("fechaEmision", document.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)),
+            new XElement("dirEstablecimiento", issuer.Address),
+            new XElement("obligadoContabilidad", issuer.AccountingRequired ? "SI" : "NO"),
+            new XElement("tipoIdentificacionSujetoRetenido", document.CustomerIdentificationType),
+            new XElement("razonSocialSujetoRetenido", document.CustomerName),
+            new XElement("identificacionSujetoRetenido", document.CustomerIdentification),
+            new XElement("periodoFiscal", related.ReasonOrPeriod));
+        var docsSustento = new XElement("docsSustento", new XElement("docSustento",
+            new XElement("codSustento", related.DocumentTypeCode),
+            new XElement("codDocSustento", related.DocumentTypeCode),
+            new XElement("numDocSustento", related.Number),
+            new XElement("fechaEmisionDocSustento", related.IssueDate.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture))));
+        var xml = new XElement("comprobanteRetencion", new XAttribute("id", "comprobante"), new XAttribute("version", "1.0.0"), InfoTributaria(document, issuer), infoCompRetencion, impuestos, docsSustento);
+        return new XDocument(new XDeclaration("1.0", "UTF-8", null), xml).ToString(SaveOptions.DisableFormatting);
+    }
+
+    private static XElement InfoTributaria(ElectronicDocument document, IssuerSriOptions issuer) => new("infoTributaria",
+        new XElement("ambiente", ((int)document.Environment).ToString(CultureInfo.InvariantCulture)),
+        new XElement("tipoEmision", ((int)document.EmissionType).ToString(CultureInfo.InvariantCulture)),
+        new XElement("razonSocial", issuer.LegalName),
+        new XElement("nombreComercial", issuer.TradeName ?? issuer.LegalName),
+        new XElement("ruc", issuer.Ruc),
+        new XElement("claveAcceso", document.AccessKey),
+        new XElement("codDoc", SriDocumentCodes.ToCode(document.DocumentType)),
+        new XElement("estab", document.EstablishmentCode),
+        new XElement("ptoEmi", document.EmissionPointCode),
+        new XElement("secuencial", document.Sequential),
+        new XElement("dirMatriz", issuer.Address));
+
     private static string Format(decimal value) => FinancialPrecision.Normalize(value).ToString("0.00##", CultureInfo.InvariantCulture);
 }
 
@@ -227,7 +342,13 @@ public sealed class DevelopmentElectronicSignatureService : IElectronicSignature
             throw new FinancialApplicationException("sri.signature.external.not_configured", "External signature provider port is defined but no production adapter is configured.");
         if (context.Provider == SignatureProviderType.Xades)
             throw new FinancialApplicationException("sri.signature.xades.adapter_required", "XAdES provider requires the XadesElectronicSignatureService and a secure certificate provider.");
-        var signed = unsignedXml.Replace("</factura>", "<firmaSimulada proveedor=\"Development\" />" + "</factura>", StringComparison.Ordinal);
+        var signed = unsignedXml.Contains("</factura>", StringComparison.Ordinal)
+            ? unsignedXml.Replace("</factura>", "<firmaSimulada proveedor=\"Development\" /></factura>", StringComparison.Ordinal)
+            : unsignedXml.Contains("</notaCredito>", StringComparison.Ordinal)
+                ? unsignedXml.Replace("</notaCredito>", "<firmaSimulada proveedor=\"Development\" /></notaCredito>", StringComparison.Ordinal)
+                : unsignedXml.Contains("</notaDebito>", StringComparison.Ordinal)
+                    ? unsignedXml.Replace("</notaDebito>", "<firmaSimulada proveedor=\"Development\" /></notaDebito>", StringComparison.Ordinal)
+                    : unsignedXml.Replace("</comprobanteRetencion>", "<firmaSimulada proveedor=\"Development\" /></comprobanteRetencion>", StringComparison.Ordinal);
         var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signed)));
         return Task.FromResult(new SignatureResult(signed, context.Provider.ToString(), context.CertificateSecretName, DateTimeOffset.UtcNow, digest, "DevelopmentSimulation"));
     }
@@ -445,31 +566,100 @@ public static class SriSoapResponseParser
 
 public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValidator
 {
+    public XmlValidationResult ValidateXml(ElectronicDocumentType type, string xml) => type switch
+    {
+        ElectronicDocumentType.Invoice => ValidateInvoiceXml(xml),
+        ElectronicDocumentType.CreditNote => ValidateCreditNoteXml(xml),
+        ElectronicDocumentType.DebitNote => ValidateDebitNoteXml(xml),
+        ElectronicDocumentType.Withholding => ValidateWithholdingXml(xml),
+        _ => new(false, ["Unsupported SRI document type."], [])
+    };
+
     public XmlValidationResult ValidateInvoiceXml(string xml)
+    {
+        var result = ValidateBase(xml, "factura", "01");
+        if (!result.IsValid) return result;
+        var errors = result.Errors.ToList();
+        var root = XDocument.Parse(xml).Root!;
+        var infoFactura = root.Element("infoFactura");
+        if (infoFactura is null) errors.Add("infoFactura is required.");
+        var detalles = root.Element("detalles");
+        if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
+        ValidateDecimal(infoFactura, "totalSinImpuestos", errors);
+        ValidateDecimal(infoFactura, "importeTotal", errors);
+        return new(errors.Count == 0, errors, result.Warnings);
+    }
+
+    public XmlValidationResult ValidateCreditNoteXml(string xml)
+    {
+        var result = ValidateBase(xml, "notaCredito", "04");
+        if (!result.IsValid) return result;
+        var errors = result.Errors.ToList();
+        var root = XDocument.Parse(xml).Root!;
+        var info = root.Element("infoNotaCredito");
+        if (info is null) errors.Add("infoNotaCredito is required.");
+        var detalles = root.Element("detalles");
+        if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
+        Require(info, "codDocModificado", errors);
+        Require(info, "numDocModificado", errors);
+        Require(info, "motivo", errors);
+        ValidateDecimal(info, "totalSinImpuestos", errors);
+        ValidateDecimal(info, "valorModificacion", errors);
+        return new(errors.Count == 0, errors, result.Warnings);
+    }
+
+    public XmlValidationResult ValidateDebitNoteXml(string xml)
+    {
+        var result = ValidateBase(xml, "notaDebito", "05");
+        if (!result.IsValid) return result;
+        var errors = result.Errors.ToList();
+        var root = XDocument.Parse(xml).Root!;
+        var info = root.Element("infoNotaDebito");
+        if (info is null) errors.Add("infoNotaDebito is required.");
+        var motivos = root.Element("motivos");
+        if (motivos is null || !motivos.Elements("motivo").Any()) errors.Add("motivos with at least one motivo is required.");
+        Require(info, "codDocModificado", errors);
+        Require(info, "numDocModificado", errors);
+        ValidateDecimal(info, "totalSinImpuestos", errors);
+        ValidateDecimal(info, "valorTotal", errors);
+        return new(errors.Count == 0, errors, result.Warnings);
+    }
+
+    public XmlValidationResult ValidateWithholdingXml(string xml)
+    {
+        var result = ValidateBase(xml, "comprobanteRetencion", "07");
+        if (!result.IsValid) return result;
+        var errors = result.Errors.ToList();
+        var root = XDocument.Parse(xml).Root!;
+        var info = root.Element("infoCompRetencion");
+        if (info is null) errors.Add("infoCompRetencion is required.");
+        var impuestos = root.Element("impuestos");
+        if (impuestos is null || !impuestos.Elements("impuesto").Any()) errors.Add("impuestos with at least one impuesto is required.");
+        Require(info, "tipoIdentificacionSujetoRetenido", errors);
+        Require(info, "identificacionSujetoRetenido", errors);
+        Require(info, "periodoFiscal", errors);
+        return new(errors.Count == 0, errors, result.Warnings);
+    }
+
+    private static XmlValidationResult ValidateBase(string xml, string expectedRoot, string expectedCodDoc)
     {
         var errors = new List<string>();
         try
         {
             var document = XDocument.Parse(xml);
             var root = document.Root;
-            if (root?.Name.LocalName != "factura") errors.Add("Root element must be factura.");
+            if (root?.Name.LocalName != expectedRoot) errors.Add($"Root element must be {expectedRoot}.");
             var infoTributaria = root?.Element("infoTributaria");
-            var infoFactura = root?.Element("infoFactura");
-            var detalles = root?.Element("detalles");
             if (infoTributaria is null) errors.Add("infoTributaria is required.");
-            if (infoFactura is null) errors.Add("infoFactura is required.");
-            if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
             var accessKey = infoTributaria?.Element("claveAcceso")?.Value;
             if (string.IsNullOrWhiteSpace(accessKey) || accessKey.Length != 49 || !accessKey.All(char.IsDigit)) errors.Add("claveAcceso must have 49 digits.");
             ValidateCode(infoTributaria, "ambiente", ["1", "2"], "ambiente must be 1 or 2.", errors);
             ValidateCode(infoTributaria, "tipoEmision", ["1", "2"], "tipoEmision must be 1 or 2.", errors);
-            ValidateCode(infoTributaria, "codDoc", ["01", "04", "05", "06", "07"], "codDoc is not supported.", errors);
+            ValidateCode(infoTributaria, "codDoc", [expectedCodDoc], $"codDoc must be {expectedCodDoc}.", errors);
             ValidateFixed(infoTributaria, "ruc", 13, "ruc must have 13 digits.", errors);
             ValidateFixed(infoTributaria, "estab", 3, "estab must have 3 digits.", errors);
             ValidateFixed(infoTributaria, "ptoEmi", 3, "ptoEmi must have 3 digits.", errors);
             ValidateFixed(infoTributaria, "secuencial", 9, "secuencial must have 9 digits.", errors);
-            ValidateDecimal(infoFactura, "totalSinImpuestos", errors);
-            ValidateDecimal(infoFactura, "importeTotal", errors);
             if (!string.IsNullOrWhiteSpace(accessKey) && accessKey.Length == 49)
             {
                 if (infoTributaria?.Element("codDoc")?.Value is { } codDoc && accessKey[8..10] != codDoc) errors.Add("claveAcceso codDoc does not match infoTributaria.");
@@ -484,6 +674,11 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
             errors.Add("XML is not well formed.");
         }
         return new(errors.Count == 0, errors, []);
+    }
+
+    private static void Require(XElement? parent, string name, List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(parent?.Element(name)?.Value)) errors.Add($"{name} is required.");
     }
 
     private static void ValidateCode(XElement? parent, string name, string[] allowed, string message, List<string> errors)
@@ -766,6 +961,51 @@ public sealed class ElectronicDocumentsService(
         return ToDto(document);
     }
 
+    public async Task<ElectronicDocumentDto> CreateCreditNoteDraftAsync(CreateCreditNoteRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        var environment = await GetEnvironmentAsync(context, ct);
+        var emissionType = await GetEmissionTypeAsync(context, ct);
+        var establishment = request.EstablishmentCode ?? await configuration.GetStringAsync("financial.sri.defaultEstablishmentCode", "001", context, ct);
+        var emissionPoint = request.EmissionPointCode ?? await configuration.GetStringAsync("financial.sri.defaultEmissionPointCode", "001", context, ct);
+        var document = ElectronicDocument.CreateCreditNote(context.TenantId, environment, emissionType, establishment, emissionPoint, request.IssueDate,
+            request.CustomerIdentificationType, request.CustomerIdentification, request.CustomerName, request.Currency, request.RelatedDocumentTypeCode,
+            request.RelatedDocumentNumber, request.RelatedDocumentIssueDate, request.Reason, DateTimeOffset.UtcNow);
+        await documents.AddAsync(document, ct);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("CreditNoteCreated", "CreditNoteCreated", document, context, ct);
+        return ToDto(document);
+    }
+
+    public async Task<ElectronicDocumentDto> CreateDebitNoteDraftAsync(CreateDebitNoteRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        var environment = await GetEnvironmentAsync(context, ct);
+        var emissionType = await GetEmissionTypeAsync(context, ct);
+        var establishment = request.EstablishmentCode ?? await configuration.GetStringAsync("financial.sri.defaultEstablishmentCode", "001", context, ct);
+        var emissionPoint = request.EmissionPointCode ?? await configuration.GetStringAsync("financial.sri.defaultEmissionPointCode", "001", context, ct);
+        var document = ElectronicDocument.CreateDebitNote(context.TenantId, environment, emissionType, establishment, emissionPoint, request.IssueDate,
+            request.CustomerIdentificationType, request.CustomerIdentification, request.CustomerName, request.Currency, request.RelatedDocumentTypeCode,
+            request.RelatedDocumentNumber, request.RelatedDocumentIssueDate, DateTimeOffset.UtcNow);
+        await documents.AddAsync(document, ct);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("DebitNoteCreated", "DebitNoteCreated", document, context, ct);
+        return ToDto(document);
+    }
+
+    public async Task<ElectronicDocumentDto> CreateWithholdingDraftAsync(CreateWithholdingRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        var environment = await GetEnvironmentAsync(context, ct);
+        var emissionType = await GetEmissionTypeAsync(context, ct);
+        var establishment = request.EstablishmentCode ?? await configuration.GetStringAsync("financial.sri.defaultEstablishmentCode", "001", context, ct);
+        var emissionPoint = request.EmissionPointCode ?? await configuration.GetStringAsync("financial.sri.defaultEmissionPointCode", "001", context, ct);
+        var document = ElectronicDocument.CreateWithholding(context.TenantId, environment, emissionType, establishment, emissionPoint, request.IssueDate,
+            request.SubjectIdentificationType, request.SubjectIdentification, request.SubjectName, request.Currency, request.FiscalPeriod,
+            request.SupportDocumentTypeCode, request.SupportDocumentNumber, request.SupportDocumentIssueDate, DateTimeOffset.UtcNow);
+        await documents.AddAsync(document, ct);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("WithholdingCreated", "WithholdingCreated", document, context, ct);
+        return ToDto(document);
+    }
+
     public async Task<ElectronicDocumentDto> AddInvoiceLineAsync(Guid id, AddElectronicDocumentLineRequest request, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
@@ -776,17 +1016,42 @@ public sealed class ElectronicDocumentsService(
         return ToDto(document);
     }
 
-    public async Task<ElectronicDocumentDto> GenerateInvoiceXmlAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    public async Task<ElectronicDocumentDto> AddDebitNoteReasonAsync(Guid id, AddDebitNoteReasonRequest request, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
+        document.AddDebitNoteReason(request.Reason, request.Amount, DateTimeOffset.UtcNow);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("DebitNoteReasonAdded", "DebitNoteReasonAdded", document, context, ct);
+        return ToDto(document);
+    }
+
+    public async Task<ElectronicDocumentDto> AddWithholdingTaxAsync(Guid id, AddWithholdingTaxRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        document.AddWithholdingTax(request.TaxCode, request.WithholdingCode, request.TaxBase, request.WithholdingPercentage, request.WithheldAmount,
+            request.SupportDocumentNumber, request.SupportDocumentIssueDate, request.FiscalPeriod, DateTimeOffset.UtcNow);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("WithholdingTaxAdded", "WithholdingTaxAdded", document, context, ct);
+        return ToDto(document);
+    }
+
+    public Task<ElectronicDocumentDto> GenerateInvoiceXmlAsync(Guid id, PortalCallContext context, CancellationToken ct) => GenerateDocumentXmlAsync(id, ElectronicDocumentType.Invoice, "ElectronicDocumentXmlGenerated", context, ct);
+    public Task<ElectronicDocumentDto> GenerateCreditNoteXmlAsync(Guid id, PortalCallContext context, CancellationToken ct) => GenerateDocumentXmlAsync(id, ElectronicDocumentType.CreditNote, "CreditNoteXmlGenerated", context, ct);
+    public Task<ElectronicDocumentDto> GenerateDebitNoteXmlAsync(Guid id, PortalCallContext context, CancellationToken ct) => GenerateDocumentXmlAsync(id, ElectronicDocumentType.DebitNote, "DebitNoteXmlGenerated", context, ct);
+    public Task<ElectronicDocumentDto> GenerateWithholdingXmlAsync(Guid id, PortalCallContext context, CancellationToken ct) => GenerateDocumentXmlAsync(id, ElectronicDocumentType.Withholding, "WithholdingXmlGenerated", context, ct);
+
+    private async Task<ElectronicDocumentDto> GenerateDocumentXmlAsync(Guid id, ElectronicDocumentType expectedType, string generatedEvent, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        if (document.DocumentType != expectedType) throw new FinancialApplicationException("electronic_document.type.invalid", $"Document must be {expectedType}.");
         var issuer = await GetIssuerAsync(context, ct);
         var sequential = await documents.GetNextSequentialAsync(context.TenantId, document.DocumentType, document.Environment, document.EstablishmentCode, document.EmissionPointCode, ct);
         if (await documents.SequenceDocumentExistsAsync(context.TenantId, document.DocumentType, document.Environment, document.EstablishmentCode, document.EmissionPointCode, sequential, document.Id, ct))
             throw new FinancialApplicationException("sri.sequence.duplicate", "SRI sequence already exists for this document scope.");
         var numericCode = await configuration.GetStringAsync("financial.sri.accessKey.numericCode", DeterministicNumericCode(document.Id), context, ct);
         var accessKey = SriAccessKeyGenerator.Generate(new(document.IssueDate, SriDocumentCodes.ToCode(document.DocumentType), issuer.Ruc, document.Environment, document.EstablishmentCode, document.EmissionPointCode, sequential, numericCode, document.EmissionType));
-        var xml = GenerateUnsignedInvoiceXml(document, issuer, sequential, accessKey.Value);
-        var validation = xmlValidator.ValidateInvoiceXml(xml);
+        var xml = GenerateUnsignedXml(document, issuer, sequential, accessKey.Value);
+        var validation = xmlValidator.ValidateXml(document.DocumentType, xml);
         if (!validation.IsValid) throw new FinancialApplicationException("sri.xml.validation.failed", string.Join("; ", validation.Errors));
         document.Generate(sequential, accessKey, xml, DateTimeOffset.UtcNow);
         var stored = await storage.SaveUnsignedXmlAsync(document, xml, context, ct);
@@ -794,15 +1059,15 @@ public sealed class ElectronicDocumentsService(
         await documents.SaveChangesAsync(ct);
         await AuditOutboxAsync("ElectronicDocumentXmlValidated", "ElectronicDocumentXmlValidated", document, context, ct);
         await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
-        await AuditOutboxAsync("ElectronicDocumentXmlGenerated", "ElectronicDocumentXmlGenerated", document, context, ct);
+        await AuditOutboxAsync(generatedEvent, generatedEvent, document, context, ct);
         return ToDto(document);
     }
 
     public async Task<XmlValidationResult> ValidateInvoiceXmlAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
-        var xml = xmlGenerator.GenerateInvoiceXml(document, await GetIssuerAsync(context, ct));
-        var result = xmlValidator.ValidateInvoiceXml(xml);
+        var xml = xmlGenerator.GenerateXml(document, await GetIssuerAsync(context, ct));
+        var result = xmlValidator.ValidateXml(document.DocumentType, xml);
         if (result.IsValid) await AuditOutboxAsync("ElectronicDocumentXmlValidated", "ElectronicDocumentXmlValidated", document, context, ct);
         return result;
     }
@@ -812,8 +1077,8 @@ public sealed class ElectronicDocumentsService(
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         document.EnsureCanSign();
         var issuer = await GetIssuerAsync(context, ct);
-        var xml = xmlGenerator.GenerateInvoiceXml(document, issuer);
-        var validation = xmlValidator.ValidateInvoiceXml(xml);
+        var xml = xmlGenerator.GenerateXml(document, issuer);
+        var validation = xmlValidator.ValidateXml(document.DocumentType, xml);
         if (!validation.IsValid) throw new FinancialApplicationException("sri.xml.validation.failed", string.Join("; ", validation.Errors));
         SignatureResult signed;
         try
@@ -841,7 +1106,7 @@ public sealed class ElectronicDocumentsService(
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         document.EnsureCanSend();
         var issuer = await GetIssuerAsync(context, ct);
-        var signedXml = (await signature.SignAsync(xmlGenerator.GenerateInvoiceXml(document, issuer), await GetSignatureContextAsync(context, ct), ct)).SignedXml;
+        var signedXml = (await signature.SignAsync(xmlGenerator.GenerateXml(document, issuer), await GetSignatureContextAsync(context, ct), ct)).SignedXml;
         SriReceptionResponse result;
         try
         {
@@ -998,20 +1263,56 @@ public sealed class ElectronicDocumentsService(
             JsonSerializer.Serialize(new { document.Id, document.TenantId, document.AccessKey, Status = document.Status.ToString() })), context, ct);
     }
     private static string DeterministicNumericCode(Guid id) => Math.Abs(BitConverter.ToInt32(id.ToByteArray(), 0)).ToString("00000000", CultureInfo.InvariantCulture)[..8];
-    private static string GenerateUnsignedInvoiceXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey)
+    private static string GenerateUnsignedXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey) => document.DocumentType switch
     {
-        var infoTributaria = $"""
+        ElectronicDocumentType.Invoice => GenerateUnsignedInvoiceXml(document, issuer, sequential, accessKey),
+        ElectronicDocumentType.CreditNote => GenerateUnsignedCreditNoteXml(document, issuer, sequential, accessKey),
+        ElectronicDocumentType.DebitNote => GenerateUnsignedDebitNoteXml(document, issuer, sequential, accessKey),
+        ElectronicDocumentType.Withholding => GenerateUnsignedWithholdingXml(document, issuer, sequential, accessKey),
+        _ => throw new FinancialApplicationException("sri.xml.document_type.unsupported", "Unsupported SRI document type.")
+    };
+
+    private static string UnsignedInfoTributaria(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey) => $"""
 <infoTributaria><ambiente>{(int)document.Environment}</ambiente><tipoEmision>{(int)document.EmissionType}</tipoEmision><razonSocial>{Xml(issuer.LegalName)}</razonSocial><nombreComercial>{Xml(issuer.TradeName ?? issuer.LegalName)}</nombreComercial><ruc>{issuer.Ruc}</ruc><claveAcceso>{accessKey}</claveAcceso><codDoc>{SriDocumentCodes.ToCode(document.DocumentType)}</codDoc><estab>{document.EstablishmentCode}</estab><ptoEmi>{document.EmissionPointCode}</ptoEmi><secuencial>{sequential}</secuencial><dirMatriz>{Xml(issuer.Address)}</dirMatriz></infoTributaria>
 """;
+
+    private static string GenerateUnsignedInvoiceXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey)
+    {
+        var infoTributaria = UnsignedInfoTributaria(document, issuer, sequential, accessKey);
         var detalles = string.Concat(document.Lines.Select(line => $"<detalle><codigoPrincipal>{Xml(line.ProductCode)}</codigoPrincipal><descripcion>{Xml(line.Description)}</descripcion><cantidad>{line.Quantity:0.00##}</cantidad><precioUnitario>{line.UnitPrice:0.00##}</precioUnitario><descuento>{line.Discount:0.00##}</descuento><precioTotalSinImpuesto>{line.Subtotal:0.00##}</precioTotalSinImpuesto></detalle>"));
         return $"""<?xml version="1.0" encoding="UTF-8"?><factura id="comprobante" version="1.0.0">{infoTributaria}<infoFactura><fechaEmision>{document.IssueDate:dd/MM/yyyy}</fechaEmision><dirEstablecimiento>{Xml(issuer.Address)}</dirEstablecimiento><obligadoContabilidad>{(issuer.AccountingRequired ? "SI" : "NO")}</obligadoContabilidad><tipoIdentificacionComprador>{document.CustomerIdentificationType}</tipoIdentificacionComprador><razonSocialComprador>{Xml(document.CustomerName)}</razonSocialComprador><identificacionComprador>{document.CustomerIdentification}</identificacionComprador><totalSinImpuestos>{document.SubtotalWithoutTaxes:0.00##}</totalSinImpuestos><totalDescuento>{document.TotalDiscount:0.00##}</totalDescuento><propina>0.00</propina><importeTotal>{document.TotalAmount:0.00##}</importeTotal><moneda>{document.Currency}</moneda></infoFactura><detalles>{detalles}</detalles></factura>""";
+    }
+
+    private static string GenerateUnsignedCreditNoteXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey)
+    {
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.credit_note.reference.required", "Credit note related document is required.");
+        var detalles = string.Concat(document.Lines.Select(line => $"<detalle><codigoInterno>{Xml(line.ProductCode)}</codigoInterno><descripcion>{Xml(line.Description)}</descripcion><cantidad>{line.Quantity:0.00##}</cantidad><precioUnitario>{line.UnitPrice:0.00##}</precioUnitario><descuento>{line.Discount:0.00##}</descuento><precioTotalSinImpuesto>{line.Subtotal:0.00##}</precioTotalSinImpuesto></detalle>"));
+        return $"""<?xml version="1.0" encoding="UTF-8"?><notaCredito id="comprobante" version="1.0.0">{UnsignedInfoTributaria(document, issuer, sequential, accessKey)}<infoNotaCredito><fechaEmision>{document.IssueDate:dd/MM/yyyy}</fechaEmision><dirEstablecimiento>{Xml(issuer.Address)}</dirEstablecimiento><tipoIdentificacionComprador>{document.CustomerIdentificationType}</tipoIdentificacionComprador><razonSocialComprador>{Xml(document.CustomerName)}</razonSocialComprador><identificacionComprador>{document.CustomerIdentification}</identificacionComprador><codDocModificado>{related.DocumentTypeCode}</codDocModificado><numDocModificado>{Xml(related.Number)}</numDocModificado><fechaEmisionDocSustento>{related.IssueDate:dd/MM/yyyy}</fechaEmisionDocSustento><totalSinImpuestos>{document.SubtotalWithoutTaxes:0.00##}</totalSinImpuestos><valorModificacion>{document.TotalAmount:0.00##}</valorModificacion><moneda>{document.Currency}</moneda><motivo>{Xml(related.ReasonOrPeriod)}</motivo></infoNotaCredito><detalles>{detalles}</detalles></notaCredito>""";
+    }
+
+    private static string GenerateUnsignedDebitNoteXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey)
+    {
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.debit_note.reference.required", "Debit note related document is required.");
+        var motivos = string.Concat(document.DebitNoteReasons.Select(x => $"<motivo><razon>{Xml(x.Reason)}</razon><valor>{x.Amount:0.00##}</valor></motivo>"));
+        var impuestos = string.Concat(document.Taxes.Select(x => $"<impuesto><codigo>{x.TaxCode}</codigo><codigoPorcentaje>{x.TaxPercentageCode}</codigoPorcentaje><tarifa>{x.TaxRate:0.00##}</tarifa><baseImponible>{x.TaxBase:0.00##}</baseImponible><valor>{x.TaxAmount:0.00##}</valor></impuesto>"));
+        return $"""<?xml version="1.0" encoding="UTF-8"?><notaDebito id="comprobante" version="1.0.0">{UnsignedInfoTributaria(document, issuer, sequential, accessKey)}<infoNotaDebito><fechaEmision>{document.IssueDate:dd/MM/yyyy}</fechaEmision><dirEstablecimiento>{Xml(issuer.Address)}</dirEstablecimiento><tipoIdentificacionComprador>{document.CustomerIdentificationType}</tipoIdentificacionComprador><razonSocialComprador>{Xml(document.CustomerName)}</razonSocialComprador><identificacionComprador>{document.CustomerIdentification}</identificacionComprador><codDocModificado>{related.DocumentTypeCode}</codDocModificado><numDocModificado>{Xml(related.Number)}</numDocModificado><fechaEmisionDocSustento>{related.IssueDate:dd/MM/yyyy}</fechaEmisionDocSustento><totalSinImpuestos>{document.SubtotalWithoutTaxes:0.00##}</totalSinImpuestos><valorTotal>{document.TotalAmount:0.00##}</valorTotal></infoNotaDebito><motivos>{motivos}</motivos><impuestos>{impuestos}</impuestos></notaDebito>""";
+    }
+
+    private static string GenerateUnsignedWithholdingXml(ElectronicDocument document, IssuerSriOptions issuer, string sequential, string accessKey)
+    {
+        var related = document.References.FirstOrDefault() ?? throw new FinancialApplicationException("sri.withholding.support.required", "Withholding support document is required.");
+        var impuestos = string.Concat(document.WithholdingTaxes.Select(x => $"<impuesto><codigo>{Xml(x.TaxCode)}</codigo><codigoRetencion>{Xml(x.WithholdingCode)}</codigoRetencion><baseImponible>{x.TaxBase:0.00##}</baseImponible><porcentajeRetener>{x.WithholdingPercentage:0.00##}</porcentajeRetener><valorRetenido>{x.WithheldAmount:0.00##}</valorRetenido><codDocSustento>{related.DocumentTypeCode}</codDocSustento><numDocSustento>{Xml(x.SupportDocumentNumber)}</numDocSustento><fechaEmisionDocSustento>{x.SupportDocumentIssueDate:dd/MM/yyyy}</fechaEmisionDocSustento></impuesto>"));
+        return $"""<?xml version="1.0" encoding="UTF-8"?><comprobanteRetencion id="comprobante" version="1.0.0">{UnsignedInfoTributaria(document, issuer, sequential, accessKey)}<infoCompRetencion><fechaEmision>{document.IssueDate:dd/MM/yyyy}</fechaEmision><dirEstablecimiento>{Xml(issuer.Address)}</dirEstablecimiento><obligadoContabilidad>{(issuer.AccountingRequired ? "SI" : "NO")}</obligadoContabilidad><tipoIdentificacionSujetoRetenido>{document.CustomerIdentificationType}</tipoIdentificacionSujetoRetenido><razonSocialSujetoRetenido>{Xml(document.CustomerName)}</razonSocialSujetoRetenido><identificacionSujetoRetenido>{document.CustomerIdentification}</identificacionSujetoRetenido><periodoFiscal>{Xml(related.ReasonOrPeriod)}</periodoFiscal></infoCompRetencion><impuestos>{impuestos}</impuestos><docsSustento><docSustento><codSustento>{related.DocumentTypeCode}</codSustento><codDocSustento>{related.DocumentTypeCode}</codDocSustento><numDocSustento>{Xml(related.Number)}</numDocSustento><fechaEmisionDocSustento>{related.IssueDate:dd/MM/yyyy}</fechaEmisionDocSustento></docSustento></docsSustento></comprobanteRetencion>""";
     }
     private static string Xml(string value) => HtmlEncoder.Default.Encode(value);
     public static ElectronicDocumentDto ToDto(ElectronicDocument document) => new(document.Id, document.TenantId, document.DocumentType.ToString(), document.Environment.ToString(), document.EmissionType.ToString(), document.Status.ToString(),
         document.EstablishmentCode, document.EmissionPointCode, document.Sequential, document.AccessKey, document.IssueDate, document.CustomerIdentificationType, document.CustomerIdentification, document.CustomerName, document.Currency,
         document.SubtotalWithoutTaxes, document.TotalDiscount, document.TotalTaxes, document.TotalAmount, document.SriAuthorizationNumber, document.SriAuthorizationDate, document.SriResponseCode, document.SriResponseMessage,
         document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.RidePdfStorageId, document.SignatureProvider, document.SignatureDigest, document.LastSriStatus, document.LastSriMessage,
-        document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray());
+        document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray(),
+        document.References.Select(x => new ElectronicDocumentReferenceDto(x.DocumentTypeCode, x.Number, x.IssueDate, x.ReasonOrPeriod)).ToArray(),
+        document.DebitNoteReasons.Select(x => new ElectronicDocumentDebitNoteReasonDto(x.Reason, x.Amount)).ToArray(),
+        document.WithholdingTaxes.Select(x => new ElectronicDocumentWithholdingTaxDto(x.TaxCode, x.WithholdingCode, x.TaxBase, x.WithholdingPercentage, x.WithheldAmount, x.SupportDocumentNumber, x.SupportDocumentIssueDate, x.FiscalPeriod)).ToArray());
 }
 
 public static class SriDocumentCodes

@@ -30,6 +30,13 @@ Financiero API
 
 `financial.sri_document_sequences` reserva secuenciales por tenant, tipo, ambiente, establecimiento y punto de emisión. No se mezcla con `accounting_sequences`.
 
+Sprint 3 P1 reutiliza la misma estrategia para:
+
+- Factura, `codDoc=01`.
+- Nota de Crédito, `codDoc=04`.
+- Nota de Débito, `codDoc=05`.
+- Comprobante de Retención, `codDoc=07`.
+
 ## Firma
 
 P2 agrega providers Development, Disabled, External y LocalCertificatePlaceholder. Development se bloquea en Production; providers reales fallan explícitamente hasta tener adapter seguro.
@@ -51,3 +58,13 @@ P5 fortalece Key Vault wiring, probe manual SRI Test y observabilidad sanitizada
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.
+
+## Documentos tributarios Sprint 3 P1
+
+`ElectronicDocument` se mantiene como agregado raíz. Las notas de crédito, notas de débito y retenciones agregan hijos persistidos para la información que no pertenece a factura:
+
+- `electronic_document_references`: documento modificado o sustento.
+- `electronic_document_debit_note_reasons`: motivos y valores de nota de débito.
+- `electronic_document_withholding_taxes`: impuestos retenidos por periodo fiscal.
+
+Los generadores y validadores XML son foundation. Antes de producción deben compararse contra XSD y reglas SRI vigentes.
