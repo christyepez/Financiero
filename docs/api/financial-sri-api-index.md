@@ -3,8 +3,17 @@
 | Método | Ruta | Permiso | Modo | Riesgo | Datos sensibles | Estado |
 |---|---|---|---|---|---|---|
 | POST | `/api/financial/electronic-documents/invoices` | create | Dev/Test | Medio | Cliente sintético | implemented |
+| POST | `/api/financial/electronic-documents/credit-notes` | create | Dev/Test | Medio | Cliente sintético | implemented P3 P1 |
+| POST | `/api/financial/electronic-documents/debit-notes` | create | Dev/Test | Medio | Cliente sintético | implemented P3 P1 |
+| POST | `/api/financial/electronic-documents/withholdings` | create | Dev/Test | Medio | Sujeto retenido sintético | implemented P3 P1 |
 | POST | `/{id}/lines` | update | Dev/Test | Medio | No XML | implemented |
+| POST | `/{id}/credit-note-lines` | update | Dev/Test | Medio | No XML | implemented P3 P1 |
+| POST | `/{id}/debit-note-reasons` | update | Dev/Test | Medio | No XML | implemented P3 P1 |
+| POST | `/{id}/withholding-taxes` | update | Dev/Test | Medio | No XML | implemented P3 P1 |
 | POST | `/{id}/generate-xml` | generate | Dev/Test | Alto | XML generado | implemented |
+| POST | `/{id}/generate-credit-note-xml` | generate | Dev/Test | Alto | XML generado | implemented P3 P1 |
+| POST | `/{id}/generate-debit-note-xml` | generate | Dev/Test | Alto | XML generado | implemented P3 P1 |
+| POST | `/{id}/generate-withholding-xml` | generate | Dev/Test | Alto | XML generado | implemented P3 P1 |
 | POST | `/{id}/validate-xml` | generate | Dev/Test | Medio | XML interno | implemented |
 | POST | `/{id}/sign` | sign | Dev/mock | Alto | Firma metadata | mock/dev |
 | POST | `/{id}/send` | send | Mock/dry-run | Alto | SRI metadata | mock/dev |
@@ -17,4 +26,4 @@
 | GET | `/sri/connectivity-probe` | manage | Test manual | Medio | URLs enmascaradas | dry-run |
 | GET | `/health/sri` | anonymous | Dev/Test | Bajo | No secretos/XML | implemented |
 
-Production SRI, XAdES real y Content/File payload real permanecen bloqueados.
+Production SRI, XAdES real, RIDE final por tipo documental y Content/File payload real permanecen bloqueados.

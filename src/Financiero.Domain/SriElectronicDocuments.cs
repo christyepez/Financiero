@@ -12,6 +12,9 @@ public sealed class ElectronicDocument
 {
     private readonly List<ElectronicDocumentLine> _lines = [];
     private readonly List<ElectronicDocumentTax> _taxes = [];
+    private readonly List<ElectronicDocumentReference> _references = [];
+    private readonly List<ElectronicDocumentDebitNoteReason> _debitNoteReasons = [];
+    private readonly List<ElectronicDocumentWithholdingTax> _withholdingTaxes = [];
 
     private ElectronicDocument() { }
 
@@ -98,6 +101,9 @@ public sealed class ElectronicDocument
     public DateTimeOffset? RideGeneratedAtUtc { get; private set; }
     public IReadOnlyCollection<ElectronicDocumentLine> Lines => _lines.OrderBy(x => x.LineNumber).ToArray();
     public IReadOnlyCollection<ElectronicDocumentTax> Taxes => _taxes.ToArray();
+    public IReadOnlyCollection<ElectronicDocumentReference> References => _references.ToArray();
+    public IReadOnlyCollection<ElectronicDocumentDebitNoteReason> DebitNoteReasons => _debitNoteReasons.ToArray();
+    public IReadOnlyCollection<ElectronicDocumentWithholdingTax> WithholdingTaxes => _withholdingTaxes.ToArray();
 
     public static ElectronicDocument CreateInvoice(
         string tenantId,
@@ -113,6 +119,85 @@ public sealed class ElectronicDocument
         DateTimeOffset now) =>
         new(Guid.NewGuid(), tenantId, ElectronicDocumentType.Invoice, environment, emissionType, establishmentCode, emissionPointCode, issueDate,
             customerIdentificationType, customerIdentification, customerName, currency, now);
+
+    public static ElectronicDocument CreateCreditNote(
+        string tenantId,
+        SriEnvironment environment,
+        SriEmissionType emissionType,
+        string establishmentCode,
+        string emissionPointCode,
+        DateOnly issueDate,
+        string customerIdentificationType,
+        string customerIdentification,
+        string customerName,
+        string currency,
+        string relatedDocumentTypeCode,
+        string relatedDocumentNumber,
+        DateOnly relatedDocumentIssueDate,
+        string reason,
+        DateTimeOffset now)
+    {
+        var document = new ElectronicDocument(Guid.NewGuid(), tenantId, ElectronicDocumentType.CreditNote, environment, emissionType, establishmentCode, emissionPointCode, issueDate,
+            customerIdentificationType, customerIdentification, customerName, currency, now);
+        document.AddRelatedDocument(relatedDocumentTypeCode, relatedDocumentNumber, relatedDocumentIssueDate, reason, now);
+        return document;
+    }
+
+    public static ElectronicDocument CreateDebitNote(
+        string tenantId,
+        SriEnvironment environment,
+        SriEmissionType emissionType,
+        string establishmentCode,
+        string emissionPointCode,
+        DateOnly issueDate,
+        string customerIdentificationType,
+        string customerIdentification,
+        string customerName,
+        string currency,
+        string relatedDocumentTypeCode,
+        string relatedDocumentNumber,
+        DateOnly relatedDocumentIssueDate,
+        DateTimeOffset now)
+    {
+        var document = new ElectronicDocument(Guid.NewGuid(), tenantId, ElectronicDocumentType.DebitNote, environment, emissionType, establishmentCode, emissionPointCode, issueDate,
+            customerIdentificationType, customerIdentification, customerName, currency, now);
+        document.AddRelatedDocument(relatedDocumentTypeCode, relatedDocumentNumber, relatedDocumentIssueDate, "Documento relacionado", now);
+        return document;
+    }
+
+    public static ElectronicDocument CreateWithholding(
+        string tenantId,
+        SriEnvironment environment,
+        SriEmissionType emissionType,
+        string establishmentCode,
+        string emissionPointCode,
+        DateOnly issueDate,
+        string subjectIdentificationType,
+        string subjectIdentification,
+        string subjectName,
+        string currency,
+        string fiscalPeriod,
+        string supportDocumentTypeCode,
+        string supportDocumentNumber,
+        DateOnly supportDocumentIssueDate,
+        DateTimeOffset now)
+    {
+        var document = new ElectronicDocument(Guid.NewGuid(), tenantId, ElectronicDocumentType.Withholding, environment, emissionType, establishmentCode, emissionPointCode, issueDate,
+            subjectIdentificationType, subjectIdentification, subjectName, currency, now);
+        document.AddRelatedDocument(supportDocumentTypeCode, supportDocumentNumber, supportDocumentIssueDate, fiscalPeriod, now);
+        return document;
+    }
+
+    public ElectronicDocumentReference AddRelatedDocument(string documentTypeCode, string number, DateOnly issueDate, string reasonOrPeriod, DateTimeOffset now)
+    {
+        EnsureEditable();
+        if (DocumentType == ElectronicDocumentType.Invoice) throw new FinancialDomainException("electronic_document.reference.unsupported", "Invoice does not require related fiscal document in this foundation.");
+        if (_references.Count > 0) throw new FinancialDomainException("electronic_document.reference.duplicate", "Only one related fiscal document is supported in this foundation.");
+        var reference = ElectronicDocumentReference.Create(Guid.NewGuid(), TenantId, Id, documentTypeCode, number, issueDate, reasonOrPeriod, now);
+        _references.Add(reference);
+        UpdatedAtUtc = now;
+        return reference;
+    }
 
     public ElectronicDocumentLine AddLine(string productCode, string description, decimal quantity, decimal unitPrice, decimal discount, DateTimeOffset now)
     {
@@ -130,16 +215,63 @@ public sealed class ElectronicDocument
         RecalculateTotals(now);
     }
 
+    public ElectronicDocumentDebitNoteReason AddDebitNoteReason(string reason, decimal amount, DateTimeOffset now)
+    {
+        EnsureEditable();
+        if (DocumentType != ElectronicDocumentType.DebitNote) throw new FinancialDomainException("electronic_document.debit_note_reason.unsupported", "Debit note reason can only be added to debit notes.");
+        var item = ElectronicDocumentDebitNoteReason.Create(Guid.NewGuid(), TenantId, Id, reason, amount, now);
+        _debitNoteReasons.Add(item);
+        SubtotalWithoutTaxes = FinancialPrecision.Normalize(_debitNoteReasons.Sum(x => x.Amount));
+        TotalAmount = FinancialPrecision.Normalize(SubtotalWithoutTaxes + TotalTaxes);
+        UpdatedAtUtc = now;
+        return item;
+    }
+
+    public ElectronicDocumentWithholdingTax AddWithholdingTax(string taxCode, string withholdingCode, decimal taxBase, decimal withholdingPercentage, decimal withheldAmount, string supportDocumentNumber, DateOnly supportDocumentIssueDate, string fiscalPeriod, DateTimeOffset now)
+    {
+        EnsureEditable();
+        if (DocumentType != ElectronicDocumentType.Withholding) throw new FinancialDomainException("electronic_document.withholding_tax.unsupported", "Withholding tax can only be added to withholding documents.");
+        var item = ElectronicDocumentWithholdingTax.Create(Guid.NewGuid(), TenantId, Id, taxCode, withholdingCode, taxBase, withholdingPercentage, withheldAmount, supportDocumentNumber, supportDocumentIssueDate, fiscalPeriod, now);
+        _withholdingTaxes.Add(item);
+        SubtotalWithoutTaxes = FinancialPrecision.Normalize(_withholdingTaxes.Sum(x => x.TaxBase));
+        TotalTaxes = FinancialPrecision.Normalize(_withholdingTaxes.Sum(x => x.WithheldAmount));
+        TotalAmount = TotalTaxes;
+        UpdatedAtUtc = now;
+        return item;
+    }
+
     public void Generate(string sequential, SriAccessKey accessKey, string unsignedXml, DateTimeOffset now)
     {
         EnsureEditable();
-        if (DocumentType == ElectronicDocumentType.Invoice && _lines.Count == 0) throw new FinancialDomainException("electronic_document.invoice.lines.required", "Invoice requires at least one line.");
+        ValidateBeforeGenerate();
         Sequential = ValidateFixedDigits(sequential, 9, "electronic_document.sequential.invalid", "Sequential must have 9 digits.");
         AccessKey = accessKey.Value;
         XmlContentHash = Sha256(unsignedXml);
         Status = ElectronicDocumentStatus.Generated;
         GeneratedAtUtc = now;
         UpdatedAtUtc = now;
+    }
+
+    private void ValidateBeforeGenerate()
+    {
+        if (DocumentType == ElectronicDocumentType.Invoice && _lines.Count == 0) throw new FinancialDomainException("electronic_document.invoice.lines.required", "Invoice requires at least one line.");
+        if (DocumentType == ElectronicDocumentType.CreditNote)
+        {
+            if (_references.Count == 0) throw new FinancialDomainException("electronic_document.credit_note.reference.required", "Credit note requires related document.");
+            if (string.IsNullOrWhiteSpace(_references[0].ReasonOrPeriod)) throw new FinancialDomainException("electronic_document.credit_note.reason.required", "Credit note reason is required.");
+            if (_lines.Count == 0) throw new FinancialDomainException("electronic_document.credit_note.lines.required", "Credit note requires at least one line.");
+        }
+        if (DocumentType == ElectronicDocumentType.DebitNote)
+        {
+            if (_references.Count == 0) throw new FinancialDomainException("electronic_document.debit_note.reference.required", "Debit note requires related document.");
+            if (_debitNoteReasons.Count == 0) throw new FinancialDomainException("electronic_document.debit_note.reason.required", "Debit note requires at least one reason.");
+            if (_debitNoteReasons.Any(x => x.Amount <= 0)) throw new FinancialDomainException("electronic_document.debit_note.amount.invalid", "Debit note adjustment amount must be greater than zero.");
+        }
+        if (DocumentType == ElectronicDocumentType.Withholding)
+        {
+            if (_references.Count == 0) throw new FinancialDomainException("electronic_document.withholding.support.required", "Withholding requires support document and fiscal period.");
+            if (_withholdingTaxes.Count == 0) throw new FinancialDomainException("electronic_document.withholding.tax.required", "Withholding requires at least one withheld tax.");
+        }
     }
 
     public void RegisterUnsignedXmlStorage(string storageId, DateTimeOffset now)
@@ -346,6 +478,97 @@ public sealed class ElectronicDocumentTax
 
     public static ElectronicDocumentTax Create(Guid id, string tenantId, Guid electronicDocumentId, Guid? lineId, string taxCode, string taxPercentageCode, decimal taxRate, decimal taxBase, decimal taxAmount, DateTimeOffset now) =>
         new(id, tenantId, electronicDocumentId, lineId, taxCode, taxPercentageCode, taxRate, taxBase, taxAmount, now);
+    private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new FinancialDomainException($"{name.ToLowerInvariant()}.required", $"{name} is required.") : value.Trim();
+}
+
+public sealed class ElectronicDocumentReference
+{
+    private ElectronicDocumentReference() { }
+    private ElectronicDocumentReference(Guid id, string tenantId, Guid electronicDocumentId, string documentTypeCode, string number, DateOnly issueDate, string reasonOrPeriod, DateTimeOffset now)
+    {
+        Id = id;
+        TenantId = Required(tenantId, nameof(TenantId));
+        ElectronicDocumentId = electronicDocumentId;
+        DocumentTypeCode = ElectronicDocument.ValidateFixedDigits(documentTypeCode, 2, "electronic_document.reference.document_type.invalid", "Related document type must have 2 digits.");
+        Number = Required(number, nameof(Number));
+        IssueDate = issueDate;
+        ReasonOrPeriod = Required(reasonOrPeriod, nameof(ReasonOrPeriod));
+        CreatedAtUtc = now;
+    }
+
+    public Guid Id { get; private set; }
+    public string TenantId { get; private set; } = FinancialTenant.Default;
+    public Guid ElectronicDocumentId { get; private set; }
+    public string DocumentTypeCode { get; private set; } = "";
+    public string Number { get; private set; } = "";
+    public DateOnly IssueDate { get; private set; }
+    public string ReasonOrPeriod { get; private set; } = "";
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public static ElectronicDocumentReference Create(Guid id, string tenantId, Guid electronicDocumentId, string documentTypeCode, string number, DateOnly issueDate, string reasonOrPeriod, DateTimeOffset now) =>
+        new(id, tenantId, electronicDocumentId, documentTypeCode, number, issueDate, reasonOrPeriod, now);
+    private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new FinancialDomainException($"{name.ToLowerInvariant()}.required", $"{name} is required.") : value.Trim();
+}
+
+public sealed class ElectronicDocumentDebitNoteReason
+{
+    private ElectronicDocumentDebitNoteReason() { }
+    private ElectronicDocumentDebitNoteReason(Guid id, string tenantId, Guid electronicDocumentId, string reason, decimal amount, DateTimeOffset now)
+    {
+        Id = id;
+        TenantId = Required(tenantId, nameof(TenantId));
+        ElectronicDocumentId = electronicDocumentId;
+        Reason = Required(reason, nameof(Reason));
+        Amount = amount > 0 ? FinancialPrecision.Normalize(amount) : throw new FinancialDomainException("electronic_document.debit_note.amount.invalid", "Debit note amount must be greater than zero.");
+        CreatedAtUtc = now;
+    }
+
+    public Guid Id { get; private set; }
+    public string TenantId { get; private set; } = FinancialTenant.Default;
+    public Guid ElectronicDocumentId { get; private set; }
+    public string Reason { get; private set; } = "";
+    public decimal Amount { get; private set; }
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public static ElectronicDocumentDebitNoteReason Create(Guid id, string tenantId, Guid electronicDocumentId, string reason, decimal amount, DateTimeOffset now) =>
+        new(id, tenantId, electronicDocumentId, reason, amount, now);
+    private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new FinancialDomainException($"{name.ToLowerInvariant()}.required", $"{name} is required.") : value.Trim();
+}
+
+public sealed class ElectronicDocumentWithholdingTax
+{
+    private ElectronicDocumentWithholdingTax() { }
+    private ElectronicDocumentWithholdingTax(Guid id, string tenantId, Guid electronicDocumentId, string taxCode, string withholdingCode, decimal taxBase, decimal withholdingPercentage, decimal withheldAmount, string supportDocumentNumber, DateOnly supportDocumentIssueDate, string fiscalPeriod, DateTimeOffset now)
+    {
+        Id = id;
+        TenantId = Required(tenantId, nameof(TenantId));
+        ElectronicDocumentId = electronicDocumentId;
+        TaxCode = Required(taxCode, nameof(TaxCode));
+        WithholdingCode = Required(withholdingCode, nameof(WithholdingCode));
+        TaxBase = taxBase >= 0 ? FinancialPrecision.Normalize(taxBase) : throw new FinancialDomainException("electronic_document.withholding.base.invalid", "Withholding tax base cannot be negative.");
+        WithholdingPercentage = withholdingPercentage >= 0 ? FinancialPrecision.Normalize(withholdingPercentage) : throw new FinancialDomainException("electronic_document.withholding.percentage.invalid", "Withholding percentage cannot be negative.");
+        WithheldAmount = withheldAmount >= 0 ? FinancialPrecision.Normalize(withheldAmount) : throw new FinancialDomainException("electronic_document.withholding.amount.invalid", "Withheld amount cannot be negative.");
+        SupportDocumentNumber = Required(supportDocumentNumber, nameof(SupportDocumentNumber));
+        SupportDocumentIssueDate = supportDocumentIssueDate;
+        FiscalPeriod = Required(fiscalPeriod, nameof(FiscalPeriod));
+        CreatedAtUtc = now;
+    }
+
+    public Guid Id { get; private set; }
+    public string TenantId { get; private set; } = FinancialTenant.Default;
+    public Guid ElectronicDocumentId { get; private set; }
+    public string TaxCode { get; private set; } = "";
+    public string WithholdingCode { get; private set; } = "";
+    public decimal TaxBase { get; private set; }
+    public decimal WithholdingPercentage { get; private set; }
+    public decimal WithheldAmount { get; private set; }
+    public string SupportDocumentNumber { get; private set; } = "";
+    public DateOnly SupportDocumentIssueDate { get; private set; }
+    public string FiscalPeriod { get; private set; } = "";
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public static ElectronicDocumentWithholdingTax Create(Guid id, string tenantId, Guid electronicDocumentId, string taxCode, string withholdingCode, decimal taxBase, decimal withholdingPercentage, decimal withheldAmount, string supportDocumentNumber, DateOnly supportDocumentIssueDate, string fiscalPeriod, DateTimeOffset now) =>
+        new(id, tenantId, electronicDocumentId, taxCode, withholdingCode, taxBase, withholdingPercentage, withheldAmount, supportDocumentNumber, supportDocumentIssueDate, fiscalPeriod, now);
     private static string Required(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new FinancialDomainException($"{name.ToLowerInvariant()}.required", $"{name} is required.") : value.Trim();
 }
 

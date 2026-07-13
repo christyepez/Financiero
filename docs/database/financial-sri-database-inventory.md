@@ -5,6 +5,9 @@
 - `financial.electronic_documents`
 - `financial.electronic_document_lines`
 - `financial.electronic_document_taxes`
+- `financial.electronic_document_references`
+- `financial.electronic_document_debit_note_reasons`
+- `financial.electronic_document_withholding_taxes`
 - `financial.sri_document_sequences`
 - `financial.sri_catalog_items`
 
@@ -13,6 +16,8 @@
 - `007_sri_electronic_documents.sql`
 - `008_sri_sequences_catalogs.sql`
 - `009_sri_signature_storage_metadata.sql`
+- `010_sri_ride_and_integration_metadata.sql`
+- `011_tax_documents_foundation.sql`
 
 ## Reglas
 
@@ -31,6 +36,17 @@ Migración `010_sri_ride_and_integration_metadata.sql` agrega `RideGeneratedAtUt
 ## Sprint 2 P4
 
 P4 no agrega campos persistentes: readiness se calcula desde configuración runtime para evitar persistir secretos o estados sensibles.
+
+## Sprint 3 P1 tax documents
+
+Migración `011_tax_documents_foundation.sql` agrega:
+
+- referencias de documento modificado/sustento para NC, ND y retenciones;
+- motivos de nota de débito;
+- impuestos retenidos;
+- índices por tenant/documento, número relacionado, periodo fiscal y tipo documental.
+
+No almacena XML reales, certificados, secretos ni payloads de Portal Content/File.
 
 ## Catálogos seed mínimos
 

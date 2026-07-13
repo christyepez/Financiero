@@ -52,15 +52,28 @@
 - [ ] Diseñar secuencia de documentos tributarios.
 - [ ] Diseñar XML schema, autorización SRI y contingencia.
 - [ ] Integrar Audit/Outbox/Notification y Journal Entries.
-- [ ] Facturas, notas de crédito/débito, retenciones, liquidaciones y guías.
+- [x] Facturas, notas de crédito/débito y retenciones foundation.
+- [ ] Liquidaciones de compra, guías, reglas tributarias completas y reporting.
 - [ ] Diferir almacenamiento genérico a Content/File Portal.
 
 ## Sprint 3 — Integración SRI
 
-- [ ] Opción A: NC/ND/Retenciones foundation si no hay credenciales/certificado SRI no productivos.
+- [x] Opción A: NC/ND/Retenciones foundation si no hay credenciales/certificado SRI no productivos.
 - [ ] Opción B: Key Vault + XAdES real controlado + SRI Test manual si ya existe custodia segura aprobada fuera del repositorio.
 - [ ] Opción C: adapter productivo Portal Content/File + RIDE hardening cuando Portal exponga contrato productivo estable.
 - [ ] Requiere decisión explícita antes de activar envío real o firma productiva.
+
+## Sprint 3 P1
+
+- [x] Extender `ElectronicDocument` para Nota de Crédito `codDoc=04`.
+- [x] Extender `ElectronicDocument` para Nota de Débito `codDoc=05`.
+- [x] Extender `ElectronicDocument` para Retención `codDoc=07`.
+- [x] Agregar referencias, motivos de débito e impuestos retenidos.
+- [x] Agregar XML generators/validators foundation por tipo.
+- [x] Agregar endpoints protegidos por permisos existentes.
+- [x] Agregar migración `011_tax_documents_foundation.sql`.
+- [x] Extender smoke SRI mock para NC/ND/retenciones.
+- [x] Documentar ADR-006 y coordinación Sprint 3 P1.
 
 ## Sprint 4 — Reporting financiero/fiscal
 
