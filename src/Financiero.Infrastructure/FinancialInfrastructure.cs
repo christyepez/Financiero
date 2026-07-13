@@ -119,6 +119,8 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.Property(x => x.SignedXmlStorageId).HasMaxLength(256);
             entity.Property(x => x.AuthorizationXmlStorageId).HasMaxLength(256);
             entity.Property(x => x.RidePdfStorageId).HasMaxLength(256);
+            entity.Property(x => x.RidePdfHash).HasMaxLength(128);
+            entity.Property(x => x.StorageProvider).HasMaxLength(64);
             entity.Property(x => x.SignatureProvider).HasMaxLength(64);
             entity.Property(x => x.SignatureDigest).HasMaxLength(128);
             entity.Property(x => x.SriAuthorizationNumber).HasMaxLength(64);
@@ -128,6 +130,7 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.Property(x => x.LastSriMessage).HasMaxLength(1024);
             entity.Property(x => x.LastErrorCode).HasMaxLength(128);
             entity.Property(x => x.LastErrorMessage).HasMaxLength(1024);
+            entity.Property(x => x.LastIntegrationCorrelationId).HasMaxLength(128);
             entity.HasIndex(x => new { x.TenantId, x.AccessKey }).IsUnique().HasFilter("[AccessKey] IS NOT NULL");
             entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Environment, x.EstablishmentCode, x.EmissionPointCode, x.Sequential }).IsUnique().HasFilter("[Sequential] IS NOT NULL");
             entity.HasIndex(x => new { x.TenantId, x.Status, x.IssueDate });
@@ -495,10 +498,13 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ElectronicDocumentsService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
         services.AddScoped<IElectronicSignatureService, DevelopmentElectronicSignatureService>();
+        services.AddScoped<ICertificateProvider, KeyVaultCertificateProviderPlaceholder>();
         services.AddScoped<ISriReceptionClient, DevelopmentSriReceptionClient>();
         services.AddScoped<ISriAuthorizationClient, DevelopmentSriAuthorizationClient>();
         services.AddScoped<IElectronicDocumentXmlValidator, ElectronicDocumentXmlValidator>();
-        services.AddScoped<IElectronicDocumentStorageClient, DevelopmentElectronicDocumentStorageClient>();
+        services.AddScoped<IXsdSchemaValidator, XsdSchemaValidatorPlaceholder>();
+        services.AddScoped<IElectronicDocumentStorageClient, ConfiguredElectronicDocumentStorageClient>();
+        services.AddScoped<IRidePdfGenerator, DevelopmentRidePdfGenerator>();
 
         var connectionString = configuration.GetConnectionString("FinancialDb");
         if (!string.IsNullOrWhiteSpace(connectionString))

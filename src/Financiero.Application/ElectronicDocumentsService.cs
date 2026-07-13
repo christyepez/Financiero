@@ -39,6 +39,7 @@ public sealed record ElectronicDocumentDto(
     string? UnsignedXmlStorageId,
     string? SignedXmlStorageId,
     string? AuthorizationXmlStorageId,
+    string? RidePdfStorageId,
     string? SignatureProvider,
     string? SignatureDigest,
     string? LastSriStatus,
@@ -58,11 +59,15 @@ public interface IElectronicDocumentRepository
 }
 
 public sealed record IssuerSriOptions(string Ruc, string LegalName, string? TradeName, string Address, bool AccountingRequired);
-public enum SignatureProviderType { Development, Disabled, External, LocalCertificatePlaceholder }
-public sealed record SignatureContext(string TenantId, SignatureProviderType Provider, string EnvironmentName, string? CertificateSecretName, string? KeyVaultName, string? LocalCertificatePath, string? LocalCertificatePasswordSecretName, bool RequireTrustedCertificate);
+public enum SignatureProviderType { Development, Disabled, External, LocalCertificatePlaceholder, Xades }
+public sealed record SignatureContext(string TenantId, SignatureProviderType Provider, string EnvironmentName, string? CertificateSecretName, string? KeyVaultName, string? LocalCertificatePath, string? LocalCertificatePasswordSecretName, bool RequireTrustedCertificate, string? CertificateSource = null, string? TimestampPolicy = null, bool RequireOcsp = false);
 public sealed record SignatureResult(string SignedXml, string Provider, string? CertificateAlias, DateTimeOffset SignedAtUtc, string SignatureDigest, string SignatureMode);
+public sealed record XadesSignatureOptions(string Provider, string CertificateSource, string? CertificateSecretName, string? KeyVaultName, string? TimestampPolicy, bool RequireOcsp, bool RequireTrustedCertificate);
+public sealed record CertificateDescriptor(string Alias, string Source, bool HasPrivateKey, bool IsTrusted, DateTimeOffset? ExpiresAtUtc);
+public sealed record CertificateLoadResult(bool IsLoaded, CertificateDescriptor? Descriptor, string? ErrorCode, string? ErrorMessage);
 public enum SriResponseStatus { Received, Returned, Processing, Authorized, Rejected, NotFound, Error }
-public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds);
+public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool AllowProduction = false, bool LogPayloads = false);
+public sealed record SriSoapOptions(string Mode, bool AllowProduction, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool LogPayloads);
 public sealed record SriMessage(string Code, string Message, string? Type = null);
 public sealed record SriReceptionRequest(string AccessKey, string SignedXml, SriClientContext Context);
 public sealed record SriReceptionResponse(SriResponseStatus Status, string Code, string Message, IReadOnlyCollection<SriMessage> Messages);
@@ -70,7 +75,13 @@ public sealed record SriAuthorizationRequest(string AccessKey, SriClientContext 
 public sealed record SriAuthorizationResponse(SriResponseStatus Status, string Code, string Message, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string? AuthorizationXml, IReadOnlyCollection<SriMessage> Messages);
 public sealed record XmlValidationResult(bool IsValid, IReadOnlyCollection<string> Errors, IReadOnlyCollection<string> Warnings);
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
-public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest);
+public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf);
+public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId);
+public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
+public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
+public sealed record InvoiceRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string AccessKey, DateOnly IssueDate, string CustomerName, string CustomerIdentification, IReadOnlyCollection<ElectronicDocumentLineDto> Lines, decimal Subtotal, decimal Taxes, decimal Total, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status);
+public sealed record RidePdfGenerationResult(byte[] PdfBytes, string Html, string Hash, DateTimeOffset GeneratedAtUtc, string ContentType);
+public sealed record RideMetadataDto(string? RidePdfStorageId, string? RidePdfHash, DateTimeOffset? RideGeneratedAtUtc, string? StorageProvider);
 
 public interface IElectronicDocumentXmlGenerator
 {
@@ -80,6 +91,11 @@ public interface IElectronicDocumentXmlGenerator
 public interface IElectronicSignatureService
 {
     Task<SignatureResult> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct);
+}
+
+public interface ICertificateProvider
+{
+    Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct);
 }
 
 public interface ISriReceptionClient
@@ -108,6 +124,11 @@ public interface IElectronicDocumentStorageClient
     Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
     Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
     Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct);
+}
+
+public interface IRidePdfGenerator
+{
+    Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct);
 }
 
 public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenerator
@@ -173,9 +194,57 @@ public sealed class DevelopmentElectronicSignatureService : IElectronicSignature
             throw new FinancialApplicationException("sri.signature.local_certificate.not_implemented", "Local certificate signature is not implemented. Use secure secret storage before enabling it.");
         if (context.Provider == SignatureProviderType.External)
             throw new FinancialApplicationException("sri.signature.external.not_configured", "External signature provider port is defined but no production adapter is configured.");
+        if (context.Provider == SignatureProviderType.Xades)
+            throw new FinancialApplicationException("sri.signature.xades.adapter_required", "XAdES provider requires the XadesElectronicSignatureService and a secure certificate provider.");
         var signed = unsignedXml.Replace("</factura>", "<firmaSimulada proveedor=\"Development\" />" + "</factura>", StringComparison.Ordinal);
         var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(signed)));
         return Task.FromResult(new SignatureResult(signed, context.Provider.ToString(), context.CertificateSecretName, DateTimeOffset.UtcNow, digest, "DevelopmentSimulation"));
+    }
+}
+
+public sealed class DevelopmentCertificateProvider : ICertificateProvider
+{
+    public Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct)
+    {
+        if (string.Equals(context.EnvironmentName, "Production", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(new CertificateLoadResult(false, null, "sri.certificate.development.production", "Development certificate provider is not allowed in Production."));
+        return Task.FromResult(new CertificateLoadResult(true, new("development-certificate", "Development", true, false, null), null, null));
+    }
+}
+
+public sealed class KeyVaultCertificateProviderPlaceholder : ICertificateProvider
+{
+    public Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(context.KeyVaultName) || string.IsNullOrWhiteSpace(context.CertificateSecretName))
+            return Task.FromResult(new CertificateLoadResult(false, null, "sri.certificate.keyvault.missing_configuration", "Key Vault name and certificate secret name are required. No secret value is read or stored by this placeholder."));
+        return Task.FromResult(new CertificateLoadResult(false, new(context.CertificateSecretName, "KeyVault", false, false, null), "sri.certificate.keyvault.placeholder", "Key Vault certificate loading is a documented placeholder in P3 and must be implemented through a secure secret store."));
+    }
+}
+
+public sealed class LocalCertificateProviderPlaceholder : ICertificateProvider
+{
+    public Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct)
+    {
+        if (string.Equals(context.EnvironmentName, "Production", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(new CertificateLoadResult(false, null, "sri.certificate.local.production_rejected", "Local certificate files are rejected in Production. Use Key Vault or an external signature service."));
+        return Task.FromResult(new CertificateLoadResult(false, null, "sri.certificate.local.placeholder", "Local certificate loading is intentionally disabled. Do not commit .p12, .pfx, .key, .cer, .crt or .pem files."));
+    }
+}
+
+public sealed class XadesElectronicSignatureService(ICertificateProvider certificateProvider) : IElectronicSignatureService
+{
+    public async Task<SignatureResult> SignAsync(string unsignedXml, SignatureContext context, CancellationToken ct)
+    {
+        if (context.Provider != SignatureProviderType.Xades)
+            throw new FinancialApplicationException("sri.signature.xades.provider_required", "XAdES signature service requires provider Xades.");
+        var certificate = await certificateProvider.LoadAsync(context, ct);
+        if (!certificate.IsLoaded || certificate.Descriptor is null)
+            throw new FinancialApplicationException(certificate.ErrorCode ?? "sri.certificate.unavailable", certificate.ErrorMessage ?? "A secure certificate is required for XAdES signing.");
+        if (context.RequireTrustedCertificate && !certificate.Descriptor.IsTrusted)
+            throw new FinancialApplicationException("sri.certificate.untrusted", "A trusted certificate is required for XAdES signing.");
+        var digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(unsignedXml)));
+        throw new FinancialApplicationException("sri.signature.xades.not_implemented", $"XAdES signing contract is ready, but productive signing is disabled. Unsigned digest: {digest}.");
     }
 }
 
@@ -213,6 +282,33 @@ public sealed class SriSoapClientPlaceholder : ISriReceptionClient, ISriAuthoriz
         Task.FromException<SriAuthorizationResponse>(new FinancialApplicationException("sri.soap.placeholder", "SRI SOAP test/production client is a placeholder and is not enabled."));
 }
 
+public sealed class SriSoapReceptionClient : ISriReceptionClient
+{
+    public Task<SriReceptionResponse> SendAsync(SriReceptionRequest request, CancellationToken ct)
+    {
+        Validate(request.Context, request.Context.ReceptionUrl, "sri.soap.reception.url_required");
+        return Task.FromException<SriReceptionResponse>(new FinancialApplicationException("sri.soap.reception.not_enabled", "SRI SOAP test reception contract is prepared but the real HTTP adapter is disabled in P3."));
+    }
+
+    internal static void Validate(SriClientContext context, string? url, string missingUrlCode)
+    {
+        if (string.Equals(context.Mode, "Production", StringComparison.OrdinalIgnoreCase) && !context.AllowProduction)
+            throw new FinancialApplicationException("sri.soap.production.disabled", "SRI Production integration is disabled by configuration.");
+        if (string.IsNullOrWhiteSpace(url)) throw new FinancialApplicationException(missingUrlCode, "SRI SOAP URL must be configured for Test/Production mode.");
+        if (!Uri.TryCreate(url, UriKind.Absolute, out _)) throw new FinancialApplicationException("sri.soap.url.invalid", "SRI SOAP URL must be absolute and come from configuration.");
+        if (context.LogPayloads) throw new FinancialApplicationException("sri.soap.payload_logging.disabled", "Full XML payload logging is disabled to avoid leaking tax data.");
+    }
+}
+
+public sealed class SriSoapAuthorizationClient : ISriAuthorizationClient
+{
+    public Task<SriAuthorizationResponse> AuthorizeAsync(SriAuthorizationRequest request, CancellationToken ct)
+    {
+        SriSoapReceptionClient.Validate(request.Context, request.Context.AuthorizationUrl, "sri.soap.authorization.url_required");
+        return Task.FromException<SriAuthorizationResponse>(new FinancialApplicationException("sri.soap.authorization.not_enabled", "SRI SOAP test authorization contract is prepared but the real HTTP adapter is disabled in P3."));
+    }
+}
+
 public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValidator
 {
     public XmlValidationResult ValidateInvoiceXml(string xml)
@@ -231,8 +327,23 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
             if (detalles is null || !detalles.Elements("detalle").Any()) errors.Add("detalles with at least one detalle is required.");
             var accessKey = infoTributaria?.Element("claveAcceso")?.Value;
             if (string.IsNullOrWhiteSpace(accessKey) || accessKey.Length != 49 || !accessKey.All(char.IsDigit)) errors.Add("claveAcceso must have 49 digits.");
-            if (infoFactura?.Element("totalSinImpuestos") is null) errors.Add("totalSinImpuestos is required.");
-            if (infoFactura?.Element("importeTotal") is null) errors.Add("importeTotal is required.");
+            ValidateCode(infoTributaria, "ambiente", ["1", "2"], "ambiente must be 1 or 2.", errors);
+            ValidateCode(infoTributaria, "tipoEmision", ["1", "2"], "tipoEmision must be 1 or 2.", errors);
+            ValidateCode(infoTributaria, "codDoc", ["01", "04", "05", "06", "07"], "codDoc is not supported.", errors);
+            ValidateFixed(infoTributaria, "ruc", 13, "ruc must have 13 digits.", errors);
+            ValidateFixed(infoTributaria, "estab", 3, "estab must have 3 digits.", errors);
+            ValidateFixed(infoTributaria, "ptoEmi", 3, "ptoEmi must have 3 digits.", errors);
+            ValidateFixed(infoTributaria, "secuencial", 9, "secuencial must have 9 digits.", errors);
+            ValidateDecimal(infoFactura, "totalSinImpuestos", errors);
+            ValidateDecimal(infoFactura, "importeTotal", errors);
+            if (!string.IsNullOrWhiteSpace(accessKey) && accessKey.Length == 49)
+            {
+                if (infoTributaria?.Element("codDoc")?.Value is { } codDoc && accessKey[8..10] != codDoc) errors.Add("claveAcceso codDoc does not match infoTributaria.");
+                if (infoTributaria?.Element("ruc")?.Value is { } ruc && accessKey[10..23] != ruc) errors.Add("claveAcceso ruc does not match infoTributaria.");
+                if (infoTributaria?.Element("ambiente")?.Value is { } ambiente && accessKey[23].ToString() != ambiente) errors.Add("claveAcceso ambiente does not match infoTributaria.");
+                if (infoTributaria?.Element("estab")?.Value is { } estab && infoTributaria.Element("ptoEmi")?.Value is { } ptoEmi && accessKey[24..30] != estab + ptoEmi) errors.Add("claveAcceso serie does not match infoTributaria.");
+                if (infoTributaria?.Element("secuencial")?.Value is { } secuencial && accessKey[30..39] != secuencial) errors.Add("claveAcceso secuencial does not match infoTributaria.");
+            }
         }
         catch (Exception ex) when (ex is System.Xml.XmlException or InvalidOperationException)
         {
@@ -240,6 +351,31 @@ public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValid
         }
         return new(errors.Count == 0, errors, []);
     }
+
+    private static void ValidateCode(XElement? parent, string name, string[] allowed, string message, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value) || !allowed.Contains(value)) errors.Add(message);
+    }
+
+    private static void ValidateFixed(XElement? parent, string name, int length, string message, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value) || value.Length != length || !value.All(char.IsDigit)) errors.Add(message);
+    }
+
+    private static void ValidateDecimal(XElement? parent, string name, List<string> errors)
+    {
+        var value = parent?.Element(name)?.Value;
+        if (string.IsNullOrWhiteSpace(value)) { errors.Add($"{name} is required."); return; }
+        if (!decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out _)) errors.Add($"{name} must be numeric.");
+    }
+}
+
+public sealed class XsdSchemaValidatorPlaceholder : IXsdSchemaValidator
+{
+    public XmlValidationResult Validate(string xml, string schemaName) =>
+        new(false, [$"XSD schema validation mode is not enabled because schema '{schemaName}' is not configured in P3."], []);
 }
 
 public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocumentStorageClient
@@ -253,6 +389,64 @@ public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocu
         Task.FromResult(new StoredDocumentFile($"dev://{purpose}/{Guid.NewGuid():N}", Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))), "Development", DateTimeOffset.UtcNow, contentType, purpose));
 }
 
+public sealed class PortalContentFileStorageClient(PortalContentFileOptions options) : IElectronicDocumentStorageClient
+{
+    public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context);
+    public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "signed-xml", "application/xml", context);
+    public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "authorization-xml", "application/xml", context);
+    public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => SaveAsync(document, pdf, "ride-pdf", "application/pdf", context);
+
+    private Task<StoredDocumentFile> SaveAsync(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context)
+    {
+        if (!string.Equals(options.Provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase))
+            throw new FinancialApplicationException("sri.storage.provider.invalid", "PortalContentFileStorageClient requires provider PortalContentFile.");
+        if (string.IsNullOrWhiteSpace(options.PortalBaseUrl))
+            throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
+        var hash = Convert.ToHexString(SHA256.HashData(content));
+        var storageId = $"portal-content-file://{options.Container}/{document.TenantId}/{document.Id}/{purpose}";
+        return Task.FromResult(new StoredDocumentFile(storageId, hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+    }
+}
+
+public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigurationReader configuration) : IElectronicDocumentStorageClient
+{
+    private readonly DevelopmentElectronicDocumentStorageClient _development = new();
+    public async Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveUnsignedXmlAsync(document, xml, context, ct);
+    public async Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveSignedXmlAsync(document, xml, context, ct);
+    public async Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveAuthorizationXmlAsync(document, xml, context, ct);
+    public async Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveRidePdfAsync(document, pdf, context, ct);
+
+    private IElectronicDocumentStorageClient ResolveAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var provider = configuration.GetStringAsync("financial.sri.storage.provider", "Development", context, ct).GetAwaiter().GetResult();
+        if (string.Equals(provider, "Development", StringComparison.OrdinalIgnoreCase)) return _development;
+        if (string.Equals(provider, "Disabled", StringComparison.OrdinalIgnoreCase)) throw new FinancialApplicationException("sri.storage.disabled", "Electronic document storage is disabled.");
+        if (string.Equals(provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase))
+        {
+            var options = new PortalContentFileOptions(provider,
+                configuration.GetStringAsync("financial.sri.storage.portalBaseUrl", "", context, ct).GetAwaiter().GetResult(),
+                configuration.GetStringAsync("financial.sri.storage.container", "financial-electronic-documents", context, ct).GetAwaiter().GetResult(),
+                configuration.GetIntAsync("financial.sri.storage.timeoutSeconds", 30, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.retainXml", true, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.retainPdf", false, context, ct).GetAwaiter().GetResult());
+            return new PortalContentFileStorageClient(options);
+        }
+        throw new FinancialApplicationException("sri.storage.provider.unsupported", $"Unsupported electronic document storage provider '{provider}'.");
+    }
+}
+
+public sealed class DevelopmentRidePdfGenerator : IRidePdfGenerator
+{
+    public Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct)
+    {
+        var html = $"""
+<html><body><h1>RIDE Factura</h1><p>Emisor: {HtmlEncoder.Default.Encode(model.IssuerName)} - {model.IssuerRuc}</p><p>Documento: {model.DocumentNumber}</p><p>Clave acceso: {model.AccessKey}</p><p>Cliente: {HtmlEncoder.Default.Encode(model.CustomerName)} - {model.CustomerIdentification}</p><p>Fecha: {model.IssueDate:yyyy-MM-dd}</p><p>Subtotal: {model.Subtotal:0.00}</p><p>Impuestos: {model.Taxes:0.00}</p><p>Total: {model.Total:0.00}</p><p>Autorizacion: {model.AuthorizationNumber ?? "PENDIENTE"}</p><p>Ambiente: {model.Environment}</p><p>Estado: {model.Status}</p></body></html>
+""";
+        var bytes = Encoding.UTF8.GetBytes("%PDF-DEV-RIDE-PLACEHOLDER\n" + html);
+        return Task.FromResult(new RidePdfGenerationResult(bytes, html, Convert.ToHexString(SHA256.HashData(bytes)), DateTimeOffset.UtcNow, "application/pdf"));
+    }
+}
+
 public sealed class ElectronicDocumentsService(
     IElectronicDocumentRepository documents,
     IFinancialConfigurationReader configuration,
@@ -262,6 +456,7 @@ public sealed class ElectronicDocumentsService(
     ISriAuthorizationClient authorization,
     IElectronicDocumentXmlValidator xmlValidator,
     IElectronicDocumentStorageClient storage,
+    IRidePdfGenerator ridePdfGenerator,
     IPortalAuditClient audit,
     IPortalOutboxClient outbox)
 {
@@ -358,6 +553,7 @@ public sealed class ElectronicDocumentsService(
         SriReceptionResponse result;
         try
         {
+            document.RegisterSriReceptionAttempt(context.CorrelationId, DateTimeOffset.UtcNow);
             result = await reception.SendAsync(new(document.AccessKey!, signedXml, await GetSriClientContextAsync(document.Environment, context, ct)), ct);
         }
         catch (FinancialApplicationException ex)
@@ -379,6 +575,7 @@ public sealed class ElectronicDocumentsService(
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
         if (document.AccessKey is null) throw new FinancialApplicationException("sri.authorization.access_key.required", "Access key is required.");
+        document.RegisterSriAuthorizationAttempt(context.CorrelationId, DateTimeOffset.UtcNow);
         var result = await authorization.AuthorizeAsync(new(document.AccessKey, await GetSriClientContextAsync(document.Environment, context, ct)), ct);
         if (result.Status == SriResponseStatus.Authorized)
         {
@@ -398,6 +595,31 @@ public sealed class ElectronicDocumentsService(
     }
 
     public async Task<ElectronicDocumentDto> GetByIdAsync(Guid id, PortalCallContext context, CancellationToken ct) => ToDto(await GetRequiredAsync(id, context.TenantId, ct));
+    public async Task<ElectronicDocumentDto> GenerateRidePdfAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        if (string.IsNullOrWhiteSpace(document.AccessKey) || string.IsNullOrWhiteSpace(document.Sequential))
+            throw new FinancialApplicationException("sri.ride.access_key.required", "Generated XML/access key is required before generating RIDE.");
+        var issuer = await GetIssuerAsync(context, ct);
+        var model = new InvoiceRideModel(issuer.Ruc, issuer.LegalName, $"{document.EstablishmentCode}-{document.EmissionPointCode}-{document.Sequential}", document.AccessKey, document.IssueDate,
+            document.CustomerName, document.CustomerIdentification,
+            document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray(),
+            document.SubtotalWithoutTaxes, document.TotalTaxes, document.TotalAmount, document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString());
+        var ride = await ridePdfGenerator.GenerateInvoiceRideAsync(model, ct);
+        var stored = await storage.SaveRidePdfAsync(document, ride.PdfBytes, context, ct);
+        document.RegisterRidePdfStorage(stored.StorageId, ride.Hash, stored.Provider, context.CorrelationId, DateTimeOffset.UtcNow);
+        await documents.SaveChangesAsync(ct);
+        await AuditOutboxAsync("ElectronicDocumentRideGenerated", "ElectronicDocumentRideGenerated", document, context, ct);
+        await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
+        return ToDto(document);
+    }
+
+    public async Task<RideMetadataDto> GetRideMetadataAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        return new(document.RidePdfStorageId, document.RidePdfHash, document.RideGeneratedAtUtc, document.StorageProvider);
+    }
+
     public async Task<object> GetStatusAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
@@ -406,7 +628,7 @@ public sealed class ElectronicDocumentsService(
     public async Task<ElectronicDocumentStorageMetadataDto> GetStorageMetadataAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
-        return new(document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.RidePdfStorageId, document.XmlContentHash, document.SignedXmlContentHash, document.SignatureDigest);
+        return new(document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.RidePdfStorageId, document.XmlContentHash, document.SignedXmlContentHash, document.SignatureDigest, document.RidePdfHash, document.StorageProvider);
     }
     public async Task<ElectronicDocumentDto> GetByAccessKeyAsync(string accessKey, PortalCallContext context, CancellationToken ct) =>
         ToDto(await documents.GetByAccessKeyAsync(accessKey.Trim(), context.TenantId, ct) ?? throw new FinancialApplicationException("electronic_document.not_found", "Electronic document was not found."));
@@ -440,7 +662,10 @@ public sealed class ElectronicDocumentsService(
             await configuration.GetStringAsync("financial.sri.signature.keyVaultName", "", context, ct),
             await configuration.GetStringAsync("financial.sri.signature.localCertificatePath", "", context, ct),
             await configuration.GetStringAsync("financial.sri.signature.localCertificatePasswordSecretName", "", context, ct),
-            await configuration.GetBoolAsync("financial.sri.signature.requireTrustedCertificate", true, context, ct));
+            await configuration.GetBoolAsync("financial.sri.signature.requireTrustedCertificate", true, context, ct),
+            await configuration.GetStringAsync("financial.sri.signature.certificateSource", "KeyVault", context, ct),
+            await configuration.GetStringAsync("financial.sri.signature.timestampPolicy", "", context, ct),
+            await configuration.GetBoolAsync("financial.sri.signature.requireOcsp", false, context, ct));
     private async Task<SriClientContext> GetSriClientContextAsync(SriEnvironment environment, PortalCallContext context, CancellationToken ct) =>
         new(context.TenantId, environment,
             await configuration.GetStringAsync("financial.sri.integration.mode", "Development", context, ct),
@@ -448,7 +673,9 @@ public sealed class ElectronicDocumentsService(
             await configuration.GetStringAsync("financial.sri.authorizationUrl", "", context, ct),
             await configuration.GetIntAsync("financial.sri.timeoutSeconds", 30, context, ct),
             await configuration.GetIntAsync("financial.sri.maxRetries", 3, context, ct),
-            await configuration.GetIntAsync("financial.sri.retryDelaySeconds", 5, context, ct));
+            await configuration.GetIntAsync("financial.sri.retryDelaySeconds", 5, context, ct),
+            await configuration.GetBoolAsync("financial.sri.allowProduction", false, context, ct),
+            await configuration.GetBoolAsync("financial.sri.logPayloads", false, context, ct));
     private async Task AuditOnlyAsync(string auditAction, ElectronicDocument document, PortalCallContext context, CancellationToken ct) =>
         await audit.RecordAsync(new(auditAction, "financial.electronic-document", document.Id.ToString(), new { document.Id, document.AccessKey, document.Status }), context, ct);
     private async Task AuditOutboxAsync(string auditAction, string outboxType, ElectronicDocument document, PortalCallContext context, CancellationToken ct)
@@ -470,7 +697,7 @@ public sealed class ElectronicDocumentsService(
     public static ElectronicDocumentDto ToDto(ElectronicDocument document) => new(document.Id, document.TenantId, document.DocumentType.ToString(), document.Environment.ToString(), document.EmissionType.ToString(), document.Status.ToString(),
         document.EstablishmentCode, document.EmissionPointCode, document.Sequential, document.AccessKey, document.IssueDate, document.CustomerIdentificationType, document.CustomerIdentification, document.CustomerName, document.Currency,
         document.SubtotalWithoutTaxes, document.TotalDiscount, document.TotalTaxes, document.TotalAmount, document.SriAuthorizationNumber, document.SriAuthorizationDate, document.SriResponseCode, document.SriResponseMessage,
-        document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.SignatureProvider, document.SignatureDigest, document.LastSriStatus, document.LastSriMessage,
+        document.UnsignedXmlStorageId, document.SignedXmlStorageId, document.AuthorizationXmlStorageId, document.RidePdfStorageId, document.SignatureProvider, document.SignatureDigest, document.LastSriStatus, document.LastSriMessage,
         document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray());
 }
 
@@ -501,11 +728,12 @@ public static class SriPortalMetadata
         "financial.sri.issuer.specialTaxpayerNumber", "financial.sri.issuer.accountingRequired", "financial.sri.environment",
         "financial.sri.integration.mode", "financial.sri.emissionType", "financial.sri.defaultEstablishmentCode",
         "financial.sri.defaultEmissionPointCode", "financial.sri.signature.provider", "financial.sri.signature.certificateSecretName",
-        "financial.sri.signature.keyVaultName", "financial.sri.signature.localCertificatePath", "financial.sri.signature.localCertificatePasswordSecretName",
+        "financial.sri.signature.keyVaultName", "financial.sri.signature.certificateSource", "financial.sri.signature.timestampPolicy",
+        "financial.sri.signature.requireOcsp", "financial.sri.signature.localCertificatePath", "financial.sri.signature.localCertificatePasswordSecretName",
         "financial.sri.signature.requireTrustedCertificate", "financial.sri.receptionUrl", "financial.sri.authorizationUrl",
-        "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
+        "financial.sri.allowProduction", "financial.sri.logPayloads", "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
         "financial.sri.xml.version.invoice", "financial.sri.xml.includeOptionalFields", "financial.sri.xml.validation.mode",
         "financial.sri.xml.validation.failOnWarning", "financial.sri.storage.provider", "financial.sri.storage.portalBaseUrl",
-        "financial.sri.storage.container", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"
+        "financial.sri.storage.container", "financial.sri.storage.timeoutSeconds", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"
     ];
 }

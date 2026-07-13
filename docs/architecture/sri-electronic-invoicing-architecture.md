@@ -42,6 +42,8 @@ P2 normaliza request/response y estados SRI. No se invocan endpoints productivos
 
 P2 agrega puerto `IElectronicDocumentStorageClient`. El adapter development registra hashes/metadata; producción debe delegar XML/PDF a Portal Content/File.
 
+P3 agrega foundation para XAdES, SOAP Test, Portal Content/File y RIDE. Todos los adapters productivos quedan deshabilitados por configuración segura; el flujo local continúa con Development/Mock.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

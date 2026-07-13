@@ -57,6 +57,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/sign")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/send")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/authorize")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
     {
         var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -80,6 +81,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/journal-entries/00000000-0000-0000-0000-000000000001/post", "financial.journalentries.post")]
     [InlineData("GET", "/api/financial/electronic-documents", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/electronic-documents/invoices", "financial.electronicdocuments.create")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride", "financial.electronicdocuments.generate")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
     {
         using var request = new HttpRequestMessage(new HttpMethod(method), url);

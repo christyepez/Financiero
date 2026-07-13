@@ -40,6 +40,10 @@ if (-not $validation.data.isValid) {
 PostJson "$BaseUrl/api/financial/electronic-documents/$id/sign" @{} | Out-Null
 PostJson "$BaseUrl/api/financial/electronic-documents/$id/send" @{} | Out-Null
 $authorized = PostJson "$BaseUrl/api/financial/electronic-documents/$id/authorize" @{}
+$ride = PostJson "$BaseUrl/api/financial/electronic-documents/$id/generate-ride" @{}
+if (-not $ride.data.ridePdfStorageId) {
+    throw "RIDE storage metadata was not registered."
+}
 
 $accessKey = $authorized.data.accessKey
 if (-not $accessKey -or $accessKey.Length -ne 49) {
@@ -55,8 +59,12 @@ if ($status.data.status -ne "Authorized") {
     throw "Unexpected document status: $($status.data.status)"
 }
 $storage = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/storage-metadata" -Headers $headers
-if (-not $storage.data.unsignedXmlStorageId -or -not $storage.data.signedXmlStorageId -or -not $storage.data.authorizationXmlStorageId) {
+if (-not $storage.data.unsignedXmlStorageId -or -not $storage.data.signedXmlStorageId -or -not $storage.data.authorizationXmlStorageId -or -not $storage.data.ridePdfStorageId) {
     throw "Storage metadata placeholder was not registered."
+}
+$rideMetadata = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/ride-metadata" -Headers $headers
+if (-not $rideMetadata.data.ridePdfHash) {
+    throw "RIDE metadata endpoint failed."
 }
 
 Write-Host "Financial SRI smoke OK. Id=$id AccessKey=$accessKey Status=$($authorized.data.status)"

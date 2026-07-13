@@ -36,6 +36,10 @@ Si `financial.sri.integration.mode` no es Mock/Development y no existe cliente r
 
 ## Checklist real
 
+## Sprint 2 P3
+
+Se agregan `SriSoapReceptionClient` y `SriSoapAuthorizationClient` como foundation de contrato. Validan URL absoluta por configuración, `financial.sri.allowProduction=false` por defecto y `financial.sri.logPayloads=false`. La implementación HTTP real sigue deshabilitada hasta validación manual con SRI Test.
+
 - Confirmar URLs oficiales vigentes.
 - Validar certificados TLS.
 - Probar con ambiente Test.

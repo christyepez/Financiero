@@ -24,6 +24,10 @@
 - Unicidad de secuencial por tenant/tipo/ambiente/establecimiento/punto.
 - Metadata de firma/storage en `financial.electronic_documents`.
 
+## Sprint 2 P3 metadata
+
+Migración `010_sri_ride_and_integration_metadata.sql` agrega `RideGeneratedAtUtc`, `RidePdfHash`, `StorageProvider`, `SriReceptionAttempts`, `SriAuthorizationAttempts` y `LastIntegrationCorrelationId`.
+
 ## Catálogos seed mínimos
 
 Tipos de comprobante, identificación, IVA e impuestos mínimos para foundation. Deben validarse contra normativa vigente antes de producción.

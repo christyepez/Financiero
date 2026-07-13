@@ -20,12 +20,17 @@ services:
       financial__sri__issuer__accountingRequired: ${SRI_ACCOUNTING_REQUIRED:-true}
       financial__sri__environment: ${SRI_ENVIRONMENT:-Test}
       financial__sri__integration__mode: ${SRI_INTEGRATION_MODE:-Development}
+      financial__sri__allowProduction: ${SRI_ALLOW_PRODUCTION:-false}
+      financial__sri__logPayloads: ${SRI_LOG_PAYLOADS:-false}
       financial__sri__emissionType: ${SRI_EMISSION_TYPE:-Normal}
       financial__sri__defaultEstablishmentCode: ${SRI_DEFAULT_ESTABLISHMENT_CODE:-001}
       financial__sri__defaultEmissionPointCode: ${SRI_DEFAULT_EMISSION_POINT_CODE:-001}
       financial__sri__signature__provider: ${SRI_SIGNATURE_PROVIDER:-Development}
+      financial__sri__signature__certificateSource: ${SRI_SIGNATURE_CERTIFICATE_SOURCE:-KeyVault}
       financial__sri__signature__certificateSecretName: ${SRI_SIGNATURE_CERTIFICATE_SECRET_NAME:-}
       financial__sri__signature__keyVaultName: ${SRI_SIGNATURE_KEY_VAULT_NAME:-}
+      financial__sri__signature__timestampPolicy: ${SRI_SIGNATURE_TIMESTAMP_POLICY:-}
+      financial__sri__signature__requireOcsp: ${SRI_SIGNATURE_REQUIRE_OCSP:-false}
       financial__sri__signature__localCertificatePath: ${SRI_SIGNATURE_LOCAL_CERTIFICATE_PATH:-}
       financial__sri__signature__localCertificatePasswordSecretName: ${SRI_SIGNATURE_LOCAL_CERTIFICATE_PASSWORD_SECRET_NAME:-}
       financial__sri__signature__requireTrustedCertificate: ${SRI_SIGNATURE_REQUIRE_TRUSTED_CERTIFICATE:-true}
@@ -37,6 +42,7 @@ services:
       financial__sri__storage__provider: ${SRI_STORAGE_PROVIDER:-Development}
       financial__sri__storage__portalBaseUrl: ${SRI_STORAGE_PORTAL_BASE_URL:-}
       financial__sri__storage__container: ${SRI_STORAGE_CONTAINER:-financial-electronic-documents}
+      financial__sri__storage__timeoutSeconds: ${SRI_STORAGE_TIMEOUT_SECONDS:-30}
       financial__sri__storage__retainXml: ${SRI_STORAGE_RETAIN_XML:-true}
       financial__sri__storage__retainPdf: ${SRI_STORAGE_RETAIN_PDF:-false}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}

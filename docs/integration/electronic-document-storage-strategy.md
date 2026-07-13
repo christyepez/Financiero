@@ -32,3 +32,7 @@ Se guardan hashes y storage ids en `financial.electronic_documents`. La polític
 ## RIDE/PDF
 
 RIDE queda placeholder; no se genera PDF final en P2.
+
+## Sprint 2 P3
+
+Se agrega `PortalContentFileStorageClient` como contrato hacia Portal Content/File. Si `financial.sri.storage.provider=PortalContentFile`, `financial.sri.storage.portalBaseUrl` es obligatorio. Financiero no crea storage documental propio; solo conserva ids, hash, provider y correlación.

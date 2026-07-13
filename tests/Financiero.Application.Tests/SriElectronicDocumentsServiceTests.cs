@@ -22,13 +22,17 @@ public sealed class SriElectronicDocumentsServiceTests
         var signed = await service.SignElectronicDocumentAsync(generated.Id, Context, default);
         var sent = await service.SendElectronicDocumentAsync(signed.Id, Context, default);
         var authorized = await service.AuthorizeElectronicDocumentAsync(sent.Id, Context, default);
+        var ride = await service.GenerateRidePdfAsync(authorized.Id, Context, default);
         var byAccessKey = await service.GetByAccessKeyAsync(authorized.AccessKey!, Context, default);
+        var rideMetadata = await service.GetRideMetadataAsync(authorized.Id, Context, default);
 
         Assert.Equal("000000001", generated.Sequential);
         Assert.Equal(49, generated.AccessKey!.Length);
         Assert.Equal("Signed", signed.Status);
         Assert.Equal("Sent", sent.Status);
         Assert.Equal("Authorized", authorized.Status);
+        Assert.NotNull(ride.RidePdfStorageId);
+        Assert.NotNull(rideMetadata.RidePdfHash);
         Assert.Equal(authorized.Id, byAccessKey.Id);
         Assert.NotNull(authorized.UnsignedXmlStorageId);
         Assert.NotNull(authorized.SignedXmlStorageId);
@@ -87,7 +91,7 @@ public sealed class SriElectronicDocumentsServiceTests
             ["financial.sri.accessKey.numericCode"] = "12345678"
         });
         return new(repo, config, new ElectronicInvoiceXmlGenerator(), new DevelopmentElectronicSignatureService(), new DevelopmentSriReceptionClient(config),
-            new DevelopmentSriAuthorizationClient(config), new ElectronicDocumentXmlValidator(), new DevelopmentElectronicDocumentStorageClient(), audit, outbox);
+            new DevelopmentSriAuthorizationClient(config), new ElectronicDocumentXmlValidator(), new DevelopmentElectronicDocumentStorageClient(), new DevelopmentRidePdfGenerator(), audit, outbox);
     }
 
     [Fact]
@@ -96,6 +100,18 @@ public sealed class SriElectronicDocumentsServiceTests
         var validator = new ElectronicDocumentXmlValidator();
         Assert.False(validator.ValidateInvoiceXml("<factura>").IsValid);
         Assert.False(validator.ValidateInvoiceXml("<factura><infoTributaria></infoTributaria><infoFactura><totalSinImpuestos>1</totalSinImpuestos><importeTotal>1</importeTotal></infoFactura><detalles><detalle /></detalles></factura>").IsValid);
+    }
+
+    [Fact]
+    public void Xml_validator_rejects_invalid_sri_structure()
+    {
+        var xml = "<factura><infoTributaria><ambiente>9</ambiente><tipoEmision>1</tipoEmision><ruc>123</ruc><claveAcceso>1234567890123456789012345678901234567890123456789</claveAcceso><codDoc>99</codDoc><estab>1</estab><ptoEmi>001</ptoEmi><secuencial>1</secuencial></infoTributaria><infoFactura><totalSinImpuestos>ABC</totalSinImpuestos><importeTotal>1</importeTotal></infoFactura><detalles><detalle /></detalles></factura>";
+        var result = new ElectronicDocumentXmlValidator().ValidateInvoiceXml(xml);
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, x => x.Contains("ambiente"));
+        Assert.Contains(result.Errors, x => x.Contains("ruc"));
+        Assert.Contains(result.Errors, x => x.Contains("codDoc"));
+        Assert.Contains(result.Errors, x => x.Contains("numeric"));
     }
 
     [Fact]
@@ -110,6 +126,42 @@ public sealed class SriElectronicDocumentsServiceTests
     {
         var service = new DevelopmentElectronicSignatureService();
         await Assert.ThrowsAsync<FinancialApplicationException>(() => service.SignAsync("<factura />", new("default", SignatureProviderType.Development, "Production", "", "", "", "", true), default));
+    }
+
+    [Fact]
+    public async Task Xades_signature_fails_without_secure_certificate()
+    {
+        var service = new XadesElectronicSignatureService(new KeyVaultCertificateProviderPlaceholder());
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => service.SignAsync("<factura />", new("default", SignatureProviderType.Xades, "Development", "", "", "", "", true, "KeyVault"), default));
+        Assert.Equal("sri.certificate.keyvault.missing_configuration", ex.Code);
+    }
+
+    [Fact]
+    public async Task Local_certificate_placeholder_is_rejected_in_production()
+    {
+        var result = await new LocalCertificateProviderPlaceholder().LoadAsync(new("default", SignatureProviderType.Xades, "Production", "", "", "", "", true, "LocalPlaceholder"), default);
+        Assert.False(result.IsLoaded);
+        Assert.Equal("sri.certificate.local.production_rejected", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Sri_soap_test_requires_configured_url_and_blocks_production()
+    {
+        var client = new SriSoapReceptionClient();
+        var test = new SriClientContext("default", SriEnvironment.Test, "Test", "", "", 30, 3, 5);
+        await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SendAsync(new("123", "<xml />", test), default));
+        var production = test with { Mode = "Production", AllowProduction = false, ReceptionUrl = "https://example.test/reception" };
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SendAsync(new("123", "<xml />", production), default));
+        Assert.Equal("sri.soap.production.disabled", ex.Code);
+    }
+
+    [Fact]
+    public async Task Portal_content_file_storage_requires_base_url()
+    {
+        var client = new PortalContentFileStorageClient(new("PortalContentFile", "", "financial-electronic-documents", 30, true, false));
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SaveUnsignedXmlAsync(doc, "<factura />", Context, default));
+        Assert.Equal("sri.storage.portal_base_url.required", ex.Code);
     }
 }
 
