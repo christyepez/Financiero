@@ -72,6 +72,8 @@ public sealed class ElectronicDocument
     public string? SignedXmlStorageId { get; private set; }
     public string? AuthorizationXmlStorageId { get; private set; }
     public string? RidePdfStorageId { get; private set; }
+    public string? RidePdfHash { get; private set; }
+    public string? StorageProvider { get; private set; }
     public string? SignatureProvider { get; private set; }
     public string? SignatureDigest { get; private set; }
     public string? SriAuthorizationNumber { get; private set; }
@@ -82,6 +84,9 @@ public sealed class ElectronicDocument
     public string? LastSriMessage { get; private set; }
     public string? LastErrorCode { get; private set; }
     public string? LastErrorMessage { get; private set; }
+    public int SriReceptionAttempts { get; private set; }
+    public int SriAuthorizationAttempts { get; private set; }
+    public string? LastIntegrationCorrelationId { get; private set; }
     public Guid? RelatedJournalEntryId { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; private set; }
     public DateTimeOffset UpdatedAtUtc { get; private set; }
@@ -90,6 +95,7 @@ public sealed class ElectronicDocument
     public DateTimeOffset? SentAtUtc { get; private set; }
     public DateTimeOffset? AuthorizedAtUtc { get; private set; }
     public DateTimeOffset? RejectedAtUtc { get; private set; }
+    public DateTimeOffset? RideGeneratedAtUtc { get; private set; }
     public IReadOnlyCollection<ElectronicDocumentLine> Lines => _lines.OrderBy(x => x.LineNumber).ToArray();
     public IReadOnlyCollection<ElectronicDocumentTax> Taxes => _taxes.ToArray();
 
@@ -199,6 +205,30 @@ public sealed class ElectronicDocument
     public void RegisterAuthorizationXmlStorage(string storageId, DateTimeOffset now)
     {
         AuthorizationXmlStorageId = Required(storageId, nameof(AuthorizationXmlStorageId));
+        UpdatedAtUtc = now;
+    }
+
+    public void RegisterRidePdfStorage(string storageId, string hash, string provider, string correlationId, DateTimeOffset now)
+    {
+        RidePdfStorageId = Required(storageId, nameof(RidePdfStorageId));
+        RidePdfHash = Required(hash, nameof(RidePdfHash));
+        StorageProvider = Required(provider, nameof(StorageProvider));
+        LastIntegrationCorrelationId = Required(correlationId, nameof(LastIntegrationCorrelationId));
+        RideGeneratedAtUtc = now;
+        UpdatedAtUtc = now;
+    }
+
+    public void RegisterSriReceptionAttempt(string correlationId, DateTimeOffset now)
+    {
+        SriReceptionAttempts++;
+        LastIntegrationCorrelationId = Required(correlationId, nameof(LastIntegrationCorrelationId));
+        UpdatedAtUtc = now;
+    }
+
+    public void RegisterSriAuthorizationAttempt(string correlationId, DateTimeOffset now)
+    {
+        SriAuthorizationAttempts++;
+        LastIntegrationCorrelationId = Required(correlationId, nameof(LastIntegrationCorrelationId));
         UpdatedAtUtc = now;
     }
 

@@ -25,6 +25,8 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => service.AuthorizeElectronicDocumentAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsAuthorize);
         group.MapPost("/{id:guid}/validate-xml", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.ValidateInvoiceXmlAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsGenerate);
+        group.MapPost("/{id:guid}/generate-ride", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.GenerateRidePdfAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsGenerate);
         group.MapGet("/", async ([AsParameters] SearchElectronicDocumentsRequest request, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.SearchAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/{id:guid}", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
@@ -33,6 +35,8 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => service.GetStatusAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/{id:guid}/storage-metadata", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetStorageMetadataAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/{id:guid}/ride-metadata", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.GetRideMetadataAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/by-access-key/{accessKey}", async (string accessKey, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetByAccessKeyAsync(accessKey, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
 

@@ -35,6 +35,16 @@ La rotación debe hacerse cambiando alias/versiones en secret store, auditando c
 
 ## Checklist para habilitar firma real
 
+## Sprint 2 P3
+
+Se agrega `XadesElectronicSignatureService` y providers placeholder:
+
+- `DevelopmentCertificateProvider`.
+- `KeyVaultCertificateProviderPlaceholder`.
+- `LocalCertificateProviderPlaceholder`.
+
+`LocalCertificateProviderPlaceholder` rechaza Production. `KeyVault` no lee secretos todavía; solo valida nombres de configuración y falla claro. No deben versionarse `.p12`, `.pfx`, `.key`, `.cer`, `.crt` ni `.pem`.
+
 - Certificado válido en secret store.
 - Password en secret store.
 - Adapter XAdES probado.

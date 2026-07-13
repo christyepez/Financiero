@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 2 P2 XAdES / SRI Test Contract / XML-PDF Storage Strategy implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, clave de acceso, XML base, validación XML, firma dev/mock controlada, contrato SRI test/mock y storage placeholder delegado a Portal Content/File están preparados.
+Estado: Sprint 2 P3 XAdES / SRI SOAP Test / Portal Content-File / RIDE Foundation implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, clave de acceso, XML base, validación XML endurecida, firma dev/mock controlada, contrato SRI test/mock, storage placeholder delegado a Portal Content/File y RIDE/PDF Development están preparados.
 
 Documentos principales:
 
@@ -70,4 +70,4 @@ APIs principales:
 - `/api/financial/electronic-documents`
 - `/health`, `/health/live`, `/health/ready`
 
-Próximo paso recomendado: Sprint 2 P3 — integrar firma XAdES real y SRI Test real bajo secret store/Key Vault y Portal Content/File.
+Próximo paso recomendado: Sprint 2 P4 — activar integración real controlada con SRI Test y secret store/Key Vault validado manualmente.
