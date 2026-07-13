@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 2 P5 Real Secret Store Wiring / SRI Test Manual Connectivity / Observability Hardening implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File y RIDE/PDF Development están preparados.
+Estado: Sprint 2 P6 SRI Readiness Closure implementado sobre Sprint 1 Accounting Core. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, documentos electrónicos SRI foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File y RIDE/PDF Development quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -38,6 +38,14 @@ Documentos principales:
 - `docs/integration/sri-soap-contract-strategy.md`
 - `docs/integration/electronic-document-storage-strategy.md`
 - `docs/database/financial-sri-database-inventory.md`
+- `docs/releases/financial-sprint-02-sri-readiness-closure.md`
+- `docs/releases/financial-sprint-02-release-notes.md`
+- `docs/architecture/financial-sprint-02-sri-architecture-snapshot.md`
+- `docs/integration/sri-test-manual-validation-runbook.md`
+- `docs/security/sri-secret-certificate-checklist.md`
+- `docs/api/financial-sri-api-index.md`
+- `docs/qa/financial-sprint-02-qa-evidence.md`
+- `docs/coordination/financial-sprint-03-backlog-readiness.md`
 
 No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF, firma XAdES productiva ni envío real a SRI.
 
@@ -70,4 +78,4 @@ APIs principales:
 - `/api/financial/electronic-documents`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 2 P6 — ejecutar validación SRI Test controlada con credenciales no productivas fuera del repositorio.
+Próximo paso recomendado: decidir Sprint 3. Usar la opción A (NC/ND/Retenciones foundation) si aún no hay credenciales/certificado SRI no productivos; usar la opción B (Key Vault + XAdES/SRI Test controlado) solo si la custodia segura y aprobación manual ya existen fuera del repositorio.
