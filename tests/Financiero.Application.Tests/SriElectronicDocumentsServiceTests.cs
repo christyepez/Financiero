@@ -163,6 +163,78 @@ public sealed class SriElectronicDocumentsServiceTests
         var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SaveUnsignedXmlAsync(doc, "<factura />", Context, default));
         Assert.Equal("sri.storage.portal_base_url.required", ex.Code);
     }
+
+    [Fact]
+    public async Task Development_secret_store_is_blocked_in_production()
+    {
+        var result = await new DevelopmentSecretStoreClient("Production", allowDevelopmentSecrets: true)
+            .GetSecretAsync(new("SRI_CERTIFICATE", SecretStoreProviderType.Development), Context, default);
+        Assert.False(result.Success);
+        Assert.Equal("secret_store.development.production_blocked", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Disabled_secret_store_fails_without_exposing_secret()
+    {
+        var result = await new DisabledSecretStoreClient().GetSecretAsync(new("VERY_SECRET_CERTIFICATE_NAME", SecretStoreProviderType.Disabled), Context, default);
+        Assert.False(result.Success);
+        Assert.Equal("secret_store.disabled", result.ErrorCode);
+        Assert.DoesNotContain("VERY_SECRET_CERTIFICATE_NAME", result.ToString());
+    }
+
+    [Fact]
+    public async Task Azure_key_vault_placeholder_requires_configuration()
+    {
+        var result = await new AzureKeyVaultSecretStoreClientPlaceholder("").GetSecretAsync(new("SRI_CERT", SecretStoreProviderType.AzureKeyVault), Context, default);
+        Assert.False(result.Success);
+        Assert.Equal("secret_store.azure_keyvault.missing_configuration", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Secret_store_certificate_provider_uses_secret_reference()
+    {
+        var provider = new SecretStoreCertificateProvider(new DisabledSecretStoreClient());
+        var result = await provider.LoadAsync(new("default", SignatureProviderType.Xades, "Development", "SRI_CERTIFICATE_SECRET", "vault", "", "", true, "Disabled"), default);
+        Assert.False(result.IsLoaded);
+        Assert.Equal("secret_store.disabled", result.ErrorCode);
+        Assert.DoesNotContain("SRI_CERTIFICATE_SECRET", result.ToString());
+    }
+
+    [Fact]
+    public async Task Sri_soap_test_dry_run_validates_urls_without_sending()
+    {
+        var client = new SriSoapReceptionClient();
+        var context = new SriClientContext("default", SriEnvironment.Test, "Test", "https://example.test/reception", "https://example.test/auth", 30, 3, 5, false, false, true, true);
+        var result = await client.SendAsync(new("123", "<factura><claveAcceso>secret</claveAcceso></factura>", context), default);
+        Assert.Equal(SriResponseStatus.Received, result.Status);
+        Assert.Contains("dry-run", result.Message);
+    }
+
+    [Fact]
+    public void Sanitizer_masks_sensitive_values_and_xml()
+    {
+        Assert.Equal("*********************************************6789", SriSensitiveDataSanitizer.MaskAccessKey("1234567890123456789012345678901234567890123456789"));
+        Assert.Equal("******7890", SriSensitiveDataSanitizer.MaskCustomerIdentification("1234567890"));
+        var masked = SriSensitiveDataSanitizer.MaskXmlPayload("<factura><claveAcceso>123</claveAcceso></factura>");
+        Assert.Contains("redacted", masked);
+        Assert.DoesNotContain("claveAcceso", masked);
+    }
+
+    [Fact]
+    public async Task Sri_readiness_reports_mock_healthy_and_production_blocked()
+    {
+        var healthy = await new SriIntegrationReadinessService(new StaticFinancialConfigurationReader()).CheckAsync(Context, default);
+        Assert.Equal("Healthy", healthy.Status);
+
+        var blockedConfig = new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.sri.environment"] = "Production",
+            ["financial.sri.integration.mode"] = "Production",
+            ["financial.sri.allowProduction"] = "false"
+        });
+        var blocked = await new SriIntegrationReadinessService(blockedConfig).CheckAsync(Context, default);
+        Assert.Equal("Unhealthy", blocked.Status);
+    }
 }
 
 internal sealed class InMemoryElectronicDocumentRepository : IElectronicDocumentRepository

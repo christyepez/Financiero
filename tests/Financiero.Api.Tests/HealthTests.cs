@@ -9,6 +9,7 @@ public sealed class HealthTests : IClassFixture<FinancialApiFactory>
     private readonly HttpClient _client;
     public HealthTests(FinancialApiFactory factory) => _client = factory.CreateClient();
     [Fact] public async Task Health_is_anonymous_and_healthy() => Assert.True((await _client.GetAsync("/health")).IsSuccessStatusCode);
+    [Fact] public async Task Sri_health_is_anonymous() => Assert.False((await _client.GetAsync("/health/sri")).StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     [Fact] public async Task Correlation_id_is_preserved()
     { using var request=new HttpRequestMessage(HttpMethod.Get,"/health");request.Headers.Add("X-Correlation-ID","api-test-correlation");var response=await _client.SendAsync(request);Assert.Equal("api-test-correlation",response.Headers.GetValues("X-Correlation-ID").Single()); }
 }
@@ -58,6 +59,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/send")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/authorize")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride")]
+    [InlineData("GET", "/api/financial/electronic-documents/sri/readiness")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
     {
         var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -82,6 +84,8 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/electronic-documents", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/electronic-documents/invoices", "financial.electronicdocuments.create")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride", "financial.electronicdocuments.generate")]
+    [InlineData("GET", "/api/financial/electronic-documents/sri/readiness", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/integration-status", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
     {
         using var request = new HttpRequestMessage(new HttpMethod(method), url);

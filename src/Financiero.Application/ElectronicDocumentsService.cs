@@ -63,11 +63,31 @@ public enum SignatureProviderType { Development, Disabled, External, LocalCertif
 public sealed record SignatureContext(string TenantId, SignatureProviderType Provider, string EnvironmentName, string? CertificateSecretName, string? KeyVaultName, string? LocalCertificatePath, string? LocalCertificatePasswordSecretName, bool RequireTrustedCertificate, string? CertificateSource = null, string? TimestampPolicy = null, bool RequireOcsp = false);
 public sealed record SignatureResult(string SignedXml, string Provider, string? CertificateAlias, DateTimeOffset SignedAtUtc, string SignatureDigest, string SignatureMode);
 public sealed record XadesSignatureOptions(string Provider, string CertificateSource, string? CertificateSecretName, string? KeyVaultName, string? TimestampPolicy, bool RequireOcsp, bool RequireTrustedCertificate);
-public sealed record CertificateDescriptor(string Alias, string Source, bool HasPrivateKey, bool IsTrusted, DateTimeOffset? ExpiresAtUtc);
+public sealed record CertificateDescriptor(string Alias, string Source, bool HasPrivateKey, bool IsTrusted, DateTimeOffset? ExpiresAtUtc)
+{
+    public override string ToString() => $"CertificateDescriptor(Alias={SecretMaskingHelper.Mask(Alias)}, Source={Source}, HasPrivateKey={HasPrivateKey}, IsTrusted={IsTrusted}, ExpiresAtUtc={ExpiresAtUtc:O})";
+}
 public sealed record CertificateLoadResult(bool IsLoaded, CertificateDescriptor? Descriptor, string? ErrorCode, string? ErrorMessage);
+public enum SecretStoreProviderType { Development, AzureKeyVault, External, Disabled }
+public sealed record SecretReference(string Name, SecretStoreProviderType Provider, string? VaultName = null)
+{
+    public override string ToString() => $"SecretReference(Name={SecretMaskingHelper.Mask(Name)}, Provider={Provider}, VaultName={SecretMaskingHelper.Mask(VaultName)})";
+}
+public sealed record SecretValue(byte[] Value, string ContentType)
+{
+    public override string ToString() => $"SecretValue(ContentType={ContentType}, Length={Value.Length}, Value=**REDACTED**)";
+}
+public sealed record SecretMetadata(string Alias, string Source, DateTimeOffset? ExpiresAtUtc)
+{
+    public override string ToString() => $"SecretMetadata(Alias={SecretMaskingHelper.Mask(Alias)}, Source={Source}, ExpiresAtUtc={ExpiresAtUtc:O})";
+}
+public sealed record SecretStoreResult(bool Success, SecretValue? Value, SecretMetadata? Metadata, string? ErrorCode, string? ErrorMessage)
+{
+    public override string ToString() => $"SecretStoreResult(Success={Success}, Metadata={Metadata}, ErrorCode={ErrorCode}, ErrorMessage={SecretMaskingHelper.Mask(ErrorMessage)})";
+}
 public enum SriResponseStatus { Received, Returned, Processing, Authorized, Rejected, NotFound, Error }
-public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool AllowProduction = false, bool LogPayloads = false);
-public sealed record SriSoapOptions(string Mode, bool AllowProduction, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool LogPayloads);
+public sealed record SriClientContext(string TenantId, SriEnvironment Environment, string Mode, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool AllowProduction = false, bool LogPayloads = false, bool DryRun = true, bool MaskPayloads = true);
+public sealed record SriSoapOptions(string Mode, bool AllowProduction, bool DryRun, string? ReceptionUrl, string? AuthorizationUrl, int TimeoutSeconds, int MaxRetries, int RetryDelaySeconds, bool LogPayloads, bool MaskPayloads);
 public sealed record SriMessage(string Code, string Message, string? Type = null);
 public sealed record SriReceptionRequest(string AccessKey, string SignedXml, SriClientContext Context);
 public sealed record SriReceptionResponse(SriResponseStatus Status, string Code, string Message, IReadOnlyCollection<SriMessage> Messages);
@@ -75,8 +95,8 @@ public sealed record SriAuthorizationRequest(string AccessKey, SriClientContext 
 public sealed record SriAuthorizationResponse(SriResponseStatus Status, string Code, string Message, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string? AuthorizationXml, IReadOnlyCollection<SriMessage> Messages);
 public sealed record XmlValidationResult(bool IsValid, IReadOnlyCollection<string> Errors, IReadOnlyCollection<string> Warnings);
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
-public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf);
-public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId);
+public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true);
+public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata);
 public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
 public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
 public sealed record InvoiceRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string AccessKey, DateOnly IssueDate, string CustomerName, string CustomerIdentification, IReadOnlyCollection<ElectronicDocumentLineDto> Lines, decimal Subtotal, decimal Taxes, decimal Total, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status);
@@ -96,6 +116,11 @@ public interface IElectronicSignatureService
 public interface ICertificateProvider
 {
     Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct);
+}
+
+public interface ISecretStoreClient
+{
+    Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct);
 }
 
 public interface ISriReceptionClient
@@ -212,6 +237,77 @@ public sealed class DevelopmentCertificateProvider : ICertificateProvider
     }
 }
 
+public sealed class DevelopmentSecretStoreClient(string environmentName = "Development", bool allowDevelopmentSecrets = false) : ISecretStoreClient
+{
+    public Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct)
+    {
+        if (!string.Equals(environmentName, "Development", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.development.production_blocked", "Development secret store is not allowed outside Development."));
+        if (!allowDevelopmentSecrets)
+            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.development.disabled", "Development secret reads require explicit configuration."));
+        var value = Environment.GetEnvironmentVariable(reference.Name);
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.secret.not_found", "Configured secret reference was not found."));
+        return Task.FromResult(new SecretStoreResult(true, new(Encoding.UTF8.GetBytes(value), "text/plain"), new(reference.Name, "DevelopmentEnvironment", null), null, null));
+    }
+}
+
+public sealed class AzureKeyVaultSecretStoreClientPlaceholder(string? keyVaultName) : ISecretStoreClient
+{
+    public Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(keyVaultName))
+            return Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.azure_keyvault.missing_configuration", "Key Vault name is required. No secret value was read."));
+        return Task.FromResult(new SecretStoreResult(false, null, new(reference.Name, "AzureKeyVault", null), "secret_store.azure_keyvault.placeholder", "Azure Key Vault adapter is a secure placeholder until SDK credentials are configured."));
+    }
+}
+
+public sealed class ExternalSecretStoreClientPlaceholder : ISecretStoreClient
+{
+    public Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct) =>
+        Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.external.not_configured", "External secret store adapter is not configured."));
+}
+
+public sealed class DisabledSecretStoreClient : ISecretStoreClient
+{
+    public Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct) =>
+        Task.FromResult(new SecretStoreResult(false, null, null, "secret_store.disabled", "Secret store is disabled."));
+}
+
+public sealed class ConfiguredSecretStoreClient(IFinancialConfigurationReader configuration) : ISecretStoreClient
+{
+    public async Task<SecretStoreResult> GetSecretAsync(SecretReference reference, PortalCallContext context, CancellationToken ct)
+    {
+        var providerText = await configuration.GetStringAsync("financial.secrets.provider", "Disabled", context, ct);
+        var environment = await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct);
+        var keyVault = await configuration.GetStringAsync("financial.secrets.keyVaultName", reference.VaultName ?? "", context, ct);
+        var allowDev = await configuration.GetBoolAsync("financial.secrets.allowDevelopmentSecrets", false, context, ct);
+        var provider = Enum.TryParse<SecretStoreProviderType>(providerText, true, out var parsed) ? parsed : SecretStoreProviderType.Disabled;
+        ISecretStoreClient client = provider switch
+        {
+            SecretStoreProviderType.Development => new DevelopmentSecretStoreClient(environment, allowDev),
+            SecretStoreProviderType.AzureKeyVault => new AzureKeyVaultSecretStoreClientPlaceholder(keyVault),
+            SecretStoreProviderType.External => new ExternalSecretStoreClientPlaceholder(),
+            _ => new DisabledSecretStoreClient()
+        };
+        return await client.GetSecretAsync(reference, context, ct);
+    }
+}
+
+public sealed class SecretStoreCertificateProvider(ISecretStoreClient secretStore) : ICertificateProvider
+{
+    public async Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(context.CertificateSecretName))
+            return new(false, null, "sri.certificate.secret_reference.required", "Certificate secret reference is required.");
+        var provider = Enum.TryParse<SecretStoreProviderType>(context.CertificateSource, true, out var parsed) ? parsed : SecretStoreProviderType.Disabled;
+        var secret = await secretStore.GetSecretAsync(new(context.CertificateSecretName, provider, context.KeyVaultName), new(context.TenantId, "certificate-provider"), ct);
+        if (!secret.Success || secret.Value is null)
+            return new(false, null, secret.ErrorCode ?? "sri.certificate.secret_unavailable", secret.ErrorMessage ?? "Certificate secret is unavailable.");
+        return new(false, new(SecretMaskingHelper.Mask(context.CertificateSecretName) ?? "certificate", provider.ToString(), true, false, null), "sri.certificate.xades.not_enabled", "Certificate bytes were resolved in-memory, but real XAdES signing remains disabled in P4.");
+    }
+}
+
 public sealed class KeyVaultCertificateProviderPlaceholder : ICertificateProvider
 {
     public Task<CertificateLoadResult> LoadAsync(SignatureContext context, CancellationToken ct)
@@ -287,6 +383,8 @@ public sealed class SriSoapReceptionClient : ISriReceptionClient
     public Task<SriReceptionResponse> SendAsync(SriReceptionRequest request, CancellationToken ct)
     {
         Validate(request.Context, request.Context.ReceptionUrl, "sri.soap.reception.url_required");
+        if (request.Context.DryRun)
+            return Task.FromResult(new SriReceptionResponse(SriResponseStatus.Received, "SRI-TEST-DRY-RUN", "SRI Test dry-run validated reception configuration without sending XML.", []));
         return Task.FromException<SriReceptionResponse>(new FinancialApplicationException("sri.soap.reception.not_enabled", "SRI SOAP test reception contract is prepared but the real HTTP adapter is disabled in P3."));
     }
 
@@ -296,7 +394,7 @@ public sealed class SriSoapReceptionClient : ISriReceptionClient
             throw new FinancialApplicationException("sri.soap.production.disabled", "SRI Production integration is disabled by configuration.");
         if (string.IsNullOrWhiteSpace(url)) throw new FinancialApplicationException(missingUrlCode, "SRI SOAP URL must be configured for Test/Production mode.");
         if (!Uri.TryCreate(url, UriKind.Absolute, out _)) throw new FinancialApplicationException("sri.soap.url.invalid", "SRI SOAP URL must be absolute and come from configuration.");
-        if (context.LogPayloads) throw new FinancialApplicationException("sri.soap.payload_logging.disabled", "Full XML payload logging is disabled to avoid leaking tax data.");
+        if (context.LogPayloads && (context.Environment == SriEnvironment.Production || !context.MaskPayloads)) throw new FinancialApplicationException("sri.soap.payload_logging.disabled", "Full XML payload logging is disabled to avoid leaking tax data.");
     }
 }
 
@@ -305,8 +403,24 @@ public sealed class SriSoapAuthorizationClient : ISriAuthorizationClient
     public Task<SriAuthorizationResponse> AuthorizeAsync(SriAuthorizationRequest request, CancellationToken ct)
     {
         SriSoapReceptionClient.Validate(request.Context, request.Context.AuthorizationUrl, "sri.soap.authorization.url_required");
+        if (request.Context.DryRun)
+            return Task.FromResult(new SriAuthorizationResponse(SriResponseStatus.Processing, "SRI-TEST-DRY-RUN", "SRI Test dry-run validated authorization configuration without calling SRI.", null, null, null, []));
         return Task.FromException<SriAuthorizationResponse>(new FinancialApplicationException("sri.soap.authorization.not_enabled", "SRI SOAP test authorization contract is prepared but the real HTTP adapter is disabled in P3."));
     }
+}
+
+public static class SriSoapResponseParser
+{
+    public static SriResponseStatus ParseStatus(string? value) => (value ?? "").Trim().ToUpperInvariant() switch
+    {
+        "RECIBIDA" or "RECEIVED" => SriResponseStatus.Received,
+        "DEVUELTA" or "RETURNED" => SriResponseStatus.Returned,
+        "EN PROCESO" or "PROCESSING" => SriResponseStatus.Processing,
+        "AUTORIZADO" or "AUTHORIZED" => SriResponseStatus.Authorized,
+        "NO AUTORIZADO" or "RECHAZADO" or "REJECTED" => SriResponseStatus.Rejected,
+        "" => SriResponseStatus.NotFound,
+        _ => SriResponseStatus.Error
+    };
 }
 
 public sealed class ElectronicDocumentXmlValidator : IElectronicDocumentXmlValidator
@@ -391,6 +505,19 @@ public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocu
 
 public sealed class PortalContentFileStorageClient(PortalContentFileOptions options) : IElectronicDocumentStorageClient
 {
+    public static PortalContentFileRequest BuildRequest(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context, PortalContentFileOptions options)
+    {
+        var hash = Convert.ToHexString(SHA256.HashData(content));
+        return new(purpose, $"{document.AccessKey ?? document.Id.ToString("N")}-{purpose}", contentType, hash, options.Container, context.CorrelationId, context.TenantId,
+            new Dictionary<string, string>
+            {
+                ["documentId"] = document.Id.ToString(),
+                ["documentType"] = document.DocumentType.ToString(),
+                ["status"] = document.Status.ToString(),
+                ["accessKeyMasked"] = SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey) ?? ""
+            });
+    }
+
     public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context);
     public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "signed-xml", "application/xml", context);
     public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "authorization-xml", "application/xml", context);
@@ -402,9 +529,9 @@ public sealed class PortalContentFileStorageClient(PortalContentFileOptions opti
             throw new FinancialApplicationException("sri.storage.provider.invalid", "PortalContentFileStorageClient requires provider PortalContentFile.");
         if (string.IsNullOrWhiteSpace(options.PortalBaseUrl))
             throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
-        var hash = Convert.ToHexString(SHA256.HashData(content));
+        var request = BuildRequest(document, content, purpose, contentType, context, options);
         var storageId = $"portal-content-file://{options.Container}/{document.TenantId}/{document.Id}/{purpose}";
-        return Task.FromResult(new StoredDocumentFile(storageId, hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+        return Task.FromResult(new StoredDocumentFile(storageId, request.Hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
     }
 }
 
@@ -428,7 +555,9 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
                 configuration.GetStringAsync("financial.sri.storage.container", "financial-electronic-documents", context, ct).GetAwaiter().GetResult(),
                 configuration.GetIntAsync("financial.sri.storage.timeoutSeconds", 30, context, ct).GetAwaiter().GetResult(),
                 configuration.GetBoolAsync("financial.sri.storage.retainXml", true, context, ct).GetAwaiter().GetResult(),
-                configuration.GetBoolAsync("financial.sri.storage.retainPdf", false, context, ct).GetAwaiter().GetResult());
+                configuration.GetBoolAsync("financial.sri.storage.retainPdf", false, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.sendPayloads", false, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct).GetAwaiter().GetResult());
             return new PortalContentFileStorageClient(options);
         }
         throw new FinancialApplicationException("sri.storage.provider.unsupported", $"Unsupported electronic document storage provider '{provider}'.");
@@ -444,6 +573,74 @@ public sealed class DevelopmentRidePdfGenerator : IRidePdfGenerator
 """;
         var bytes = Encoding.UTF8.GetBytes("%PDF-DEV-RIDE-PLACEHOLDER\n" + html);
         return Task.FromResult(new RidePdfGenerationResult(bytes, html, Convert.ToHexString(SHA256.HashData(bytes)), DateTimeOffset.UtcNow, "application/pdf"));
+    }
+}
+
+public static class SecretMaskingHelper
+{
+    public static string? Mask(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return value;
+        var trimmed = value.Trim();
+        return trimmed.Length <= 4 ? "****" : $"{trimmed[..2]}***{trimmed[^2..]}";
+    }
+}
+
+public static class SriSensitiveDataSanitizer
+{
+    public static string? MaskAccessKey(string? accessKey) => MaskDigits(accessKey, 4);
+    public static string? MaskCustomerIdentification(string? identification) => MaskDigits(identification, 4);
+    public static string MaskXmlPayload(string? xml) => string.IsNullOrWhiteSpace(xml) ? "" : $"<xml redacted=\"true\" sha256=\"{Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(xml)))[..16]}\" />";
+    public static string SanitizeMessage(string? message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return "";
+        var sanitized = message.Replace("<", "[").Replace(">", "]");
+        return sanitized.Length > 256 ? sanitized[..256] + "..." : sanitized;
+    }
+
+    private static string? MaskDigits(string? value, int visible)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return value;
+        var trimmed = value.Trim();
+        if (trimmed.Length <= visible) return "****";
+        return new string('*', Math.Max(0, trimmed.Length - visible)) + trimmed[^visible..];
+    }
+}
+
+public sealed record SriReadinessResult(string Status, IReadOnlyCollection<string> Checks, IReadOnlyCollection<string> Issues);
+
+public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader configuration)
+{
+    public async Task<SriReadinessResult> CheckAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var checks = new List<string>();
+        var issues = new List<string>();
+        var environmentName = await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct);
+        var sriEnvironment = await configuration.GetStringAsync("financial.sri.environment", "Test", context, ct);
+        var mode = await configuration.GetStringAsync("financial.sri.integration.mode", "Development", context, ct);
+        var allowProduction = await configuration.GetBoolAsync("financial.sri.allowProduction", false, context, ct);
+        var secretProvider = await configuration.GetStringAsync("financial.secrets.provider", "Disabled", context, ct);
+        var signatureProvider = await configuration.GetStringAsync("financial.sri.signature.provider", "Development", context, ct);
+        var storageProvider = await configuration.GetStringAsync("financial.sri.storage.provider", "Development", context, ct);
+        var receptionUrl = await configuration.GetStringAsync("financial.sri.receptionUrl", "", context, ct);
+        var authorizationUrl = await configuration.GetStringAsync("financial.sri.authorizationUrl", "", context, ct);
+        var localCertificatePath = await configuration.GetStringAsync("financial.sri.signature.localCertificatePath", "", context, ct);
+
+        checks.Add($"mode={mode}");
+        checks.Add($"secretStore={secretProvider}");
+        checks.Add($"signature={signatureProvider}");
+        checks.Add($"storage={storageProvider}");
+        checks.Add($"sriEnvironment={sriEnvironment}");
+
+        if (string.Equals(sriEnvironment, "Production", StringComparison.OrdinalIgnoreCase) && !allowProduction) issues.Add("SRI Production is blocked because allowProduction=false.");
+        if (string.Equals(mode, "Production", StringComparison.OrdinalIgnoreCase) && !allowProduction) issues.Add("Integration mode Production is blocked.");
+        if (string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) && (string.IsNullOrWhiteSpace(receptionUrl) || string.IsNullOrWhiteSpace(authorizationUrl))) issues.Add("SRI Test mode requires receptionUrl and authorizationUrl.");
+        if (string.Equals(storageProvider, "PortalContentFile", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(await configuration.GetStringAsync("financial.sri.storage.portalBaseUrl", "", context, ct))) issues.Add("PortalContentFile storage requires portalBaseUrl.");
+        if (string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(localCertificatePath)) issues.Add("Local certificate path is not allowed in Production.");
+        if (string.Equals(secretProvider, "Development", StringComparison.OrdinalIgnoreCase) && string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase)) issues.Add("Development secret store is not allowed in Production.");
+
+        var status = issues.Count == 0 ? "Healthy" : string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) ? "Degraded" : "Unhealthy";
+        return new(status, checks, issues);
     }
 }
 
@@ -620,6 +817,25 @@ public sealed class ElectronicDocumentsService(
         return new(document.RidePdfStorageId, document.RidePdfHash, document.RideGeneratedAtUtc, document.StorageProvider);
     }
 
+    public async Task<object> GetIntegrationStatusAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        return new
+        {
+            document.Id,
+            AccessKey = SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey),
+            CustomerIdentification = SriSensitiveDataSanitizer.MaskCustomerIdentification(document.CustomerIdentification),
+            Status = document.Status.ToString(),
+            document.LastSriStatus,
+            LastSriMessage = SriSensitiveDataSanitizer.SanitizeMessage(document.LastSriMessage),
+            document.SriReceptionAttempts,
+            document.SriAuthorizationAttempts,
+            document.LastIntegrationCorrelationId,
+            document.StorageProvider,
+            document.RideGeneratedAtUtc
+        };
+    }
+
     public async Task<object> GetStatusAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
@@ -663,7 +879,7 @@ public sealed class ElectronicDocumentsService(
             await configuration.GetStringAsync("financial.sri.signature.localCertificatePath", "", context, ct),
             await configuration.GetStringAsync("financial.sri.signature.localCertificatePasswordSecretName", "", context, ct),
             await configuration.GetBoolAsync("financial.sri.signature.requireTrustedCertificate", true, context, ct),
-            await configuration.GetStringAsync("financial.sri.signature.certificateSource", "KeyVault", context, ct),
+            await configuration.GetStringAsync("financial.sri.signature.certificateSource", "SecretStore", context, ct),
             await configuration.GetStringAsync("financial.sri.signature.timestampPolicy", "", context, ct),
             await configuration.GetBoolAsync("financial.sri.signature.requireOcsp", false, context, ct));
     private async Task<SriClientContext> GetSriClientContextAsync(SriEnvironment environment, PortalCallContext context, CancellationToken ct) =>
@@ -675,7 +891,9 @@ public sealed class ElectronicDocumentsService(
             await configuration.GetIntAsync("financial.sri.maxRetries", 3, context, ct),
             await configuration.GetIntAsync("financial.sri.retryDelaySeconds", 5, context, ct),
             await configuration.GetBoolAsync("financial.sri.allowProduction", false, context, ct),
-            await configuration.GetBoolAsync("financial.sri.logPayloads", false, context, ct));
+            await configuration.GetBoolAsync("financial.sri.logPayloads", false, context, ct),
+            await configuration.GetBoolAsync("financial.sri.test.dryRun", true, context, ct),
+            await configuration.GetBoolAsync("financial.sri.maskPayloads", true, context, ct));
     private async Task AuditOnlyAsync(string auditAction, ElectronicDocument document, PortalCallContext context, CancellationToken ct) =>
         await audit.RecordAsync(new(auditAction, "financial.electronic-document", document.Id.ToString(), new { document.Id, document.AccessKey, document.Status }), context, ct);
     private async Task AuditOutboxAsync(string auditAction, string outboxType, ElectronicDocument document, PortalCallContext context, CancellationToken ct)
@@ -724,16 +942,18 @@ public static class SriPortalMetadata
     ];
     public static readonly string[] ConfigurationKeys =
     [
+        "financial.secrets.provider", "financial.secrets.keyVaultName", "financial.secrets.allowDevelopmentSecrets", "financial.secrets.maskSecretsInLogs",
         "financial.sri.issuer.ruc", "financial.sri.issuer.legalName", "financial.sri.issuer.tradeName", "financial.sri.issuer.address",
         "financial.sri.issuer.specialTaxpayerNumber", "financial.sri.issuer.accountingRequired", "financial.sri.environment",
         "financial.sri.integration.mode", "financial.sri.emissionType", "financial.sri.defaultEstablishmentCode",
         "financial.sri.defaultEmissionPointCode", "financial.sri.signature.provider", "financial.sri.signature.certificateSecretName",
+        "financial.sri.signature.certificatePasswordSecretName",
         "financial.sri.signature.keyVaultName", "financial.sri.signature.certificateSource", "financial.sri.signature.timestampPolicy",
         "financial.sri.signature.requireOcsp", "financial.sri.signature.localCertificatePath", "financial.sri.signature.localCertificatePasswordSecretName",
         "financial.sri.signature.requireTrustedCertificate", "financial.sri.receptionUrl", "financial.sri.authorizationUrl",
-        "financial.sri.allowProduction", "financial.sri.logPayloads", "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
+        "financial.sri.allowProduction", "financial.sri.logPayloads", "financial.sri.maskPayloads", "financial.sri.test.dryRun", "financial.sri.timeoutSeconds", "financial.sri.maxRetries", "financial.sri.retryDelaySeconds",
         "financial.sri.xml.version.invoice", "financial.sri.xml.includeOptionalFields", "financial.sri.xml.validation.mode",
         "financial.sri.xml.validation.failOnWarning", "financial.sri.storage.provider", "financial.sri.storage.portalBaseUrl",
-        "financial.sri.storage.container", "financial.sri.storage.timeoutSeconds", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"
+        "financial.sri.storage.container", "financial.sri.storage.timeoutSeconds", "financial.sri.storage.sendPayloads", "financial.sri.storage.maskPayloads", "financial.sri.storage.retainXml", "financial.sri.storage.retainPdf"
     ];
 }

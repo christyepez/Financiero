@@ -42,6 +42,7 @@
 - [x] Integrar permisos runtime, Audit/Outbox, migraciones y smoke SRI.
 - [x] Implementar P2 contrato XAdES, SRI test/mock y storage strategy.
 - [x] Implementar P3 XAdES adapter foundation, SRI SOAP Test contract, Portal Content/File contract, RIDE/PDF foundation y migración 010.
+- [x] Implementar P4 Secret Store, SRI Test dry-run/readiness, sanitización y Portal Content/File productive-readiness.
 - [x] Agregar validación XML básica.
 - [x] Agregar metadata de firma/storage y migración 009.
 - [ ] Definir certificado/firma electrónica y estrategia XAdES.

@@ -44,6 +44,8 @@ P2 agrega puerto `IElectronicDocumentStorageClient`. El adapter development regi
 
 P3 agrega foundation para XAdES, SOAP Test, Portal Content/File y RIDE. Todos los adapters productivos quedan deshabilitados por configuración segura; el flujo local continúa con Development/Mock.
 
+P4 agrega Secret Store, sanitización y readiness SRI. Los adapters productivos siguen bloqueados por gates explícitos.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

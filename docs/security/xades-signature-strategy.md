@@ -45,6 +45,10 @@ Se agrega `XadesElectronicSignatureService` y providers placeholder:
 
 `LocalCertificateProviderPlaceholder` rechaza Production. `KeyVault` no lee secretos todavía; solo valida nombres de configuración y falla claro. No deben versionarse `.p12`, `.pfx`, `.key`, `.cer`, `.crt` ni `.pem`.
 
+## Sprint 2 P4
+
+`SecretStoreCertificateProvider` usa `SecretReference` contra `ISecretStoreClient`. P4 no firma con certificado real: si el secreto se resuelve, el provider conserva el contrato y falla con `sri.certificate.xades.not_enabled` hasta implementar firma XAdES real.
+
 - Certificado válido en secret store.
 - Password en secret store.
 - Adapter XAdES probado.
