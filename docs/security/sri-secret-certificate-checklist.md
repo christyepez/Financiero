@@ -91,4 +91,12 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - Tax/legal review gaps y approval checklist son read-only y usan `financial.electronicdocuments.read`.
 - El checklist no aprueba producción ni habilita mutaciones.
 - Security production gate debe aprobar exposición de clave completa, custodia XAdES, Content/File productivo, redacción de logs y rollback antes de cualquier uso oficial.
+
+## Sprint 4 closure
+
+- Sin certificados reales en repositorio.
+- Sin secretos reales, token real Portal, passwords ni connection strings privadas.
+- Sin XML reales, datos personales reales ni respuestas reales del SRI.
+- Payloads Content/File bloqueados por defecto; `dryRun=true` y `sendPayloads=false` son el estándar seguro.
+- SRI Production y payload productivo siguen bloqueados hasta security production gate, certificate custody approval, evidencia SRI Test y aprobación operacional.
 - No descargar catálogos/XSD oficiales desde runtime.
