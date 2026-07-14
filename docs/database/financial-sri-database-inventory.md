@@ -55,3 +55,6 @@ No se crea migración `012`: los catálogos/reglas foundation se implementan en 
 ## Catálogos seed mínimos
 
 Tipos de comprobante, identificación, IVA e impuestos mínimos para foundation. Deben validarse contra normativa vigente antes de producción.
+## Sprint 3 P3 RIDE/reporting
+
+No se agrega migración 012. RIDE/reporting foundation consulta `financial.electronic_documents` y tablas relacionadas existentes (`lines`, `taxes`, `references`, `debit_note_reasons`, `withholding_taxes`). No se crea SQL Server propio ni base compartida.

@@ -49,3 +49,9 @@ NC, ND y retenciones foundation no agregan nuevos secretos ni certificados. Los 
 ## Sprint 3 P2
 
 Catálogos y reglas tributarias foundation no agregan secretos, certificados ni XML reales. No descargar catálogos automáticamente desde runtime; cualquier catálogo oficial revisado debe entrar por proceso controlado, PR y evidencia normativa.
+## Sprint 3 P3
+
+- RIDE preview y reporting deben devolver datos enmascarados.
+- No incluir XML, certificados, claves privadas ni secretos en HTML/reportes.
+- No cargar archivos `.p12`, `.pfx`, `.key`, `.pem`, `.crt`, `.cer`.
+- El RIDE final legal y ATS oficial requieren revisión manual antes de producción.

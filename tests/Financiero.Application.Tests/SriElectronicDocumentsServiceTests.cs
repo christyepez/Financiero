@@ -379,6 +379,72 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal("Degraded", result.Status);
         Assert.DoesNotContain("celcer.sri.gob.ec", string.Join(";", result.Checks.Concat(result.Issues)));
     }
+
+    [Fact]
+    public async Task Ride_preview_is_sanitized_and_does_not_expose_full_access_key_or_identification()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 1, 1), "05", "0102030405", "Cliente"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        var generated = await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+
+        var preview = await service.GetRidePreviewAsync(generated.Id, Context, default);
+
+        Assert.Contains("RIDE Factura", preview.Html);
+        Assert.DoesNotContain(generated.AccessKey!, preview.Html);
+        Assert.DoesNotContain("0102030405", preview.Html);
+        Assert.Contains("****", preview.Html);
+        Assert.NotEmpty(preview.Hash);
+    }
+
+    [Fact]
+    public async Task Ride_generation_supports_credit_note_debit_note_and_withholding()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var creditNote = await service.CreateCreditNoteDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Cliente", "01", "001-001-000000001", new DateOnly(2026, 1, 1), "Devolución"), Context, default);
+        await service.AddInvoiceLineAsync(creditNote.Id, new("NC", "Devolución", 1, 5, 0), Context, default);
+        creditNote = await service.GenerateCreditNoteXmlAsync(creditNote.Id, Context, default);
+        var debitNote = await service.CreateDebitNoteDraftAsync(new(new DateOnly(2026, 1, 3), "04", "0999999999001", "Cliente", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+        await service.AddDebitNoteReasonAsync(debitNote.Id, new("Interés", 2.50m), Context, default);
+        debitNote = await service.GenerateDebitNoteXmlAsync(debitNote.Id, Context, default);
+        var withholding = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 1, 4), "04", "0999999999001", "Proveedor", "01/2026", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+        await service.AddWithholdingTaxAsync(withholding.Id, new("1", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 1, 1), "01/2026"), Context, default);
+        withholding = await service.GenerateWithholdingXmlAsync(withholding.Id, Context, default);
+
+        var creditRide = await service.GetRidePreviewAsync(creditNote.Id, Context, default);
+        var debitRide = await service.GetRidePreviewAsync(debitNote.Id, Context, default);
+        var withholdingRide = await service.GetRidePreviewAsync(withholding.Id, Context, default);
+
+        Assert.Contains("Nota de cr", creditRide.Html);
+        Assert.Contains("Nota de d", debitRide.Html);
+        Assert.Contains("Comprobante de reten", withholdingRide.Html);
+        Assert.DoesNotContain("<notaCredito", creditRide.Html);
+        Assert.DoesNotContain("<notaDebito", debitRide.Html);
+        Assert.DoesNotContain("<comprobanteRetencion", withholdingRide.Html);
+    }
+
+    [Fact]
+    public async Task Tax_reporting_summarizes_documents_and_masks_sensitive_values()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var invoice = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente"), Context, default);
+        await service.AddInvoiceLineAsync(invoice.Id, new("SKU", "Servicio", 2, 10, 0), Context, default);
+        invoice = await service.GenerateInvoiceXmlAsync(invoice.Id, Context, default);
+        var withholding = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 1, 2), "04", "0999999999001", "Proveedor", "01/2026", "01", "001-001-000000001", new DateOnly(2026, 1, 1)), Context, default);
+        await service.AddWithholdingTaxAsync(withholding.Id, new("1", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 1, 1), "01/2026"), Context, default);
+        await service.GenerateWithholdingXmlAsync(withholding.Id, Context, default);
+
+        var report = await new TaxReportingService(repo, new RecordingAudit()).GetSummaryAsync(new(StartDate: new DateOnly(2026, 1, 1), EndDate: new DateOnly(2026, 1, 31)), Context, default);
+
+        Assert.Equal(2, report.Totals.Count);
+        Assert.Contains("Invoice", report.ByDocumentType.Keys);
+        Assert.Contains(report.WithholdingTotals, x => x.WithholdingCode == "312");
+        Assert.All(report.Documents, x => Assert.DoesNotContain("0999999999001", x.CustomerIdentificationMasked));
+        Assert.All(report.Documents.Where(x => x.AccessKeyMasked is not null), x => Assert.DoesNotContain(invoice.AccessKey!, x.AccessKeyMasked));
+    }
 }
 
 internal sealed class InMemoryElectronicDocumentRepository : IElectronicDocumentRepository

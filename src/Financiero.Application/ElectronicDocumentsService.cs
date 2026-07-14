@@ -128,9 +128,30 @@ public sealed record PortalContentFileOptions(string Provider, string? PortalBas
 public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata, bool IncludePayload, string? PayloadBase64);
 public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
 public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
-public sealed record InvoiceRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string AccessKey, DateOnly IssueDate, string CustomerName, string CustomerIdentification, IReadOnlyCollection<ElectronicDocumentLineDto> Lines, decimal Subtotal, decimal Taxes, decimal Total, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status);
+public sealed record RideLineModel(int LineNumber, string Code, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Subtotal, decimal Total);
+public sealed record RideTaxModel(string TaxCode, string TaxPercentageCode, decimal TaxRate, decimal TaxBase, decimal TaxAmount);
+public sealed record RideReferenceModel(string DocumentTypeCode, string Number, DateOnly IssueDate, string ReasonOrPeriod);
+public sealed record RideTotalsModel(decimal SubtotalWithoutTaxes, decimal TotalDiscount, decimal TotalTaxes, decimal TotalAmount);
+public abstract record RideDocumentModel(string DocumentType, string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, DateOnly IssueDate, string CustomerName, string? CustomerIdentificationMasked, RideTotalsModel Totals, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status);
+public sealed record InvoiceRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, DateOnly IssueDate, string CustomerName, string? CustomerIdentificationMasked, IReadOnlyCollection<RideLineModel> Lines, IReadOnlyCollection<RideTaxModel> Taxes, RideTotalsModel Totals, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status)
+    : RideDocumentModel("Factura", IssuerRuc, IssuerName, DocumentNumber, AccessKeyMasked, IssueDate, CustomerName, CustomerIdentificationMasked, Totals, AuthorizationNumber, AuthorizationDate, Environment, Status);
+public sealed record CreditNoteRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, DateOnly IssueDate, string CustomerName, string? CustomerIdentificationMasked, RideReferenceModel Reference, IReadOnlyCollection<RideLineModel> Lines, IReadOnlyCollection<RideTaxModel> Taxes, RideTotalsModel Totals, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status)
+    : RideDocumentModel("Nota de crédito", IssuerRuc, IssuerName, DocumentNumber, AccessKeyMasked, IssueDate, CustomerName, CustomerIdentificationMasked, Totals, AuthorizationNumber, AuthorizationDate, Environment, Status);
+public sealed record DebitNoteRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, DateOnly IssueDate, string CustomerName, string? CustomerIdentificationMasked, RideReferenceModel Reference, IReadOnlyCollection<ElectronicDocumentDebitNoteReasonDto> Reasons, IReadOnlyCollection<RideTaxModel> Taxes, RideTotalsModel Totals, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status)
+    : RideDocumentModel("Nota de débito", IssuerRuc, IssuerName, DocumentNumber, AccessKeyMasked, IssueDate, CustomerName, CustomerIdentificationMasked, Totals, AuthorizationNumber, AuthorizationDate, Environment, Status);
+public sealed record WithholdingRideModel(string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, DateOnly IssueDate, string SubjectName, string? SubjectIdentificationMasked, RideReferenceModel SupportDocument, IReadOnlyCollection<ElectronicDocumentWithholdingTaxDto> WithholdingTaxes, RideTotalsModel Totals, string? AuthorizationNumber, DateTimeOffset? AuthorizationDate, string Environment, string Status)
+    : RideDocumentModel("Comprobante de retención", IssuerRuc, IssuerName, DocumentNumber, AccessKeyMasked, IssueDate, SubjectName, SubjectIdentificationMasked, Totals, AuthorizationNumber, AuthorizationDate, Environment, Status);
+public sealed record RidePreviewDto(Guid Id, string DocumentType, string Html, string Hash, DateTimeOffset GeneratedAtUtc, string ContentType);
 public sealed record RidePdfGenerationResult(byte[] PdfBytes, string Html, string Hash, DateTimeOffset GeneratedAtUtc, string ContentType);
 public sealed record RideMetadataDto(string? RidePdfStorageId, string? RidePdfHash, DateTimeOffset? RideGeneratedAtUtc, string? StorageProvider);
+public sealed record TaxReportQuery(DateOnly? StartDate = null, DateOnly? EndDate = null, string? DocumentType = null, string? Status = null, string? Environment = null, string? CustomerIdentification = null, int Page = 1, int PageSize = 50);
+public sealed record TaxReportPeriod(DateOnly? StartDate, DateOnly? EndDate);
+public sealed record TaxReportDocumentSummary(Guid Id, string DocumentType, string Status, DateOnly IssueDate, string Environment, string? AccessKeyMasked, string? CustomerIdentificationMasked, decimal Subtotal, decimal Taxes, decimal Total);
+public sealed record TaxReportTotals(int Count, decimal Subtotal, decimal Taxes, decimal Total);
+public sealed record TaxReportTaxTotal(string TaxCode, string TaxPercentageCode, decimal TaxBase, decimal TaxAmount);
+public sealed record TaxReportWithholdingTotal(string TaxCode, string WithholdingCode, decimal TaxBase, decimal WithheldAmount);
+public sealed record TaxReportPendingSummary(int GeneratedNotSigned, int SignedNotSent, int SentPendingAuthorization, int Rejected);
+public sealed record TaxReportResult(TaxReportPeriod Period, TaxReportTotals Totals, IReadOnlyCollection<TaxReportDocumentSummary> Documents, IReadOnlyDictionary<string, TaxReportTotals> ByDocumentType, IReadOnlyDictionary<string, int> ByStatus, IReadOnlyCollection<TaxReportTaxTotal> TaxTotals, IReadOnlyCollection<TaxReportWithholdingTotal> WithholdingTotals, TaxReportPendingSummary Pending);
 
 public interface IElectronicDocumentXmlGenerator
 {
@@ -191,6 +212,9 @@ public interface IElectronicDocumentStorageClient
 public interface IRidePdfGenerator
 {
     Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct);
+    Task<RidePdfGenerationResult> GenerateCreditNoteRideAsync(CreditNoteRideModel model, CancellationToken ct);
+    Task<RidePdfGenerationResult> GenerateDebitNoteRideAsync(DebitNoteRideModel model, CancellationToken ct);
+    Task<RidePdfGenerationResult> GenerateWithholdingRideAsync(WithholdingRideModel model, CancellationToken ct);
 }
 
 public sealed class ElectronicInvoiceXmlGenerator : IElectronicDocumentXmlGenerator
@@ -862,14 +886,43 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
 
 public sealed class DevelopmentRidePdfGenerator : IRidePdfGenerator
 {
-    public Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct)
+    public Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct) =>
+        GenerateAsync(model, RenderLines(model.Lines) + RenderTaxes(model.Taxes));
+
+    public Task<RidePdfGenerationResult> GenerateCreditNoteRideAsync(CreditNoteRideModel model, CancellationToken ct) =>
+        GenerateAsync(model, RenderReference("Documento modificado", model.Reference) + RenderLines(model.Lines) + RenderTaxes(model.Taxes));
+
+    public Task<RidePdfGenerationResult> GenerateDebitNoteRideAsync(DebitNoteRideModel model, CancellationToken ct) =>
+        GenerateAsync(model, RenderReference("Documento modificado", model.Reference) + RenderReasons(model.Reasons) + RenderTaxes(model.Taxes));
+
+    public Task<RidePdfGenerationResult> GenerateWithholdingRideAsync(WithholdingRideModel model, CancellationToken ct) =>
+        GenerateAsync(model, RenderReference("Documento sustento", model.SupportDocument) + RenderWithholdings(model.WithholdingTaxes));
+
+    private static Task<RidePdfGenerationResult> GenerateAsync(RideDocumentModel model, string body)
     {
         var html = $"""
-<html><body><h1>RIDE Factura</h1><p>Emisor: {HtmlEncoder.Default.Encode(model.IssuerName)} - {model.IssuerRuc}</p><p>Documento: {model.DocumentNumber}</p><p>Clave acceso: {model.AccessKey}</p><p>Cliente: {HtmlEncoder.Default.Encode(model.CustomerName)} - {model.CustomerIdentification}</p><p>Fecha: {model.IssueDate:yyyy-MM-dd}</p><p>Subtotal: {model.Subtotal:0.00}</p><p>Impuestos: {model.Taxes:0.00}</p><p>Total: {model.Total:0.00}</p><p>Autorizacion: {model.AuthorizationNumber ?? "PENDIENTE"}</p><p>Ambiente: {model.Environment}</p><p>Estado: {model.Status}</p></body></html>
+<html><body><h1>RIDE {E(model.DocumentType)}</h1><p>Emisor: {E(model.IssuerName)} - {E(model.IssuerRuc)}</p><p>Documento: {E(model.DocumentNumber)}</p><p>Clave acceso: {E(model.AccessKeyMasked ?? "PENDIENTE")}</p><p>Cliente/Sujeto: {E(model.CustomerName)} - {E(model.CustomerIdentificationMasked ?? "****")}</p><p>Fecha: {model.IssueDate:yyyy-MM-dd}</p><p>Subtotal: {model.Totals.SubtotalWithoutTaxes:0.00}</p><p>Descuento: {model.Totals.TotalDiscount:0.00}</p><p>Impuestos: {model.Totals.TotalTaxes:0.00}</p><p>Total: {model.Totals.TotalAmount:0.00}</p><p>Autorizacion: {E(model.AuthorizationNumber ?? "PENDIENTE")}</p><p>Fecha autorizacion: {model.AuthorizationDate:yyyy-MM-dd HH:mm:ss}</p><p>Ambiente: {E(model.Environment)}</p><p>Estado: {E(model.Status)}</p>{body}</body></html>
 """;
         var bytes = Encoding.UTF8.GetBytes("%PDF-DEV-RIDE-PLACEHOLDER\n" + html);
         return Task.FromResult(new RidePdfGenerationResult(bytes, html, Convert.ToHexString(SHA256.HashData(bytes)), DateTimeOffset.UtcNow, "application/pdf"));
     }
+
+    private static string RenderLines(IEnumerable<RideLineModel> lines) =>
+        "<h2>Detalle</h2><ul>" + string.Concat(lines.Select(x => $"<li>{x.LineNumber}. {E(x.Code)} - {E(x.Description)} qty={x.Quantity:0.00##} subtotal={x.Subtotal:0.00} total={x.Total:0.00}</li>")) + "</ul>";
+
+    private static string RenderTaxes(IEnumerable<RideTaxModel> taxes) =>
+        "<h2>Impuestos</h2><ul>" + string.Concat(taxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.TaxPercentageCode)} base={x.TaxBase:0.00} tarifa={x.TaxRate:0.00} valor={x.TaxAmount:0.00}</li>")) + "</ul>";
+
+    private static string RenderReference(string title, RideReferenceModel reference) =>
+        $"<h2>{E(title)}</h2><p>{E(reference.DocumentTypeCode)} {E(reference.Number)} fecha={reference.IssueDate:yyyy-MM-dd} motivo/periodo={E(reference.ReasonOrPeriod)}</p>";
+
+    private static string RenderReasons(IEnumerable<ElectronicDocumentDebitNoteReasonDto> reasons) =>
+        "<h2>Motivos</h2><ul>" + string.Concat(reasons.Select(x => $"<li>{E(x.Reason)} valor={x.Amount:0.00}</li>")) + "</ul>";
+
+    private static string RenderWithholdings(IEnumerable<ElectronicDocumentWithholdingTaxDto> taxes) =>
+        "<h2>Retenciones</h2><ul>" + string.Concat(taxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.WithholdingCode)} periodo={E(x.FiscalPeriod)} base={x.TaxBase:0.00} porcentaje={x.WithholdingPercentage:0.00} retenido={x.WithheldAmount:0.00}</li>")) + "</ul>";
+
+    private static string E(string value) => HtmlEncoder.Default.Encode(value);
 }
 
 public static class SecretMaskingHelper
@@ -951,6 +1004,37 @@ public sealed class SriManualTestConnectivityService(IFinancialConfigurationRead
     }
 }
 
+public static class ElectronicDocumentRideMapper
+{
+    public static RideDocumentModel ToRideModel(ElectronicDocument document, IssuerSriOptions issuer)
+    {
+        if (string.IsNullOrWhiteSpace(document.Sequential)) throw new FinancialApplicationException("sri.ride.sequential.required", "Sequential is required before generating RIDE.");
+        var common = Common(document, issuer);
+        return document.DocumentType switch
+        {
+            ElectronicDocumentType.Invoice => new InvoiceRideModel(common.IssuerRuc, common.IssuerName, common.DocumentNumber, common.AccessKeyMasked, document.IssueDate, document.CustomerName, common.CustomerIdentificationMasked, Lines(document), Taxes(document), Totals(document), document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString()),
+            ElectronicDocumentType.CreditNote => new CreditNoteRideModel(common.IssuerRuc, common.IssuerName, common.DocumentNumber, common.AccessKeyMasked, document.IssueDate, document.CustomerName, common.CustomerIdentificationMasked, Reference(document, "sri.ride.credit_note.reference.required"), Lines(document), Taxes(document), Totals(document), document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString()),
+            ElectronicDocumentType.DebitNote => new DebitNoteRideModel(common.IssuerRuc, common.IssuerName, common.DocumentNumber, common.AccessKeyMasked, document.IssueDate, document.CustomerName, common.CustomerIdentificationMasked, Reference(document, "sri.ride.debit_note.reference.required"), document.DebitNoteReasons.Select(x => new ElectronicDocumentDebitNoteReasonDto(x.Reason, x.Amount)).ToArray(), Taxes(document), Totals(document), document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString()),
+            ElectronicDocumentType.Withholding => new WithholdingRideModel(common.IssuerRuc, common.IssuerName, common.DocumentNumber, common.AccessKeyMasked, document.IssueDate, document.CustomerName, common.CustomerIdentificationMasked, Reference(document, "sri.ride.withholding.support.required"), document.WithholdingTaxes.Select(x => new ElectronicDocumentWithholdingTaxDto(x.TaxCode, x.WithholdingCode, x.TaxBase, x.WithholdingPercentage, x.WithheldAmount, x.SupportDocumentNumber, x.SupportDocumentIssueDate, x.FiscalPeriod)).ToArray(), Totals(document), document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString()),
+            _ => throw new FinancialApplicationException("sri.ride.document_type.unsupported", "Unsupported RIDE document type.")
+        };
+    }
+
+    private static (string IssuerRuc, string IssuerName, string DocumentNumber, string? AccessKeyMasked, string? CustomerIdentificationMasked) Common(ElectronicDocument document, IssuerSriOptions issuer) =>
+        (issuer.Ruc, issuer.LegalName, $"{document.EstablishmentCode}-{document.EmissionPointCode}-{document.Sequential}", SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskCustomerIdentification(document.CustomerIdentification));
+    private static IReadOnlyCollection<RideLineModel> Lines(ElectronicDocument document) =>
+        document.Lines.Select(x => new RideLineModel(x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray();
+    private static IReadOnlyCollection<RideTaxModel> Taxes(ElectronicDocument document) =>
+        document.Taxes.Select(x => new RideTaxModel(x.TaxCode, x.TaxPercentageCode, x.TaxRate, x.TaxBase, x.TaxAmount)).ToArray();
+    private static RideTotalsModel Totals(ElectronicDocument document) =>
+        new(document.SubtotalWithoutTaxes, document.TotalDiscount, document.TotalTaxes, document.TotalAmount);
+    private static RideReferenceModel Reference(ElectronicDocument document, string errorCode)
+    {
+        var reference = document.References.FirstOrDefault() ?? throw new FinancialApplicationException(errorCode, "RIDE reference/support document is required.");
+        return new(reference.DocumentTypeCode, reference.Number, reference.IssueDate, reference.ReasonOrPeriod);
+    }
+}
+
 public sealed record SriReadinessResult(string Status, IReadOnlyCollection<string> Checks, IReadOnlyCollection<string> Issues);
 
 public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader configuration)
@@ -1009,6 +1093,90 @@ public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader
         var status = issues.Count == 0 ? "Healthy" : string.Equals(mode, "Test", StringComparison.OrdinalIgnoreCase) ? "Degraded" : "Unhealthy";
         return new(status, checks, issues);
     }
+}
+
+public interface ITaxReportingService
+{
+    Task<TaxReportResult> GetSummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+    Task<IReadOnlyCollection<TaxReportDocumentSummary>> GetDocumentsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+    Task<IReadOnlyCollection<TaxReportTaxTotal>> GetTaxTotalsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+    Task<IReadOnlyCollection<TaxReportWithholdingTotal>> GetWithholdingTotalsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+}
+
+public sealed class TaxReportingService(IElectronicDocumentRepository documents, IPortalAuditClient audit) : ITaxReportingService
+{
+    public async Task<TaxReportResult> GetSummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var items = await LoadAsync(query, context, ct);
+        await AuditAsync("TaxReportSummaryQueried", query, context, ct);
+        return Build(query, items);
+    }
+
+    public async Task<IReadOnlyCollection<TaxReportDocumentSummary>> GetDocumentsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var result = Build(query, await LoadAsync(query, context, ct));
+        await AuditAsync("TaxReportDocumentsQueried", query, context, ct);
+        return result.Documents;
+    }
+
+    public async Task<IReadOnlyCollection<TaxReportTaxTotal>> GetTaxTotalsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var result = Build(query, await LoadAsync(query, context, ct));
+        await AuditAsync("TaxReportTaxTotalsQueried", query, context, ct);
+        return result.TaxTotals;
+    }
+
+    public async Task<IReadOnlyCollection<TaxReportWithholdingTotal>> GetWithholdingTotalsAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var result = Build(query, await LoadAsync(query, context, ct));
+        await AuditAsync("TaxReportWithholdingTotalsQueried", query, context, ct);
+        return result.WithholdingTotals;
+    }
+
+    private async Task<IReadOnlyCollection<ElectronicDocument>> LoadAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        ElectronicDocumentStatus? status = string.IsNullOrWhiteSpace(query.Status) ? null : Enum.Parse<ElectronicDocumentStatus>(query.Status, true);
+        var (items, _) = await documents.SearchAsync(context.TenantId, status, null, 1, 1000, ct);
+        return items.Where(x =>
+            (!query.StartDate.HasValue || x.IssueDate >= query.StartDate.Value) &&
+            (!query.EndDate.HasValue || x.IssueDate <= query.EndDate.Value) &&
+            (string.IsNullOrWhiteSpace(query.DocumentType) || x.DocumentType.ToString().Equals(query.DocumentType, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(query.Environment) || x.Environment.ToString().Equals(query.Environment, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(query.CustomerIdentification) || x.CustomerIdentification == query.CustomerIdentification.Trim())).ToArray();
+    }
+
+    private static TaxReportResult Build(TaxReportQuery query, IReadOnlyCollection<ElectronicDocument> items)
+    {
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var documentsPage = items.OrderBy(x => x.IssueDate).ThenBy(x => x.Sequential)
+            .Skip((page - 1) * pageSize).Take(pageSize).Select(ToSummary).ToArray();
+        var byType = items.GroupBy(x => x.DocumentType.ToString()).ToDictionary(x => x.Key, x => Totals(x));
+        var byStatus = items.GroupBy(x => x.Status.ToString()).ToDictionary(x => x.Key, x => x.Count());
+        var taxes = items.SelectMany(x => x.Taxes).GroupBy(x => new { x.TaxCode, x.TaxPercentageCode })
+            .Select(x => new TaxReportTaxTotal(x.Key.TaxCode, x.Key.TaxPercentageCode, x.Sum(t => t.TaxBase), x.Sum(t => t.TaxAmount))).ToArray();
+        var withholdings = items.SelectMany(x => x.WithholdingTaxes).GroupBy(x => new { x.TaxCode, x.WithholdingCode })
+            .Select(x => new TaxReportWithholdingTotal(x.Key.TaxCode, x.Key.WithholdingCode, x.Sum(t => t.TaxBase), x.Sum(t => t.WithheldAmount))).ToArray();
+        var pending = new TaxReportPendingSummary(
+            items.Count(x => x.Status == ElectronicDocumentStatus.Generated || x.Status == ElectronicDocumentStatus.SignedPending),
+            items.Count(x => x.Status == ElectronicDocumentStatus.Signed),
+            items.Count(x => x.Status == ElectronicDocumentStatus.Sent),
+            items.Count(x => x.Status == ElectronicDocumentStatus.Rejected));
+        return new(new(query.StartDate, query.EndDate), Totals(items), documentsPage, byType, byStatus, taxes, withholdings, pending);
+    }
+
+    private static TaxReportDocumentSummary ToSummary(ElectronicDocument document) =>
+        new(document.Id, document.DocumentType.ToString(), document.Status.ToString(), document.IssueDate, document.Environment.ToString(),
+            SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey),
+            SriSensitiveDataSanitizer.MaskCustomerIdentification(document.CustomerIdentification),
+            document.SubtotalWithoutTaxes, document.TotalTaxes, document.TotalAmount);
+    private static TaxReportTotals Totals(IEnumerable<ElectronicDocument> items)
+    {
+        var array = items.ToArray();
+        return new(array.Length, array.Sum(x => x.SubtotalWithoutTaxes), array.Sum(x => x.TotalTaxes), array.Sum(x => x.TotalAmount));
+    }
+    private async Task AuditAsync(string action, TaxReportQuery query, PortalCallContext context, CancellationToken ct) =>
+        await audit.RecordAsync(new(action, "financial.tax-reporting", context.TenantId, new { query.StartDate, query.EndDate, query.DocumentType, query.Status, query.Environment }), context, ct);
 }
 
 public sealed class ElectronicDocumentsService(
@@ -1237,17 +1405,25 @@ public sealed class ElectronicDocumentsService(
         if (string.IsNullOrWhiteSpace(document.AccessKey) || string.IsNullOrWhiteSpace(document.Sequential))
             throw new FinancialApplicationException("sri.ride.access_key.required", "Generated XML/access key is required before generating RIDE.");
         var issuer = await GetIssuerAsync(context, ct);
-        var model = new InvoiceRideModel(issuer.Ruc, issuer.LegalName, $"{document.EstablishmentCode}-{document.EmissionPointCode}-{document.Sequential}", document.AccessKey, document.IssueDate,
-            document.CustomerName, document.CustomerIdentification,
-            document.Lines.Select(x => new ElectronicDocumentLineDto(x.Id, x.LineNumber, x.ProductCode, x.Description, x.Quantity, x.UnitPrice, x.Discount, x.Subtotal, x.Total)).ToArray(),
-            document.SubtotalWithoutTaxes, document.TotalTaxes, document.TotalAmount, document.SriAuthorizationNumber, document.SriAuthorizationDate, document.Environment.ToString(), document.Status.ToString());
-        var ride = await ridePdfGenerator.GenerateInvoiceRideAsync(model, ct);
+        var model = ElectronicDocumentRideMapper.ToRideModel(document, issuer);
+        var ride = await GenerateRideAsync(model, ct);
         var stored = await storage.SaveRidePdfAsync(document, ride.PdfBytes, context, ct);
         document.RegisterRidePdfStorage(stored.StorageId, ride.Hash, stored.Provider, context.CorrelationId, DateTimeOffset.UtcNow);
         await documents.SaveChangesAsync(ct);
         await AuditOutboxAsync("ElectronicDocumentRideGenerated", "ElectronicDocumentRideGenerated", document, context, ct);
         await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
         return ToDto(document);
+    }
+
+    public async Task<RidePreviewDto> GetRidePreviewAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        if (string.IsNullOrWhiteSpace(document.AccessKey) || string.IsNullOrWhiteSpace(document.Sequential))
+            throw new FinancialApplicationException("sri.ride.access_key.required", "Generated XML/access key is required before generating RIDE preview.");
+        var model = ElectronicDocumentRideMapper.ToRideModel(document, await GetIssuerAsync(context, ct));
+        var ride = await GenerateRideAsync(model, ct);
+        await AuditOnlyAsync("ElectronicDocumentRidePreviewGenerated", document, context, ct);
+        return new(document.Id, document.DocumentType.ToString(), ride.Html, ride.Hash, ride.GeneratedAtUtc, ride.ContentType);
     }
 
     public async Task<RideMetadataDto> GetRideMetadataAsync(Guid id, PortalCallContext context, CancellationToken ct)
@@ -1295,6 +1471,15 @@ public sealed class ElectronicDocumentsService(
         var (items, total) = await documents.SearchAsync(context.TenantId, status, request.AccessKey, page, size, ct);
         return new { items = items.Select(ToDto).ToArray(), page, pageSize = size, total };
     }
+
+    private Task<RidePdfGenerationResult> GenerateRideAsync(RideDocumentModel model, CancellationToken ct) => model switch
+    {
+        InvoiceRideModel invoice => ridePdfGenerator.GenerateInvoiceRideAsync(invoice, ct),
+        CreditNoteRideModel creditNote => ridePdfGenerator.GenerateCreditNoteRideAsync(creditNote, ct),
+        DebitNoteRideModel debitNote => ridePdfGenerator.GenerateDebitNoteRideAsync(debitNote, ct),
+        WithholdingRideModel withholding => ridePdfGenerator.GenerateWithholdingRideAsync(withholding, ct),
+        _ => throw new FinancialApplicationException("sri.ride.document_type.unsupported", "Unsupported RIDE document type.")
+    };
 
     private async Task<ElectronicDocument> GetRequiredAsync(Guid id, string tenantId, CancellationToken ct) =>
         await documents.GetByIdAsync(id, tenantId, ct) ?? throw new FinancialApplicationException("electronic_document.not_found", "Electronic document was not found.");
