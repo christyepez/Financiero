@@ -40,6 +40,8 @@
 | GET | `/api/financial/electronic-documents/{id}/integration-status` | `financial.electronicdocuments.read` | Implementado P4 |
 | GET | `/api/financial/electronic-documents/sri/readiness` | `financial.electronicdocuments.manage` | Implementado P4 |
 | GET | `/api/financial/electronic-documents/content-file/readiness` | `financial.electronicdocuments.manage` | Implementado Sprint 4 P1 |
+
+Content/File P2 no agrega endpoints públicos nuevos. Fortalece `store-ride`, `export/store` y readiness para soportar `PortalContentFile` en `dryRun=true` o HTTP real controlado por configuración.
 | GET | `/api/financial/electronic-documents/sri/connectivity-probe` | `financial.electronicdocuments.manage` | Implementado P5 |
 | GET | `/api/financial/electronic-documents/by-access-key/{accessKey}` | `financial.electronicdocuments.read` | Implementado P1 |
 

@@ -4,6 +4,8 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Xml.Linq;
 using System.Security.Cryptography;
+using System.Net;
+using System.Net.Http.Headers;
 using Financiero.Domain;
 
 namespace Financiero.Application;
@@ -125,7 +127,7 @@ public sealed class DevelopmentSriCatalogProvider : ISriCatalogProvider
 }
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
 public enum PortalContentFilePurpose { UnsignedXml, SignedXml, AuthorizationXml, RidePdf, RideHtmlPreview, TaxExportJson, TaxExportCsv, AtsReadinessJson, ReportingSnapshotJson }
-public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true, bool AllowProductionContentFilePayload = false, string EnvironmentName = "Development");
+public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true, bool AllowProductionContentFilePayload = false, string EnvironmentName = "Development", string UploadPath = "/api/content-files", bool DryRun = true, bool AuthRequired = false);
 public sealed record PortalContentFileMetadata(string SourceSystem, string? DocumentId, string? DocumentType, string? AccessKeyMasked, string? Period, string? RetentionPolicy, IReadOnlyDictionary<string, string> Values);
 public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, long Size, string Container, string CorrelationId, string TenantId, PortalContentFileMetadata Metadata, bool IncludePayload, string? PayloadBase64)
 {
@@ -133,6 +135,31 @@ public sealed record PortalContentFileRequest(string Purpose, string FileName, s
 }
 public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
 public sealed record PortalContentFileReadinessResult(string Status, string Provider, IReadOnlyCollection<string> Checks, IReadOnlyCollection<string> Issues, string? PortalBaseUrlMasked);
+public sealed record PortalContentFileHttpOptions(string BaseUrl, string UploadPath, int TimeoutSeconds, bool DryRun, bool AuthRequired, bool SendPayloads, bool MaskPayloads, bool AllowProductionPayload, string EnvironmentName);
+public sealed record PortalContentFileHttpRequest(PortalContentFileRequest File, string UploadPath);
+public sealed record PortalContentFileHttpResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc, string ContractStatus);
+public sealed record PortalContentFileAuthContext(string? BearerToken, bool AuthRequired)
+{
+    public override string ToString() => $"PortalContentFileAuthContext(AuthRequired={AuthRequired}, BearerToken=**REDACTED**)";
+}
+public interface IPortalContentFileTokenProvider { Task<PortalContentFileAuthContext> GetAsync(PortalCallContext context, PortalContentFileHttpOptions options, CancellationToken ct); }
+public sealed class DisabledPortalContentFileTokenProvider : IPortalContentFileTokenProvider
+{
+    public Task<PortalContentFileAuthContext> GetAsync(PortalCallContext context, PortalContentFileHttpOptions options, CancellationToken ct) => Task.FromResult(new PortalContentFileAuthContext(context.BearerToken, options.AuthRequired));
+}
+public sealed class ConfigurationPortalContentFileTokenProvider(IFinancialConfigurationReader configuration) : IPortalContentFileTokenProvider
+{
+    public async Task<PortalContentFileAuthContext> GetAsync(PortalCallContext context, PortalContentFileHttpOptions options, CancellationToken ct)
+    {
+        var token = context.BearerToken;
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = await configuration.GetStringAsync("financial.sri.storage.authToken", "", context, ct);
+        }
+        return new(string.IsNullOrWhiteSpace(token) ? null : token, options.AuthRequired);
+    }
+}
+public interface IPortalContentFileClient { Task<PortalContentFileHttpResponse> UploadAsync(PortalContentFileHttpRequest request, PortalContentFileHttpOptions options, PortalContentFileAuthContext auth, PortalCallContext context, CancellationToken ct); }
 public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
 public sealed record RideLineModel(int LineNumber, string Code, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Subtotal, decimal Total);
 public sealed record RideTaxModel(string TaxCode, string TaxPercentageCode, decimal TaxRate, decimal TaxBase, decimal TaxAmount);
@@ -831,6 +858,112 @@ public sealed class XsdSchemaValidatorPlaceholder : IXsdSchemaValidator
         new(false, [$"XSD schema validation mode is not enabled because schema '{schemaName}' is not configured in P3."], []);
 }
 
+public static class PortalContentFileContractValidator
+{
+    public static void Validate(PortalContentFileRequest request)
+    {
+        var errors = new List<string>();
+        Required(request.Purpose, "purpose", errors);
+        Required(request.FileName, "fileName", errors);
+        Required(request.ContentType, "contentType", errors);
+        Required(request.Hash, "hash", errors);
+        Required(request.Container, "container", errors);
+        Required(request.CorrelationId, "correlationId", errors);
+        Required(request.TenantId, "tenantId", errors);
+        if (request.Size < 0) errors.Add("size must be zero or greater.");
+        if (request.IncludePayload && string.IsNullOrWhiteSpace(request.PayloadBase64)) errors.Add("payloadBase64 is required when includePayload=true.");
+        if (!request.IncludePayload && !string.IsNullOrWhiteSpace(request.PayloadBase64)) errors.Add("payloadBase64 must be empty when includePayload=false.");
+        if (!request.FileName.All(x => char.IsLetterOrDigit(x) || x is '-' or '_' or '.')) errors.Add("fileName contains unsupported characters.");
+        if (LooksLikeSensitive(request.FileName)) errors.Add("fileName must not contain sensitive identifiers.");
+        ValidateMetadata(request.Metadata, errors);
+        if (errors.Count > 0) throw new FinancialApplicationException("content_file.contract.invalid", string.Join(" ", errors));
+    }
+
+    public static void ValidateOptions(PortalContentFileHttpOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.BaseUrl)) throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
+        if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) throw new FinancialApplicationException("content_file.base_url.invalid", "Portal Content/File base URL is invalid.");
+        if (string.IsNullOrWhiteSpace(options.UploadPath) || !options.UploadPath.StartsWith('/')) throw new FinancialApplicationException("content_file.upload_path.invalid", "Portal Content/File uploadPath must start with '/'.");
+        if (options.TimeoutSeconds <= 0 || options.TimeoutSeconds > 300) throw new FinancialApplicationException("content_file.timeout.invalid", "Portal Content/File timeout must be between 1 and 300 seconds.");
+        if (options.SendPayloads && !options.MaskPayloads) throw new FinancialApplicationException("content_file.payload.masking_required", "Payload sending requires maskPayloads=true.");
+        if (options.SendPayloads && options.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) && !options.AllowProductionPayload) throw new FinancialApplicationException("content_file.payload.production_blocked", "Portal Content/File payload sending is disabled in Production without explicit approval.");
+    }
+
+    private static void ValidateMetadata(PortalContentFileMetadata metadata, List<string> errors)
+    {
+        Required(metadata.SourceSystem, "metadata.sourceSystem", errors);
+        if (LooksLikeSensitive(metadata.DocumentId)) errors.Add("metadata.documentId must not contain sensitive identifiers.");
+        if (LooksLikeSensitive(metadata.AccessKeyMasked) && !metadata.AccessKeyMasked!.Contains('*')) errors.Add("metadata.accessKey must be masked.");
+        foreach (var item in metadata.Values)
+        {
+            if (LooksLikeXml(item.Value)) errors.Add($"metadata.{item.Key} must not contain XML.");
+            if (LooksLikeBearer(item.Value)) errors.Add($"metadata.{item.Key} must not contain tokens.");
+            if (LooksLikeLargeBase64(item.Value)) errors.Add($"metadata.{item.Key} must not contain embedded payloads.");
+        }
+    }
+
+    private static void Required(string? value, string name, List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(value)) errors.Add($"{name} is required.");
+    }
+    private static bool LooksLikeXml(string? value) => !string.IsNullOrWhiteSpace(value) && value.Contains('<') && value.Contains('>');
+    private static bool LooksLikeBearer(string? value) => !string.IsNullOrWhiteSpace(value) && value.Contains("Bearer ", StringComparison.OrdinalIgnoreCase);
+    private static bool LooksLikeSensitive(string? value) => !string.IsNullOrWhiteSpace(value) && (System.Text.RegularExpressions.Regex.IsMatch(value, "\\d{10,}") || value.Contains("claveAcceso", StringComparison.OrdinalIgnoreCase));
+    private static bool LooksLikeLargeBase64(string? value) => !string.IsNullOrWhiteSpace(value) && value.Length > 256 && value.All(x => char.IsLetterOrDigit(x) || x is '+' or '/' or '=');
+}
+
+public static class PortalContentFileErrorMapper
+{
+    public static FinancialApplicationException Map(Exception ex) =>
+        ex is FinancialApplicationException app ? app : new("content_file.http.error", Sanitize(ex.Message));
+
+    public static string Sanitize(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return "";
+        var sanitized = SriSensitiveDataSanitizer.MaskUrl(value) ?? "";
+        sanitized = System.Text.RegularExpressions.Regex.Replace(sanitized, "Bearer\\s+[A-Za-z0-9._~+/=-]+", "Bearer **REDACTED**", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        sanitized = System.Text.RegularExpressions.Regex.Replace(sanitized, "\"?payloadBase64\"?\\s*[:=]\\s*\"?[A-Za-z0-9+/=]+\"?", "payloadBase64=**REDACTED**", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        return sanitized.Replace("<factura", "<xml-redacted", StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+public sealed class PortalContentFileHttpClient(HttpClient http) : IPortalContentFileClient
+{
+    public async Task<PortalContentFileHttpResponse> UploadAsync(PortalContentFileHttpRequest request, PortalContentFileHttpOptions options, PortalContentFileAuthContext auth, PortalCallContext context, CancellationToken ct)
+    {
+        try
+        {
+            PortalContentFileContractValidator.ValidateOptions(options);
+            PortalContentFileContractValidator.Validate(request.File);
+            if (options.AuthRequired && string.IsNullOrWhiteSpace(auth.BearerToken)) throw new FinancialApplicationException("content_file.auth.token_required", "Portal Content/File token is required when dryRun=false and authRequired=true.");
+            if (options.DryRun)
+            {
+                return new($"portal-dryrun://{request.File.Container}/{request.File.TenantId}/{request.File.Hash}/{request.File.Purpose}", "PortalContentFile", DateTimeOffset.UtcNow, "DryRun");
+            }
+
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(TimeSpan.FromSeconds(options.TimeoutSeconds));
+            var uri = new Uri(new Uri(options.BaseUrl.TrimEnd('/') + "/"), request.UploadPath.TrimStart('/'));
+            using var message = new HttpRequestMessage(HttpMethod.Post, uri);
+            message.Headers.Add("X-Tenant-Id", context.TenantId);
+            message.Headers.Add("X-Correlation-Id", context.CorrelationId);
+            message.Headers.Add("X-Source-System", "Financiero");
+            if (!string.IsNullOrWhiteSpace(auth.BearerToken)) message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", auth.BearerToken);
+            message.Content = new StringContent(JsonSerializer.Serialize(request.File), Encoding.UTF8, "application/json");
+            var response = await http.SendAsync(message, cts.Token);
+            var body = await response.Content.ReadAsStringAsync(cts.Token);
+            if (!response.IsSuccessStatusCode) throw new FinancialApplicationException("content_file.http.failed", $"Portal Content/File returned {(int)response.StatusCode} {response.StatusCode}: {PortalContentFileErrorMapper.Sanitize(body)}");
+            var portalResponse = JsonSerializer.Deserialize<PortalContentFileHttpResponse>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (portalResponse is null || string.IsNullOrWhiteSpace(portalResponse.StorageId)) throw new FinancialApplicationException("content_file.http.invalid_response", "Portal Content/File response did not include storageId.");
+            return portalResponse;
+        }
+        catch (Exception ex) when (ex is not FinancialApplicationException)
+        {
+            throw PortalContentFileErrorMapper.Map(ex);
+        }
+    }
+}
+
 public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocumentStorageClient
 {
     public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync("unsigned-xml", xml, "application/xml");
@@ -847,7 +980,7 @@ public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocu
     private static string TaxExportPurpose(string format) => string.Equals(format, "Csv", StringComparison.OrdinalIgnoreCase) ? "tax-export-csv" : "tax-export-json";
 }
 
-public sealed class PortalContentFileStorageClient(PortalContentFileOptions options) : IElectronicDocumentStorageClient
+public sealed class PortalContentFileStorageClient(PortalContentFileOptions options, IPortalContentFileClient? client = null, IPortalContentFileTokenProvider? tokenProvider = null, IPortalAuditClient? audit = null) : IElectronicDocumentStorageClient
 {
     public static PortalContentFileRequest BuildRequest(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context, PortalContentFileOptions options)
     {
@@ -864,50 +997,72 @@ public sealed class PortalContentFileStorageClient(PortalContentFileOptions opti
             ShouldIncludePayload(options) ? Convert.ToBase64String(content) : null);
     }
 
-    public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context);
-    public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "signed-xml", "application/xml", context);
-    public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "authorization-xml", "application/xml", context);
-    public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => SaveAsync(document, pdf, "ride-pdf", "application/pdf", context);
-    public Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(html), "ride-html-preview", "text/html", context);
+    public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context, ct);
+    public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "signed-xml", "application/xml", context, ct);
+    public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "authorization-xml", "application/xml", context, ct);
+    public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => SaveAsync(document, pdf, "ride-pdf", "application/pdf", context, ct);
+    public Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(html), "ride-html-preview", "text/html", context, ct);
     public Task<StoredDocumentFile> SaveTaxExportAsync(TaxExportResult export, PortalCallContext context, CancellationToken ct) =>
-        SaveGenericAsync(export.Content, TaxExportPurpose(export.Metadata.Format), export.Metadata.ContentType, context, export.Metadata.FileName, null);
+        SaveGenericAsync(export.Content, TaxExportPurpose(export.Metadata.Format), export.Metadata.ContentType, context, export.Metadata.FileName, null, ct);
     public Task<StoredDocumentFile> SaveAtsReadinessSnapshotAsync(AtsReadinessResult snapshot, PortalCallContext context, CancellationToken ct) =>
-        SaveGenericAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(snapshot)), "ats-readiness-json", "application/json", context, $"ats-readiness-{snapshot.Period}.json", snapshot.Period);
+        SaveGenericAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(snapshot)), "ats-readiness-json", "application/json", context, $"ats-readiness-{snapshot.Period}.json", snapshot.Period, ct);
 
-    private Task<StoredDocumentFile> SaveAsync(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context)
+    private async Task<StoredDocumentFile> SaveAsync(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context, CancellationToken ct)
     {
         if (!string.Equals(options.Provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase))
             throw new FinancialApplicationException("sri.storage.provider.invalid", "PortalContentFileStorageClient requires provider PortalContentFile.");
-        if (string.IsNullOrWhiteSpace(options.PortalBaseUrl))
-            throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
-        EnsurePayloadAllowed(options);
         var request = BuildRequest(document, content, purpose, contentType, context, options);
-        var storageId = $"portal-content-file://{options.Container}/{document.TenantId}/{document.Id}/{purpose}";
-        return Task.FromResult(new StoredDocumentFile(storageId, request.Hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+        var response = await UploadAsync(request, context, ct);
+        return new StoredDocumentFile(response.StorageId, request.Hash, response.Provider, response.StoredAtUtc, contentType, purpose);
     }
 
-    private Task<StoredDocumentFile> SaveGenericAsync(byte[] content, string purpose, string contentType, PortalCallContext context, string fileName, string? period)
+    private async Task<StoredDocumentFile> SaveGenericAsync(byte[] content, string purpose, string contentType, PortalCallContext context, string fileName, string? period, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(options.PortalBaseUrl)) throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
-        EnsurePayloadAllowed(options);
         var hash = Convert.ToHexString(SHA256.HashData(content));
         var request = new PortalContentFileRequest(purpose, fileName, contentType, hash, content.LongLength, options.Container, context.CorrelationId, context.TenantId,
             new("Financiero", null, null, null, period, "financial-reporting-foundation", new Dictionary<string, string> { ["hash"] = hash, ["purpose"] = purpose }),
             ShouldIncludePayload(options),
             ShouldIncludePayload(options) ? Convert.ToBase64String(content) : null);
-        return Task.FromResult(new StoredDocumentFile($"portal-content-file://{options.Container}/{context.TenantId}/exports/{request.Hash}/{purpose}", request.Hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+        var response = await UploadAsync(request, context, ct);
+        return new StoredDocumentFile(response.StorageId, request.Hash, response.Provider, response.StoredAtUtc, contentType, purpose);
+    }
+
+    private async Task<PortalContentFileHttpResponse> UploadAsync(PortalContentFileRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        var httpOptions = ToHttpOptions(options);
+        EnsurePayloadAllowed(options);
+        var httpClient = client ?? new PortalContentFileHttpClient(new HttpClient());
+        var auth = await (tokenProvider ?? new DisabledPortalContentFileTokenProvider()).GetAsync(context, httpOptions, ct);
+        try
+        {
+            await AuditAsync(httpOptions.DryRun ? "ContentFileHttpDryRunRequested" : "ContentFileHttpUploadRequested", request, context, ct);
+            var response = await httpClient.UploadAsync(new(request, options.UploadPath), httpOptions, auth, context, ct);
+            await AuditAsync(httpOptions.DryRun ? "ContentFileHttpDryRunCompleted" : "ContentFileHttpUploadSucceeded", request, context, ct);
+            return response;
+        }
+        catch
+        {
+            await AuditAsync("ContentFileHttpUploadFailed", request, context, ct);
+            throw;
+        }
     }
 
     private static bool ShouldIncludePayload(PortalContentFileOptions options) => options.SendPayloads;
     private static string TaxExportPurpose(string format) => string.Equals(format, "Csv", StringComparison.OrdinalIgnoreCase) ? "tax-export-csv" : "tax-export-json";
+    private static PortalContentFileHttpOptions ToHttpOptions(PortalContentFileOptions options) => new(options.PortalBaseUrl ?? "", options.UploadPath, options.TimeoutSeconds, options.DryRun, options.AuthRequired, options.SendPayloads, options.MaskPayloads, options.AllowProductionContentFilePayload, options.EnvironmentName);
     private static void EnsurePayloadAllowed(PortalContentFileOptions options)
     {
         if (options.SendPayloads && options.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) && !options.AllowProductionContentFilePayload)
             throw new FinancialApplicationException("sri.storage.payload.production_blocked", "Portal Content/File payload sending is disabled in Production without explicit approval.");
     }
+    private async Task AuditAsync(string action, PortalContentFileRequest request, PortalCallContext context, CancellationToken ct)
+    {
+        if (audit is null) return;
+        await audit.RecordAsync(new(action, "financial.content-file", context.TenantId, new { request.Purpose, request.Hash, request.Size, Provider = "PortalContentFile", options.DryRun, options.SendPayloads, PortalBaseUrl = SriSensitiveDataSanitizer.MaskUrl(options.PortalBaseUrl) }), context, ct);
+    }
 }
 
-public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigurationReader configuration) : IElectronicDocumentStorageClient
+public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigurationReader configuration, IPortalContentFileClient contentFileClient, IPortalContentFileTokenProvider tokenProvider, IPortalAuditClient audit) : IElectronicDocumentStorageClient
 {
     private readonly DevelopmentElectronicDocumentStorageClient _development = new();
     public async Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveUnsignedXmlAsync(document, xml, context, ct);
@@ -933,9 +1088,12 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
                 configuration.GetBoolAsync("financial.sri.storage.retainPdf", false, context, ct).GetAwaiter().GetResult(),
                 configuration.GetBoolAsync("financial.sri.storage.sendPayloads", false, context, ct).GetAwaiter().GetResult(),
                 configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct).GetAwaiter().GetResult(),
-                configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct).GetAwaiter().GetResult(),
-                configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct).GetAwaiter().GetResult());
-            return new PortalContentFileStorageClient(options);
+                configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct).GetAwaiter().GetResult() || configuration.GetBoolAsync("financial.sri.storage.allowProductionPayload", false, context, ct).GetAwaiter().GetResult(),
+                configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct).GetAwaiter().GetResult(),
+                configuration.GetStringAsync("financial.sri.storage.uploadPath", "/api/content-files", context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.dryRun", true, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.authRequired", false, context, ct).GetAwaiter().GetResult());
+            return new PortalContentFileStorageClient(options, contentFileClient, tokenProvider, audit);
         }
         throw new FinancialApplicationException("sri.storage.provider.unsupported", $"Unsupported electronic document storage provider '{provider}'.");
     }
@@ -1160,21 +1318,34 @@ public sealed class ContentFileReadinessService(IFinancialConfigurationReader co
         var issues = new List<string>();
         var provider = await configuration.GetStringAsync("financial.sri.storage.provider", "Development", context, ct);
         var baseUrl = await configuration.GetStringAsync("financial.sri.storage.portalBaseUrl", "", context, ct);
+        var uploadPath = await configuration.GetStringAsync("financial.sri.storage.uploadPath", "/api/content-files", context, ct);
+        var dryRun = await configuration.GetBoolAsync("financial.sri.storage.dryRun", true, context, ct);
+        var authRequired = await configuration.GetBoolAsync("financial.sri.storage.authRequired", false, context, ct);
+        var token = await configuration.GetStringAsync("financial.sri.storage.authToken", "", context, ct);
         var sendPayloads = await configuration.GetBoolAsync("financial.sri.storage.sendPayloads", false, context, ct);
         var maskPayloads = await configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct);
-        var allowProductionPayload = await configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct);
+        var allowProductionPayload = await configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct) || await configuration.GetBoolAsync("financial.sri.storage.allowProductionPayload", false, context, ct);
         var timeout = await configuration.GetIntAsync("financial.sri.storage.timeoutSeconds", 30, context, ct);
         var environment = await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct);
         checks.Add($"provider={provider}");
+        checks.Add($"uploadPath={uploadPath}");
+        checks.Add($"dryRun={dryRun}");
+        checks.Add($"authRequired={authRequired}");
         checks.Add($"sendPayloads={sendPayloads}");
         checks.Add($"maskPayloads={maskPayloads}");
         checks.Add($"timeoutSeconds={timeout}");
         checks.Add($"environment={environment}");
-        if (string.Equals(provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(baseUrl)) issues.Add("PortalContentFile provider requires portalBaseUrl.");
+        if (string.Equals(provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(baseUrl)) issues.Add("PortalContentFile provider requires portalBaseUrl.");
+            else if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out _)) issues.Add("PortalContentFile portalBaseUrl is invalid.");
+            if (string.IsNullOrWhiteSpace(uploadPath) || !uploadPath.StartsWith('/')) issues.Add("PortalContentFile uploadPath must start with '/'.");
+            if (!dryRun && authRequired && string.IsNullOrWhiteSpace(context.BearerToken) && string.IsNullOrWhiteSpace(token)) issues.Add("PortalContentFile auth token is required when dryRun=false and authRequired=true.");
+        }
         if (sendPayloads && !maskPayloads) issues.Add("Payload sending requires maskPayloads=true.");
         if (sendPayloads && environment.Equals("Production", StringComparison.OrdinalIgnoreCase) && !allowProductionPayload) issues.Add("Production payload sending requires explicit approval.");
-        var status = string.Equals(provider, "Development", StringComparison.OrdinalIgnoreCase) ? "Healthy" : issues.Count > 0 ? "Unhealthy" : sendPayloads ? "Degraded" : "Degraded";
-        await audit.RecordAsync(new("ContentFileReadinessChecked", "financial.content-file", context.TenantId, new { Provider = provider, Status = status, SendPayloads = sendPayloads, PortalBaseUrl = SriSensitiveDataSanitizer.MaskUrl(baseUrl) }), context, ct);
+        var status = string.Equals(provider, "Development", StringComparison.OrdinalIgnoreCase) ? "Healthy" : issues.Count > 0 ? "Unhealthy" : dryRun ? "Degraded" : "Healthy";
+        await audit.RecordAsync(new("ContentFileReadinessChecked", "financial.content-file", context.TenantId, new { Provider = provider, Status = status, DryRun = dryRun, AuthRequired = authRequired, SendPayloads = sendPayloads, PortalBaseUrl = SriSensitiveDataSanitizer.MaskUrl(baseUrl) }), context, ct);
         return new(status, provider, checks, issues, SriSensitiveDataSanitizer.MaskUrl(baseUrl));
     }
 }

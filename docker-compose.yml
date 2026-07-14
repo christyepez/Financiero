@@ -51,11 +51,16 @@ services:
       financial__sri__xml__validation__failOnWarning: ${SRI_XML_VALIDATION_FAIL_ON_WARNING:-true}
       financial__sri__storage__provider: ${SRI_STORAGE_PROVIDER:-Development}
       financial__sri__storage__portalBaseUrl: ${SRI_STORAGE_PORTAL_BASE_URL:-}
+      financial__sri__storage__uploadPath: ${SRI_STORAGE_UPLOAD_PATH:-/api/content-files}
       financial__sri__storage__container: ${SRI_STORAGE_CONTAINER:-financial-electronic-documents}
       financial__sri__storage__timeoutSeconds: ${SRI_STORAGE_TIMEOUT_SECONDS:-30}
       financial__sri__storage__sendPayloads: ${SRI_STORAGE_SEND_PAYLOADS:-false}
       financial__sri__storage__maskPayloads: ${SRI_STORAGE_MASK_PAYLOADS:-true}
       financial__sri__storage__allowProductionContentFilePayload: ${SRI_STORAGE_ALLOW_PRODUCTION_CONTENT_FILE_PAYLOAD:-false}
+      financial__sri__storage__allowProductionPayload: ${SRI_STORAGE_ALLOW_PRODUCTION_PAYLOAD:-false}
+      financial__sri__storage__dryRun: ${SRI_STORAGE_DRY_RUN:-true}
+      financial__sri__storage__authRequired: ${SRI_STORAGE_AUTH_REQUIRED:-false}
+      financial__sri__storage__authToken: ${SRI_STORAGE_AUTH_TOKEN:-}
       financial__sri__storage__retainXml: ${SRI_STORAGE_RETAIN_XML:-true}
       financial__sri__storage__retainPdf: ${SRI_STORAGE_RETAIN_PDF:-false}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}

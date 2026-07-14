@@ -41,4 +41,6 @@
 
 Production SRI, XAdES real, RIDE legal final, ATS oficial y Content/File upload/payload real permanecen bloqueados.
 
+Sprint 4 P2 prepara el cliente HTTP Content/File detrás de configuración. No agrega endpoints públicos nuevos.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
