@@ -70,3 +70,7 @@ No se agrega migración 012. RIDE y exports almacenables conservan metadata/hash
 ## Sprint 4 P2 Content/File HTTP contract
 
 No se agrega migración 012. El contrato HTTP, dry-run, token placeholder y validaciones no requieren persistencia nueva. No se guardan payloads, tokens, XML ni respuestas reales de Portal/SRI.
+
+## Sprint 4 P3 RIDE/ATS design foundation
+
+No se agrega migración 012. RIDE legal readiness y ATS official design son cálculos read-only sobre documentos existentes. No se guardan documentos finales, XML ATS, payloads ni secretos.

@@ -536,7 +536,7 @@ public sealed class SriElectronicDocumentsServiceTests
 
         var preview = await service.GetRidePreviewAsync(generated.Id, Context, default);
 
-        Assert.Contains("RIDE Factura", preview.Html);
+        Assert.Contains("RIDE Foundation - Factura", preview.Html);
         Assert.DoesNotContain(generated.AccessKey!, preview.Html);
         Assert.DoesNotContain("0102030405", preview.Html);
         Assert.Contains("****", preview.Html);
@@ -562,12 +562,62 @@ public sealed class SriElectronicDocumentsServiceTests
         var debitRide = await service.GetRidePreviewAsync(debitNote.Id, Context, default);
         var withholdingRide = await service.GetRidePreviewAsync(withholding.Id, Context, default);
 
-        Assert.Contains("Nota de cr", creditRide.Html);
-        Assert.Contains("Nota de d", debitRide.Html);
-        Assert.Contains("Comprobante de reten", withholdingRide.Html);
+        Assert.Contains("Nota de", creditRide.Html);
+        Assert.Contains("Nota de", debitRide.Html);
+        Assert.Contains("Comprobante de", withholdingRide.Html);
         Assert.DoesNotContain("<notaCredito", creditRide.Html);
         Assert.DoesNotContain("<notaDebito", debitRide.Html);
         Assert.DoesNotContain("<comprobanteRetencion", withholdingRide.Html);
+        Assert.Contains("Foundation RIDE layout", creditRide.Html);
+        Assert.Contains("Comprobante modificado", creditRide.Html);
+        Assert.Contains("Motivos/cargos", debitRide.Html);
+        Assert.Contains("Documento sustento", withholdingRide.Html);
+    }
+
+    [Fact]
+    public async Task Ride_legal_readiness_detects_pending_authorization_and_keeps_response_sanitized()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 1, 1), "05", "0102030405", "Cliente"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        var generated = await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+
+        var readiness = await service.GetRideLegalReadinessAsync(generated.Id, Context, default);
+        var payload = System.Text.Json.JsonSerializer.Serialize(readiness);
+
+        Assert.Equal(RideLegalReadinessStatus.RequiresLegalReview, readiness.Status);
+        Assert.Contains(readiness.Issues, x => x.Code == "ride.authorization.pending");
+        Assert.Contains("not a legal final RIDE", readiness.Disclaimer);
+        Assert.DoesNotContain(generated.AccessKey!, payload);
+        Assert.DoesNotContain("<factura", payload);
+    }
+
+    [Fact]
+    public void Ride_readiness_detects_missing_related_and_support_documents()
+    {
+        var issuer = new IssuerSriOptions("0999999999001", "EMISOR TEST", "EMISOR TEST", "DIR", true);
+        var credit = ElectronicDocument.CreateCreditNote("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", "01", "001-001-000000001", new DateOnly(2026, 1, 1), "Motivo", DateTimeOffset.UtcNow);
+        var withholding = ElectronicDocument.CreateWithholding("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Proveedor", "USD", "01/2026", "01", "001-001-000000001", new DateOnly(2026, 1, 1), DateTimeOffset.UtcNow);
+        ((System.Collections.IList)typeof(ElectronicDocument).GetField("_references", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(credit)!).Clear();
+        ((System.Collections.IList)typeof(ElectronicDocument).GetField("_references", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(withholding)!).Clear();
+
+        var validator = new RideLegalReadinessValidator();
+
+        Assert.Contains(validator.Validate(credit, issuer).Issues, x => x.Code == "ride.related_document.missing");
+        Assert.Contains(validator.Validate(withholding, issuer).Issues, x => x.Code == "ride.support_document.missing");
+    }
+
+    [Fact]
+    public void Ride_qr_payload_is_placeholder_hash_only()
+    {
+        var model = new InvoiceRideModel("0999999999001", "EMISOR", "001-001-000000001", "*********************************************6789", new DateOnly(2026, 1, 1), "Cliente", "******7890", [], [], new(0, 0, 0, 0), null, null, "Test", "Generated");
+
+        var qr = RideQrPayloadFactory.Create(model);
+
+        Assert.Equal("FoundationHashOnly", qr.Mode);
+        Assert.DoesNotContain("http", qr.Hash, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not official", qr.Disclaimer);
     }
 
     [Fact]
@@ -648,6 +698,27 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Equal(AtsReadinessStatus.MissingData, readiness.Status);
         Assert.Contains(readiness.Issues, x => x.Code == "ats.document.not_authorized");
         Assert.Contains("not an official ATS", readiness.Disclaimer);
+    }
+
+    [Fact]
+    public async Task Ats_official_design_maps_sections_and_flags_unsupported_purchases()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 3, 1), "04", "0999999999001", "Cliente ATS"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
+
+        var design = await export.EvaluateAtsOfficialDesignAsync(new("2026-03"), Context, default);
+        var payload = System.Text.Json.JsonSerializer.Serialize(design);
+
+        Assert.Contains(design.Sections, x => x.Code == "informant");
+        Assert.Contains(design.Sections, x => x.Code == "purchases" && x.Status == "Unsupported");
+        Assert.Contains(design.UnsupportedReasons, x => x.Code == "ats.purchases.module_missing");
+        Assert.Contains("not an official ATS", design.Disclaimer);
+        Assert.DoesNotContain("<factura", payload);
+        Assert.DoesNotContain("PRIVATE KEY", payload);
     }
 
     [Fact]

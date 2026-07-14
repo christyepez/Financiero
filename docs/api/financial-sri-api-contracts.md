@@ -28,6 +28,7 @@
 | POST | `/api/financial/electronic-documents/{id}/store-ride` | `financial.electronicdocuments.generate` | Implementado Sprint 4 P1; registra metadata Content/File |
 | GET | `/api/financial/electronic-documents/{id}/ride-metadata` | `financial.electronicdocuments.read` | Implementado P3 |
 | GET | `/api/financial/electronic-documents/{id}/ride-preview` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3; HTML sanitizado |
+| GET | `/api/financial/electronic-documents/{id}/ride-legal-readiness` | `financial.electronicdocuments.read` | Implementado Sprint 4 P3; foundation no legal final |
 | GET | `/api/financial/tax-reporting/summary` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/documents` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/tax-totals` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
@@ -35,6 +36,7 @@
 | GET | `/api/financial/tax-reporting/export` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4; JSON/CSV foundation |
 | POST | `/api/financial/tax-reporting/export/store` | `financial.electronicdocuments.manage` | Implementado Sprint 4 P1; storage metadata |
 | GET | `/api/financial/tax-reporting/ats-readiness` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4; no ATS oficial |
+| GET | `/api/financial/tax-reporting/ats-official-design` | `financial.electronicdocuments.read` | Implementado Sprint 4 P3; diseño foundation no oficial |
 | GET | `/api/financial/tax-reporting/action-queue` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/electronic-documents/{id}/integration-status` | `financial.electronicdocuments.read` | Implementado P4 |

@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 4 P1 Portal Content/File Storage Readiness implementado sobre Sprint 3 P4. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF Development por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation y ATS readiness interno quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 4 P3 RIDE Legal Layout Foundation / ATS Official Design Foundation implementado sobre Sprint 4 P2. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno y ATS official design foundation quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -75,6 +75,8 @@ scripts/smoke/financial-sri-smoke.ps1 -BaseUrl http://localhost:8083
 
 Sprint 4 P2 agrega contrato HTTP productivo-ready para Portal Content/File. El provider local por defecto es `Development`; `PortalContentFile` requiere `SRI_STORAGE_PORTAL_BASE_URL`, usa `SRI_STORAGE_DRY_RUN=true` por defecto y no envía payloads ni tokens reales salvo configuración explícita fuera del repo.
 
+Sprint 4 P3 agrega templates RIDE foundation por tipo documental y diseño ATS oficial foundation. Ningún output debe considerarse legal final ni ATS oficial.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -87,4 +89,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 4 P3. Activar upload real solo contra un endpoint Portal Content/File estable y aprobado; mantener RIDE legal final, ATS oficial, firma XAdES productiva y SRI Production bajo aprobación manual fuera del repositorio.
+Próximo paso recomendado: Sprint 4 P4. Revisión tributaria/legal Ecuador de RIDE/ATS y cierre de gaps de compras/anulados antes de cualquier generación oficial.

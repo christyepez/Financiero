@@ -71,6 +71,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-debit-note-xml")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-withholding-xml")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-preview")]
+    [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-legal-readiness")]
     [InlineData("GET", "/api/financial/tax-reporting/summary")]
     [InlineData("GET", "/api/financial/tax-reporting/documents")]
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals")]
@@ -78,6 +79,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/export")]
     [InlineData("POST", "/api/financial/tax-reporting/export/store")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=2026-01")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-official-design?period=2026-01")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
@@ -116,6 +118,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/integration-status", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-preview", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-legal-readiness", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/summary", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/documents", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals", "financial.electronicdocuments.read")]
@@ -123,6 +126,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/export?format=Xml", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/tax-reporting/export/store?format=Json", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-official-design?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
@@ -147,6 +151,15 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     public async Task Ats_readiness_invalid_period_returns_bad_request_without_500()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-reporting/ats-readiness?period=invalid");
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Ats_official_design_invalid_period_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-reporting/ats-official-design?period=invalid");
         request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
