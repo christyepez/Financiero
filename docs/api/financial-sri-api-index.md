@@ -24,6 +24,10 @@
 | GET | `/api/financial/tax-reporting/documents` | read | Dev/Test | Medio | Datos enmascarados | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/tax-totals` | read | Dev/Test | Medio | Totales impuestos | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/withholding-totals` | read | Dev/Test | Medio | Totales retenciones | implemented Sprint 3 P3 |
+| GET | `/api/financial/tax-reporting/export` | read | Dev/Test | Medio | JSON/CSV en memoria | implemented Sprint 3 P4 |
+| GET | `/api/financial/tax-reporting/ats-readiness` | read | Dev/Test | Medio | Evaluación interna no oficial | implemented Sprint 3 P4 |
+| GET | `/api/financial/tax-reporting/action-queue` | read | Dev/Test | Medio | Pendientes por acción | implemented Sprint 3 P4 |
+| GET | `/api/financial/tax-reporting/monthly-summary` | read | Dev/Test | Medio | Resumen mensual | implemented Sprint 3 P4 |
 | GET | `/{id}/ride-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
 | GET | `/{id}/storage-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
 | GET | `/{id}/integration-status` | read | Dev/Test | Bajo | Sanitizado | implemented |

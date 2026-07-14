@@ -165,8 +165,16 @@ $reportSummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-
 if (-not $reportSummary.data.totals -or $reportSummary.data.totals.count -lt 4) {
     throw "Tax reporting summary did not include smoke documents."
 }
+$actionQueue = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/action-queue?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
+if (-not $actionQueue.data) { throw "Tax reporting action queue endpoint failed." }
+$monthlySummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/monthly-summary?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
+if (-not $monthlySummary.data) { throw "Tax reporting monthly summary endpoint failed." }
+$exportJson = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/export?from=2026-01-01&to=2026-01-31&format=Json" -Headers $headers
+$exportCsvResponse = Invoke-WebRequest -UseBasicParsing -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/export?from=2026-01-01&to=2026-01-31&format=Csv" -Headers $headers
+$atsReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-readiness?period=2026-01" -Headers $headers
+if (-not $atsReadiness.data.disclaimer -or $atsReadiness.data.disclaimer -notmatch "not an official ATS") { throw "ATS readiness disclaimer is missing." }
 $reportPayload = $reportSummary | ConvertTo-Json -Depth 20
-if ($reportPayload -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE") {
+if (($reportPayload + ($exportJson | ConvertTo-Json -Depth 20) + $exportCsvResponse.Content + ($atsReadiness | ConvertTo-Json -Depth 20)) -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") {
     throw "Tax reporting exposed XML or certificate material."
 }
 

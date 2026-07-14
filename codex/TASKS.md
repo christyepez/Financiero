@@ -95,6 +95,14 @@
 - [x] Extender smoke SRI mock con RIDE por tipo y reporting.
 - [x] Documentar ADR-008 y coordinación Sprint 3 P3.
 
+## Sprint 3 P4
+
+- [x] Implementar export foundation JSON/CSV en memoria.
+- [x] Implementar ATS readiness interno no oficial.
+- [x] Implementar action queue y monthly summary.
+- [x] Mantener sanitización de accessKey/identificación y exclusión de XML/secretos.
+- [x] Documentar ADR-009 y coordinación Sprint 3 P4.
+
 ## Sprint 4 — Reporting financiero/fiscal
 
 - [ ] RIDE legal final, ATS oficial y adapter productivo Content/File; requiere contrato productivo Portal y revisión fiscal/manual.

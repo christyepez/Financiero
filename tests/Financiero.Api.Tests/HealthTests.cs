@@ -72,6 +72,10 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/documents")]
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals")]
     [InlineData("GET", "/api/financial/tax-reporting/withholding-totals")]
+    [InlineData("GET", "/api/financial/tax-reporting/export")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=2026-01")]
+    [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
+    [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
     {
         var response = await _factory.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), url));
@@ -110,12 +114,35 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/documents", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/withholding-totals", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/export?format=Xml", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
     {
         using var request = new HttpRequestMessage(new HttpMethod(method), url);
         request.Headers.Add("X-Dev-Permissions", permission);
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.False(response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Tax_export_invalid_format_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-reporting/export?format=Xml");
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Ats_readiness_invalid_period_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-reporting/ats-readiness?period=invalid");
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

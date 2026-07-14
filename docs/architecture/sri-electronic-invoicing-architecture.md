@@ -84,3 +84,7 @@ La política de redondeo usa `decimal`, 2 posiciones, `AwayFromZero` y toleranci
 Sprint 3 P3 agrega modelos RIDE por tipo documental, generador Development sanitizado y endpoints de reporting tributario foundation. La generación PDF sigue siendo placeholder de desarrollo; el HTML de preview no expone XML, certificados, claves privadas, clave de acceso completa ni identificación completa del cliente/sujeto.
 
 El reporting resume documentos electrónicos existentes por periodo, tipo, estado, impuestos y retenciones. No genera ATS oficial, no crea storage documental propio y no agrega migración porque consulta la persistencia existente de documentos electrónicos.
+
+## Exportaciones y ATS readiness Sprint 3 P4
+
+Sprint 3 P4 agrega exportaciones internas JSON/CSV, action queue, monthly summary y evaluación ATS readiness. ATS readiness no genera XML oficial ni certifica cumplimiento normativo; solo identifica faltantes de autorización/XML, revisión tributaria y agregados foundation.
