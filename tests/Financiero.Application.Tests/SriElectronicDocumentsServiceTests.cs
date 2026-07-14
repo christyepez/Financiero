@@ -161,6 +161,61 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.Contains("000000001", xml);
     }
 
+    [Fact]
+    public async Task Ride_gap_analysis_returns_critical_foundation_only_gaps()
+    {
+        var audit = new RecordingAudit();
+        var result = await new RideLegalGapAnalysisService(audit).AnalyzeAsync(Context, default);
+        var payload = System.Text.Json.JsonSerializer.Serialize(result);
+
+        Assert.Equal(RideFinalEnablementStatus.BlockedForOfficialUse, result.Status);
+        Assert.Contains(result.Gaps, x => x.Type == TaxLegalReviewGapType.MissingLegalTemplateReview && x.Severity == TaxLegalReviewGapSeverity.Critical);
+        Assert.Contains(result.Gaps, x => x.Code == "ride.security.full_access_key_approval");
+        Assert.Contains("not a legal final RIDE", result.Disclaimer);
+        Assert.DoesNotContain("<factura", payload);
+        Assert.DoesNotContain("PRIVATE KEY", payload);
+        Assert.Contains("RideLegalGapsQueried", audit.Actions);
+    }
+
+    [Fact]
+    public async Task Ats_gap_analysis_returns_missing_purchases_and_schema_gaps()
+    {
+        var audit = new RecordingAudit();
+        var result = await new AtsOfficialGapAnalysisService(audit).AnalyzeAsync(new("2026-03"), Context, default);
+        var payload = System.Text.Json.JsonSerializer.Serialize(result);
+
+        Assert.Equal(AtsOfficialEnablementStatus.NotReadyForOfficialGeneration, result.Status);
+        Assert.Contains(result.Gaps, x => x.Type == TaxLegalReviewGapType.MissingPurchaseModule);
+        Assert.Contains(result.Gaps, x => x.Type == TaxLegalReviewGapType.MissingOfficialSchema);
+        Assert.Contains("does not generate official ATS XML", result.Disclaimer);
+        Assert.DoesNotContain("<factura", payload);
+        Assert.DoesNotContain("BEGIN CERTIFICATE", payload);
+        Assert.Contains("AtsOfficialGapsQueried", audit.Actions);
+    }
+
+    [Fact]
+    public async Task Approval_checklist_is_not_approved_and_includes_required_reviews()
+    {
+        var audit = new RecordingAudit();
+        var checklist = await new TaxLegalApprovalChecklistService(new RideLegalGapAnalysisService(audit), new AtsOfficialGapAnalysisService(audit), audit).CheckAsync("all", Context, default);
+
+        Assert.False(checklist.ApprovedForOfficialUse);
+        Assert.Contains(checklist.Items, x => x.Code == "tax.expert.review");
+        Assert.Contains(checklist.Items, x => x.Code == "security.production.gate");
+        Assert.Contains(checklist.BlockingGaps, x => x.Severity == TaxLegalReviewGapSeverity.Critical);
+        Assert.Contains("Approval is not granted", checklist.Disclaimer);
+        Assert.Contains("TaxLegalApprovalChecklistQueried", audit.Actions);
+    }
+
+    [Fact]
+    public async Task Approval_checklist_rejects_invalid_scope()
+    {
+        var service = new TaxLegalApprovalChecklistService(new RideLegalGapAnalysisService(new RecordingAudit()), new AtsOfficialGapAnalysisService(new RecordingAudit()), new RecordingAudit());
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => service.CheckAsync("production", Context, default));
+
+        Assert.Equal("tax_legal.scope.invalid", ex.Code);
+    }
+
     private static ElectronicDocumentsService NewService(InMemoryElectronicDocumentRepository repo, RecordingAudit audit, RecordingOutbox outbox, IFinancialConfigurationReader? configuration = null)
     {
         var config = configuration ?? new StaticFinancialConfigurationReader(new Dictionary<string, string>

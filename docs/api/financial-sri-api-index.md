@@ -30,6 +30,9 @@
 | POST | `/api/financial/tax-reporting/export/store` | manage | Dev/Test | Medio | Storage id/hash | implemented Sprint 4 P1 |
 | GET | `/api/financial/tax-reporting/ats-readiness` | read | Dev/Test | Medio | Evaluación interna no oficial | implemented Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/ats-official-design` | read | Dev/Test | Medio | Diseño no oficial | implemented Sprint 4 P3 |
+| GET | `/api/financial/tax-legal-review/ride-gaps` | read | Dev/Test | Medio | Gaps/disclaimer no oficial | implemented Sprint 4 P4 |
+| GET | `/api/financial/tax-legal-review/ats-gaps` | read | Dev/Test | Medio | Gaps/disclaimer no oficial | implemented Sprint 4 P4 |
+| GET | `/api/financial/tax-legal-review/approval-checklist` | read | Dev/Test | Medio | Checklist advisory | implemented Sprint 4 P4 |
 | GET | `/api/financial/tax-reporting/action-queue` | read | Dev/Test | Medio | Pendientes por acción | implemented Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | read | Dev/Test | Medio | Resumen mensual | implemented Sprint 3 P4 |
 | GET | `/{id}/ride-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
@@ -46,5 +49,7 @@ Production SRI, XAdES real, RIDE legal final, ATS oficial y Content/File upload/
 Sprint 4 P2 prepara el cliente HTTP Content/File detrás de configuración. No agrega endpoints públicos nuevos.
 
 Sprint 4 P3 agrega endpoints read-only para RIDE legal readiness y ATS official design foundation. No generan documentos legales finales.
+
+Sprint 4 P4 agrega endpoints read-only de gaps y checklist de aprobación. No aprueba uso oficial, no genera ATS oficial y no persiste evidencia real.
 
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.

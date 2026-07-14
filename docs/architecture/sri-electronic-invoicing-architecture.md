@@ -61,6 +61,8 @@ Sprint 4 P2 agrega `PortalContentFileHttpClient` con `HttpClientFactory`, contra
 
 Sprint 4 P3 separa templates RIDE foundation por tipo documental y agrega ATS official design foundation. Ambos son modelos de preparación y revisión; no son outputs legales finales ni ATS oficial.
 
+Sprint 4 P4 agrega gestión calculada de gaps tributarios/legales para RIDE final y ATS oficial. Los resultados son read-only, auditados por Portal Audit y no crean evidencia persistida, aprobaciones mutables ni artefactos oficiales.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

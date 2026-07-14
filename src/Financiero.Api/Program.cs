@@ -40,6 +40,7 @@ app.MapFiscalPeriods();
 app.MapJournalEntries();
 app.MapElectronicDocuments();
 app.MapTaxReporting();
+app.MapTaxLegalReview();
 app.Run();
 
 public partial class Program;

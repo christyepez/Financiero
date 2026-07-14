@@ -201,8 +201,17 @@ if (-not $atsReadiness.data.disclaimer -or $atsReadiness.data.disclaimer -notmat
 $atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
 if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
 if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }
+$rideGaps = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/ride-gaps" -Headers $headers
+if (-not $rideGaps.data.disclaimer -or $rideGaps.data.disclaimer -notmatch "not a legal final RIDE") { throw "RIDE legal gap disclaimer is missing." }
+if (-not ($rideGaps.data.gaps | Where-Object { $_.code -eq "ride.layout.legal_review" })) { throw "RIDE legal layout gap is missing." }
+$atsGaps = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/ats-gaps?period=2026-01" -Headers $headers
+if (-not $atsGaps.data.disclaimer -or $atsGaps.data.disclaimer -notmatch "does not generate official ATS XML") { throw "ATS gap disclaimer is missing." }
+if (-not ($atsGaps.data.gaps | Where-Object { $_.code -eq "ats.purchases.module_missing" })) { throw "ATS purchases gap is missing." }
+$approvalChecklist = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/approval-checklist?scope=all" -Headers $headers
+if ($approvalChecklist.data.approvedForOfficialUse) { throw "Tax/legal approval checklist must not approve official use in P4." }
+if (-not ($approvalChecklist.data.items | Where-Object { $_.code -eq "security.production.gate" })) { throw "Security production gate checklist item is missing." }
 $reportPayload = $reportSummary | ConvertTo-Json -Depth 20
-if (($reportPayload + ($exportJson | ConvertTo-Json -Depth 20) + $exportCsvResponse.Content + ($storedExportJson | ConvertTo-Json -Depth 20) + ($storedExportCsv | ConvertTo-Json -Depth 20) + ($atsReadiness | ConvertTo-Json -Depth 20) + ($atsOfficialDesign | ConvertTo-Json -Depth 20)) -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") {
+if (($reportPayload + ($exportJson | ConvertTo-Json -Depth 20) + $exportCsvResponse.Content + ($storedExportJson | ConvertTo-Json -Depth 20) + ($storedExportCsv | ConvertTo-Json -Depth 20) + ($atsReadiness | ConvertTo-Json -Depth 20) + ($atsOfficialDesign | ConvertTo-Json -Depth 20) + ($rideGaps | ConvertTo-Json -Depth 20) + ($atsGaps | ConvertTo-Json -Depth 20) + ($approvalChecklist | ConvertTo-Json -Depth 20)) -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") {
     throw "Tax reporting exposed XML or certificate material."
 }
 
