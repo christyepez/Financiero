@@ -22,6 +22,8 @@
 - `financial.sri.test.allowDocumentSend=true`.
 - `financial.sri.storage.sendPayloads=true`.
 - `financial.sri.storage.allowProductionContentFilePayload=true`.
+- `financial.sri.storage.authRequired=true`.
+- `financial.sri.storage.dryRun=false`.
 - Provider Azure Key Vault real.
 - Firma XAdES real.
 
@@ -70,3 +72,10 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - `PayloadBase64` se redacta en logs y `ToString()`.
 - Production bloquea payloads salvo aprobación explícita.
 - Storage documental propio sigue prohibido.
+
+## Sprint 4 P2
+
+- Token Content/File no se versiona; `.env.example` deja la variable vacía.
+- Errores HTTP redactan token, querystring y payload.
+- `dryRun=true` es el modo seguro por defecto.
+- `dryRun=false` + `authRequired=true` exige token externo.

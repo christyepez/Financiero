@@ -582,6 +582,8 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ISriAuthorizationClient, DevelopmentSriAuthorizationClient>();
         services.AddScoped<IElectronicDocumentXmlValidator, ElectronicDocumentXmlValidator>();
         services.AddScoped<IXsdSchemaValidator, XsdSchemaValidatorPlaceholder>();
+        services.AddHttpClient<IPortalContentFileClient, PortalContentFileHttpClient>();
+        services.AddScoped<IPortalContentFileTokenProvider, ConfigurationPortalContentFileTokenProvider>();
         services.AddScoped<IElectronicDocumentStorageClient, ConfiguredElectronicDocumentStorageClient>();
         services.AddScoped<IRidePdfGenerator, DevelopmentRidePdfGenerator>();
 

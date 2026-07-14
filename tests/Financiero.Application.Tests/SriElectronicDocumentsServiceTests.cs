@@ -375,6 +375,83 @@ public sealed class SriElectronicDocumentsServiceTests
     }
 
     [Fact]
+    public async Task Portal_content_file_dry_run_returns_stable_storage_id_without_http_call()
+    {
+        var handler = new RecordingHttpHandler(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        var client = new PortalContentFileStorageClient(new("PortalContentFile", "https://portal.test", "financial", 30, true, false, DryRun: true), new PortalContentFileHttpClient(new HttpClient(handler)));
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+
+        var stored = await client.SaveUnsignedXmlAsync(doc, "<factura />", Context, default);
+
+        Assert.StartsWith("portal-dryrun://financial/default/", stored.StorageId);
+        Assert.Equal(0, handler.Calls);
+    }
+
+    [Fact]
+    public async Task Portal_content_file_real_http_success_maps_portal_response_and_headers()
+    {
+        var response = new HttpResponseMessage(System.Net.HttpStatusCode.Created)
+        {
+            Content = new StringContent("""{"storageId":"portal-content-file://files/123","provider":"PortalContentFile","storedAtUtc":"2026-01-01T00:00:00Z","contractStatus":"Uploaded"}""")
+        };
+        var handler = new RecordingHttpHandler(response);
+        var client = new PortalContentFileStorageClient(new("PortalContentFile", "https://portal.test", "financial", 30, true, true, DryRun: false, AuthRequired: true), new PortalContentFileHttpClient(new HttpClient(handler)));
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+
+        var stored = await client.SaveRidePdfAsync(doc, [1, 2, 3], Context with { BearerToken = "test-token" }, default);
+
+        Assert.Equal("portal-content-file://files/123", stored.StorageId);
+        Assert.Equal("Bearer", handler.LastRequest!.Headers.Authorization!.Scheme);
+        Assert.Equal("default", handler.LastRequest.Headers.GetValues("X-Tenant-Id").Single());
+        Assert.Equal("corr-sri", handler.LastRequest.Headers.GetValues("X-Correlation-Id").Single());
+        Assert.Equal("Financiero", handler.LastRequest.Headers.GetValues("X-Source-System").Single());
+        Assert.DoesNotContain("test-token", stored.ToString());
+    }
+
+    [Fact]
+    public async Task Portal_content_file_missing_token_fails_when_real_http_requires_auth()
+    {
+        var client = new PortalContentFileStorageClient(new("PortalContentFile", "https://portal.test", "financial", 30, true, true, DryRun: false, AuthRequired: true), new PortalContentFileHttpClient(new HttpClient(new RecordingHttpHandler(new HttpResponseMessage(System.Net.HttpStatusCode.OK)))));
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SaveRidePdfAsync(doc, [1, 2, 3], Context, default));
+
+        Assert.Equal("content_file.auth.token_required", ex.Code);
+    }
+
+    [Fact]
+    public async Task Portal_content_file_invalid_url_and_external_error_are_safe()
+    {
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+        var invalid = new PortalContentFileStorageClient(new("PortalContentFile", "not-a-url", "financial", 30, true, false, DryRun: false), new PortalContentFileHttpClient(new HttpClient()));
+        var invalidEx = await Assert.ThrowsAsync<FinancialApplicationException>(() => invalid.SaveUnsignedXmlAsync(doc, "<factura />", Context, default));
+        Assert.Equal("content_file.base_url.invalid", invalidEx.Code);
+
+        var failure = new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent("""{"error":"bad","token":"Bearer SECRET","payloadBase64":"QUJD","url":"https://portal.test/files?token=SECRET"}""")
+        };
+        var failed = new PortalContentFileStorageClient(new("PortalContentFile", "https://portal.test", "financial", 30, true, false, DryRun: false), new PortalContentFileHttpClient(new HttpClient(new RecordingHttpHandler(failure))));
+        var failedEx = await Assert.ThrowsAsync<FinancialApplicationException>(() => failed.SaveUnsignedXmlAsync(doc, "<factura />", Context, default));
+        Assert.Equal("content_file.http.failed", failedEx.Code);
+        Assert.DoesNotContain("SECRET", failedEx.Message);
+        Assert.DoesNotContain("QUJD", failedEx.Message);
+    }
+
+    [Fact]
+    public void Portal_content_file_contract_validator_rejects_sensitive_metadata()
+    {
+        var request = new PortalContentFileRequest("unsigned-xml", "safe-file", "application/xml", "ABC", 1, "financial", "corr", "default",
+            new("Financiero", null, null, null, null, null, new Dictionary<string, string> { ["xml"] = "<factura />", ["token"] = "Bearer SECRET" }),
+            false, null);
+
+        var ex = Assert.Throws<FinancialApplicationException>(() => PortalContentFileContractValidator.Validate(request));
+
+        Assert.Equal("content_file.contract.invalid", ex.Code);
+        Assert.DoesNotContain("SECRET", PortalContentFileErrorMapper.Sanitize(ex.Message));
+    }
+
+    [Fact]
     public async Task Content_file_readiness_reports_development_healthy_and_portal_missing_url_unhealthy()
     {
         var development = await new ContentFileReadinessService(new StaticFinancialConfigurationReader(), new RecordingAudit()).CheckAsync(Context, default);
@@ -387,6 +464,16 @@ public sealed class SriElectronicDocumentsServiceTests
         var portal = await new ContentFileReadinessService(portalConfig, new RecordingAudit()).CheckAsync(Context, default);
         Assert.Equal("Unhealthy", portal.Status);
         Assert.Contains(portal.Issues, x => x.Contains("portalBaseUrl"));
+
+        var dryRunConfig = new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.sri.storage.provider"] = "PortalContentFile",
+            ["financial.sri.storage.portalBaseUrl"] = "https://portal.test",
+            ["financial.sri.storage.dryRun"] = "true"
+        });
+        var dryRun = await new ContentFileReadinessService(dryRunConfig, new RecordingAudit()).CheckAsync(Context, default);
+        Assert.Equal("Degraded", dryRun.Status);
+        Assert.Contains(dryRun.Checks, x => x.Contains("dryRun=True"));
     }
 
     [Fact]
@@ -612,4 +699,16 @@ internal sealed class StaticFinancialConfigurationReader(IReadOnlyDictionary<str
     public Task<bool> GetBoolAsync(string key, bool defaultValue, PortalCallContext context, CancellationToken ct) => Task.FromResult(_values.TryGetValue(key, out var value) ? bool.Parse(value) : defaultValue);
     public Task<int> GetIntAsync(string key, int defaultValue, PortalCallContext context, CancellationToken ct) => Task.FromResult(_values.TryGetValue(key, out var value) ? int.Parse(value) : defaultValue);
     public Task<string> GetStringAsync(string key, string defaultValue, PortalCallContext context, CancellationToken ct) => Task.FromResult(_values.TryGetValue(key, out var value) ? value : defaultValue);
+}
+
+internal sealed class RecordingHttpHandler(HttpResponseMessage response) : HttpMessageHandler
+{
+    public int Calls { get; private set; }
+    public HttpRequestMessage? LastRequest { get; private set; }
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        Calls++;
+        LastRequest = request;
+        return Task.FromResult(response);
+    }
 }

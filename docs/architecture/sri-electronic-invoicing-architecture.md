@@ -57,6 +57,8 @@ P5 fortalece Key Vault wiring, probe manual SRI Test y observabilidad sanitizada
 
 Sprint 4 P1 agrega readiness productivo de Portal Content/File: `PortalContentFileStorageClient`, `/health/content-file`, metadata estructurada, payload opcional apagado por defecto y bloqueo de payloads en Production sin aprobación explícita. No hay upload HTTP real todavía ni storage documental propio.
 
+Sprint 4 P2 agrega `PortalContentFileHttpClient` con `HttpClientFactory`, contrato HTTP, validator, estrategia de token placeholder y `dryRun=true` por defecto. Las pruebas usan handler falso; no se llama Portal real.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

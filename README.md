@@ -73,7 +73,7 @@ scripts/smoke/financial-smoke.ps1 -BaseUrl http://localhost:8083
 scripts/smoke/financial-sri-smoke.ps1 -BaseUrl http://localhost:8083
 ```
 
-Sprint 4 P1 agrega `/health/content-file`, readiness protegida de Content/File, `store-ride` y `tax-reporting/export/store`. El provider local por defecto es `Development`; `PortalContentFile` requiere `SRI_STORAGE_PORTAL_BASE_URL` y no envía payloads salvo configuración explícita.
+Sprint 4 P2 agrega contrato HTTP productivo-ready para Portal Content/File. El provider local por defecto es `Development`; `PortalContentFile` requiere `SRI_STORAGE_PORTAL_BASE_URL`, usa `SRI_STORAGE_DRY_RUN=true` por defecto y no envía payloads ni tokens reales salvo configuración explícita fuera del repo.
 
 APIs principales:
 
@@ -87,4 +87,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 4 P2. Conectar upload HTTP real a Portal Content/File solo cuando Portal exponga contrato productivo estable; mantener RIDE legal final, ATS oficial, firma XAdES productiva y SRI Production bajo aprobación manual fuera del repositorio.
+Próximo paso recomendado: Sprint 4 P3. Activar upload real solo contra un endpoint Portal Content/File estable y aprobado; mantener RIDE legal final, ATS oficial, firma XAdES productiva y SRI Production bajo aprobación manual fuera del repositorio.

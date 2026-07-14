@@ -66,3 +66,7 @@ No se agrega migración 012. Exportaciones y ATS readiness se calculan en memori
 ## Sprint 4 P1 Content/File readiness
 
 No se agrega migración 012. RIDE y exports almacenables conservan metadata/hash usando campos existentes y storage ids externos. No se crean tablas de archivos, blobs, bases compartidas ni SQL Server propio.
+
+## Sprint 4 P2 Content/File HTTP contract
+
+No se agrega migración 012. El contrato HTTP, dry-run, token placeholder y validaciones no requieren persistencia nueva. No se guardan payloads, tokens, XML ni respuestas reales de Portal/SRI.
