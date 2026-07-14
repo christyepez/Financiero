@@ -45,6 +45,8 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => service.ValidateInvoiceXmlAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsGenerate);
         group.MapPost("/{id:guid}/generate-ride", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GenerateRidePdfAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsGenerate);
+        group.MapPost("/{id:guid}/store-ride", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.StoreRideAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsGenerate);
         group.MapGet("/", async ([AsParameters] SearchElectronicDocumentsRequest request, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.SearchAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/{id:guid}", async (Guid id, ElectronicDocumentsService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
@@ -65,6 +67,8 @@ public static class ElectronicDocumentsEndpoints
             await ExecuteAsync(() => readiness.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
         group.MapGet("/sri/connectivity-probe", async (SriManualTestConnectivityService connectivity, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => connectivity.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
+        group.MapGet("/content-file/readiness", async (ContentFileReadinessService readiness, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => readiness.CheckAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
 
         return app;
     }

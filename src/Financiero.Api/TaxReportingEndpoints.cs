@@ -26,6 +26,17 @@ public static class TaxReportingEndpoints
                 return BadRequestJson("tax_export.format.invalid", "Tax export format must be Json or Csv.", http);
             return await ExecuteFileAsync(() => service.ExportAsync(request, Context(http, options.Value), ct), http);
         }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapPost("/export/store", async (ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+        {
+            var request = TaxExportQueryFrom(http) with { Store = true };
+            if (!Enum.TryParse<TaxExportFormat>(request.Format, true, out _))
+                return BadRequestJson("tax_export.format.invalid", "Tax export format must be Json or Csv.", http);
+            return await ExecuteAsync(async () =>
+            {
+                var result = await service.ExportAsync(request, Context(http, options.Value), ct);
+                return new { result.Metadata, result.StoredFile };
+            }, http);
+        }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
         group.MapGet("/ats-readiness", async (ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
         {
             var request = AtsReadinessQueryFrom(http);
@@ -86,7 +97,8 @@ public static class TaxReportingEndpoints
         Environment: Value(http, "environment"),
         Kind: Value(http, "kind") ?? "DocumentSummary",
         Format: Value(http, "format") ?? "Json",
-        IncludeSensitive: bool.TryParse(Value(http, "includeSensitive"), out var includeSensitive) && includeSensitive);
+        IncludeSensitive: bool.TryParse(Value(http, "includeSensitive"), out var includeSensitive) && includeSensitive,
+        Store: bool.TryParse(Value(http, "store"), out var store) && store);
 
     private static AtsReadinessQuery AtsReadinessQueryFrom(HttpContext http) => new(
         Period: Value(http, "period") ?? "",

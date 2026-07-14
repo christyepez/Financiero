@@ -514,6 +514,20 @@ public sealed class SriReadinessHealthCheck(SriIntegrationReadinessService readi
     }
 }
 
+public sealed class ContentFileReadinessHealthCheck(ContentFileReadinessService readiness) : IHealthCheck
+{
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken ct = default)
+    {
+        var result = await readiness.CheckAsync(new(FinancialTenant.Default, "health-content-file"), ct);
+        return result.Status switch
+        {
+            "Healthy" => HealthCheckResult.Healthy("Content/File readiness is healthy.", new Dictionary<string, object> { ["checks"] = result.Checks.ToArray() }),
+            "Degraded" => HealthCheckResult.Degraded("Content/File readiness is degraded.", null, new Dictionary<string, object> { ["issues"] = result.Issues.ToArray(), ["checks"] = result.Checks.ToArray() }),
+            _ => HealthCheckResult.Unhealthy("Content/File readiness is unhealthy.", null, new Dictionary<string, object> { ["issues"] = result.Issues.ToArray(), ["checks"] = result.Checks.ToArray() })
+        };
+    }
+}
+
 public sealed class DevelopmentPortalAdapters(IOptions<PortalOptions> options, ILogger<DevelopmentPortalAdapters> logger, IConfiguration configuration) :
     IPortalAuditClient, IPortalNotificationClient, IPortalOutboxClient, IPortalConfigurationClient,
     IPortalSecurityClient, IPortalMenuRegistrationClient
@@ -557,6 +571,7 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<SriIntegrationReadinessService>();
+        services.AddScoped<ContentFileReadinessService>();
         services.AddScoped<SriManualTestConnectivityService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();
         services.AddSingleton<ISriCatalogProvider, DevelopmentSriCatalogProvider>();
@@ -589,6 +604,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IElectronicDocumentRepository, UnconfiguredElectronicDocumentRepository>();
         }
         services.AddHealthChecks().AddCheck<SriReadinessHealthCheck>("financial-sri", tags: ["sri"]);
+        services.AddHealthChecks().AddCheck<ContentFileReadinessHealthCheck>("financial-content-file", tags: ["content-file"]);
         return services;
     }
 }

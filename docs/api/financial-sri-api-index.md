@@ -19,12 +19,14 @@
 | POST | `/{id}/send` | send | Mock/dry-run | Alto | SRI metadata | mock/dev |
 | POST | `/{id}/authorize` | authorize | Mock/dry-run | Alto | SRI metadata | mock/dev |
 | POST | `/{id}/generate-ride` | generate | Dev | Medio | PDF placeholder | implemented |
+| POST | `/{id}/store-ride` | generate | Dev/Test | Medio | Storage id/hash | implemented Sprint 4 P1 |
 | GET | `/{id}/ride-preview` | read | Dev/Test | Medio | HTML sanitizado | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/summary` | read | Dev/Test | Medio | Totales agregados | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/documents` | read | Dev/Test | Medio | Datos enmascarados | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/tax-totals` | read | Dev/Test | Medio | Totales impuestos | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/withholding-totals` | read | Dev/Test | Medio | Totales retenciones | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/export` | read | Dev/Test | Medio | JSON/CSV en memoria | implemented Sprint 3 P4 |
+| POST | `/api/financial/tax-reporting/export/store` | manage | Dev/Test | Medio | Storage id/hash | implemented Sprint 4 P1 |
 | GET | `/api/financial/tax-reporting/ats-readiness` | read | Dev/Test | Medio | Evaluación interna no oficial | implemented Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/action-queue` | read | Dev/Test | Medio | Pendientes por acción | implemented Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | read | Dev/Test | Medio | Resumen mensual | implemented Sprint 3 P4 |
@@ -32,9 +34,11 @@
 | GET | `/{id}/storage-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
 | GET | `/{id}/integration-status` | read | Dev/Test | Bajo | Sanitizado | implemented |
 | GET | `/sri/readiness` | manage | Dev/Test | Bajo | No secretos/XML | dry-run |
+| GET | `/content-file/readiness` | manage | Dev/Test | Bajo | URL enmascarada | implemented Sprint 4 P1 |
 | GET | `/sri/connectivity-probe` | manage | Test manual | Medio | URLs enmascaradas | dry-run |
 | GET | `/health/sri` | anonymous | Dev/Test | Bajo | No secretos/XML | implemented |
+| GET | `/health/content-file` | anonymous | Dev/Test | Bajo | No secretos/XML | implemented Sprint 4 P1 |
 
-Production SRI, XAdES real, RIDE final por tipo documental y Content/File payload real permanecen bloqueados.
+Production SRI, XAdES real, RIDE legal final, ATS oficial y Content/File upload/payload real permanecen bloqueados.
 
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.

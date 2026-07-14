@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 3 P4 Tax Exports / ATS Readiness implementado sobre Sprint 3 P3. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation y ATS readiness interno quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 4 P1 Portal Content/File Storage Readiness implementado sobre Sprint 3 P4. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF Development por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation y ATS readiness interno quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -73,6 +73,8 @@ scripts/smoke/financial-smoke.ps1 -BaseUrl http://localhost:8083
 scripts/smoke/financial-sri-smoke.ps1 -BaseUrl http://localhost:8083
 ```
 
+Sprint 4 P1 agrega `/health/content-file`, readiness protegida de Content/File, `store-ride` y `tax-reporting/export/store`. El provider local por defecto es `Development`; `PortalContentFile` requiere `SRI_STORAGE_PORTAL_BASE_URL` y no envía payloads salvo configuración explícita.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -85,4 +87,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 4. Definir ATS oficial, RIDE legal final y adapter productivo Portal Content/File solo cuando exista contrato estable, validación fiscal y aprobación manual fuera del repositorio.
+Próximo paso recomendado: Sprint 4 P2. Conectar upload HTTP real a Portal Content/File solo cuando Portal exponga contrato productivo estable; mantener RIDE legal final, ATS oficial, firma XAdES productiva y SRI Production bajo aprobación manual fuera del repositorio.

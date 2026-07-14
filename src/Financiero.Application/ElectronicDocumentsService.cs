@@ -124,9 +124,15 @@ public sealed class DevelopmentSriCatalogProvider : ISriCatalogProvider
     public bool Contains(string catalog, string code) => SriCatalogService.Contains(catalog, code);
 }
 public sealed record StoredDocumentFile(string StorageId, string Hash, string Provider, DateTimeOffset StoredAtUtc, string ContentType, string Purpose);
-public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true);
-public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, string Container, string CorrelationId, string TenantId, IReadOnlyDictionary<string, string> Metadata, bool IncludePayload, string? PayloadBase64);
+public enum PortalContentFilePurpose { UnsignedXml, SignedXml, AuthorizationXml, RidePdf, RideHtmlPreview, TaxExportJson, TaxExportCsv, AtsReadinessJson, ReportingSnapshotJson }
+public sealed record PortalContentFileOptions(string Provider, string? PortalBaseUrl, string Container, int TimeoutSeconds, bool RetainXml, bool RetainPdf, bool SendPayloads = false, bool MaskPayloads = true, bool AllowProductionContentFilePayload = false, string EnvironmentName = "Development");
+public sealed record PortalContentFileMetadata(string SourceSystem, string? DocumentId, string? DocumentType, string? AccessKeyMasked, string? Period, string? RetentionPolicy, IReadOnlyDictionary<string, string> Values);
+public sealed record PortalContentFileRequest(string Purpose, string FileName, string ContentType, string Hash, long Size, string Container, string CorrelationId, string TenantId, PortalContentFileMetadata Metadata, bool IncludePayload, string? PayloadBase64)
+{
+    public override string ToString() => $"PortalContentFileRequest(Purpose={Purpose}, FileName={FileName}, ContentType={ContentType}, Hash={Hash}, Size={Size}, Container={Container}, CorrelationId={CorrelationId}, TenantId={TenantId}, IncludePayload={IncludePayload}, PayloadBase64=**REDACTED**, Metadata={Metadata})";
+}
 public sealed record PortalContentFileResponse(string StorageId, string Provider, DateTimeOffset StoredAtUtc);
+public sealed record PortalContentFileReadinessResult(string Status, string Provider, IReadOnlyCollection<string> Checks, IReadOnlyCollection<string> Issues, string? PortalBaseUrlMasked);
 public sealed record ElectronicDocumentStorageMetadataDto(string? UnsignedXmlStorageId, string? SignedXmlStorageId, string? AuthorizationXmlStorageId, string? RidePdfStorageId, string? XmlContentHash, string? SignedXmlContentHash, string? SignatureDigest, string? RidePdfHash = null, string? StorageProvider = null);
 public sealed record RideLineModel(int LineNumber, string Code, string Description, decimal Quantity, decimal UnitPrice, decimal Discount, decimal Subtotal, decimal Total);
 public sealed record RideTaxModel(string TaxCode, string TaxPercentageCode, decimal TaxRate, decimal TaxBase, decimal TaxAmount);
@@ -153,10 +159,10 @@ public sealed record TaxReportWithholdingTotal(string TaxCode, string Withholdin
 public sealed record TaxReportPendingSummary(int GeneratedNotSigned, int SignedNotSent, int SentPendingAuthorization, int Rejected);
 public sealed record TaxReportResult(TaxReportPeriod Period, TaxReportTotals Totals, IReadOnlyCollection<TaxReportDocumentSummary> Documents, IReadOnlyDictionary<string, TaxReportTotals> ByDocumentType, IReadOnlyDictionary<string, int> ByStatus, IReadOnlyCollection<TaxReportTaxTotal> TaxTotals, IReadOnlyCollection<TaxReportWithholdingTotal> WithholdingTotals, TaxReportPendingSummary Pending);
 public enum TaxExportFormat { Json, Csv }
-public sealed record TaxExportQuery(DateOnly? From = null, DateOnly? To = null, string? DocumentType = null, string? Status = null, string? Environment = null, string Kind = "DocumentSummary", string Format = "Json", bool IncludeSensitive = false);
+public sealed record TaxExportQuery(DateOnly? From = null, DateOnly? To = null, string? DocumentType = null, string? Status = null, string? Environment = null, string Kind = "DocumentSummary", string Format = "Json", bool IncludeSensitive = false, bool Store = false);
 public sealed record TaxExportRow(IReadOnlyDictionary<string, string?> Columns);
 public sealed record TaxExportFileMetadata(string FileName, string ContentType, string Format, string Kind, int RowCount, string Hash, DateTimeOffset GeneratedAtUtc, bool SensitiveValuesIncluded);
-public sealed record TaxExportResult(byte[] Content, TaxExportFileMetadata Metadata);
+public sealed record TaxExportResult(byte[] Content, TaxExportFileMetadata Metadata, StoredDocumentFile? StoredFile = null);
 public sealed record AtsReadinessQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
 public enum AtsReadinessStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
 public sealed record AtsPurchaseSummary(int Count, decimal TaxBase, decimal TaxAmount);
@@ -221,6 +227,9 @@ public interface IElectronicDocumentStorageClient
     Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
     Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct);
     Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveTaxExportAsync(TaxExportResult export, PortalCallContext context, CancellationToken ct);
+    Task<StoredDocumentFile> SaveAtsReadinessSnapshotAsync(AtsReadinessResult snapshot, PortalCallContext context, CancellationToken ct);
 }
 
 public interface IRidePdfGenerator
@@ -829,8 +838,13 @@ public sealed class DevelopmentElectronicDocumentStorageClient : IElectronicDocu
     public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync("authorization-xml", xml, "application/xml");
     public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) =>
         Task.FromResult(new StoredDocumentFile($"dev://ride-pdf/{Guid.NewGuid():N}", Convert.ToHexString(SHA256.HashData(pdf)), "Development", DateTimeOffset.UtcNow, "application/pdf", "ride-pdf"));
+    public Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct) => SaveAsync("ride-html-preview", html, "text/html");
+    public Task<StoredDocumentFile> SaveTaxExportAsync(TaxExportResult export, PortalCallContext context, CancellationToken ct) =>
+        Task.FromResult(new StoredDocumentFile($"dev://tax-export/{Guid.NewGuid():N}", export.Metadata.Hash, "Development", DateTimeOffset.UtcNow, export.Metadata.ContentType, TaxExportPurpose(export.Metadata.Format)));
+    public Task<StoredDocumentFile> SaveAtsReadinessSnapshotAsync(AtsReadinessResult snapshot, PortalCallContext context, CancellationToken ct) => SaveAsync("ats-readiness-json", JsonSerializer.Serialize(snapshot), "application/json");
     private static Task<StoredDocumentFile> SaveAsync(string purpose, string content, string contentType) =>
         Task.FromResult(new StoredDocumentFile($"dev://{purpose}/{Guid.NewGuid():N}", Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content))), "Development", DateTimeOffset.UtcNow, contentType, purpose));
+    private static string TaxExportPurpose(string format) => string.Equals(format, "Csv", StringComparison.OrdinalIgnoreCase) ? "tax-export-csv" : "tax-export-json";
 }
 
 public sealed class PortalContentFileStorageClient(PortalContentFileOptions options) : IElectronicDocumentStorageClient
@@ -838,24 +852,27 @@ public sealed class PortalContentFileStorageClient(PortalContentFileOptions opti
     public static PortalContentFileRequest BuildRequest(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context, PortalContentFileOptions options)
     {
         var hash = Convert.ToHexString(SHA256.HashData(content));
-        return new(purpose, $"{document.AccessKey ?? document.Id.ToString("N")}-{purpose}", contentType, hash, options.Container, context.CorrelationId, context.TenantId,
-            new Dictionary<string, string>
+        var fileName = $"{document.Id:N}-{purpose}";
+        return new(purpose, fileName, contentType, hash, content.LongLength, options.Container, context.CorrelationId, context.TenantId,
+            new("Financiero", document.Id.ToString(), document.DocumentType.ToString(), SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), null, options.RetainPdf || options.RetainXml ? "financial-retention-foundation" : null, new Dictionary<string, string>
             {
-                ["documentId"] = document.Id.ToString(),
-                ["documentType"] = document.DocumentType.ToString(),
                 ["status"] = document.Status.ToString(),
-                ["accessKeyMasked"] = SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey) ?? "",
                 ["hash"] = hash,
                 ["purpose"] = purpose
-            },
-            options.SendPayloads,
-            options.SendPayloads ? Convert.ToBase64String(content) : null);
+            }),
+            ShouldIncludePayload(options),
+            ShouldIncludePayload(options) ? Convert.ToBase64String(content) : null);
     }
 
     public Task<StoredDocumentFile> SaveUnsignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "unsigned-xml", "application/xml", context);
     public Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "signed-xml", "application/xml", context);
     public Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(xml), "authorization-xml", "application/xml", context);
     public Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => SaveAsync(document, pdf, "ride-pdf", "application/pdf", context);
+    public Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct) => SaveAsync(document, Encoding.UTF8.GetBytes(html), "ride-html-preview", "text/html", context);
+    public Task<StoredDocumentFile> SaveTaxExportAsync(TaxExportResult export, PortalCallContext context, CancellationToken ct) =>
+        SaveGenericAsync(export.Content, TaxExportPurpose(export.Metadata.Format), export.Metadata.ContentType, context, export.Metadata.FileName, null);
+    public Task<StoredDocumentFile> SaveAtsReadinessSnapshotAsync(AtsReadinessResult snapshot, PortalCallContext context, CancellationToken ct) =>
+        SaveGenericAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(snapshot)), "ats-readiness-json", "application/json", context, $"ats-readiness-{snapshot.Period}.json", snapshot.Period);
 
     private Task<StoredDocumentFile> SaveAsync(ElectronicDocument document, byte[] content, string purpose, string contentType, PortalCallContext context)
     {
@@ -863,9 +880,30 @@ public sealed class PortalContentFileStorageClient(PortalContentFileOptions opti
             throw new FinancialApplicationException("sri.storage.provider.invalid", "PortalContentFileStorageClient requires provider PortalContentFile.");
         if (string.IsNullOrWhiteSpace(options.PortalBaseUrl))
             throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
+        EnsurePayloadAllowed(options);
         var request = BuildRequest(document, content, purpose, contentType, context, options);
         var storageId = $"portal-content-file://{options.Container}/{document.TenantId}/{document.Id}/{purpose}";
         return Task.FromResult(new StoredDocumentFile(storageId, request.Hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+    }
+
+    private Task<StoredDocumentFile> SaveGenericAsync(byte[] content, string purpose, string contentType, PortalCallContext context, string fileName, string? period)
+    {
+        if (string.IsNullOrWhiteSpace(options.PortalBaseUrl)) throw new FinancialApplicationException("sri.storage.portal_base_url.required", "Portal Content/File base URL is required when storage provider is PortalContentFile.");
+        EnsurePayloadAllowed(options);
+        var hash = Convert.ToHexString(SHA256.HashData(content));
+        var request = new PortalContentFileRequest(purpose, fileName, contentType, hash, content.LongLength, options.Container, context.CorrelationId, context.TenantId,
+            new("Financiero", null, null, null, period, "financial-reporting-foundation", new Dictionary<string, string> { ["hash"] = hash, ["purpose"] = purpose }),
+            ShouldIncludePayload(options),
+            ShouldIncludePayload(options) ? Convert.ToBase64String(content) : null);
+        return Task.FromResult(new StoredDocumentFile($"portal-content-file://{options.Container}/{context.TenantId}/exports/{request.Hash}/{purpose}", request.Hash, "PortalContentFile", DateTimeOffset.UtcNow, contentType, purpose));
+    }
+
+    private static bool ShouldIncludePayload(PortalContentFileOptions options) => options.SendPayloads;
+    private static string TaxExportPurpose(string format) => string.Equals(format, "Csv", StringComparison.OrdinalIgnoreCase) ? "tax-export-csv" : "tax-export-json";
+    private static void EnsurePayloadAllowed(PortalContentFileOptions options)
+    {
+        if (options.SendPayloads && options.EnvironmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) && !options.AllowProductionContentFilePayload)
+            throw new FinancialApplicationException("sri.storage.payload.production_blocked", "Portal Content/File payload sending is disabled in Production without explicit approval.");
     }
 }
 
@@ -876,6 +914,9 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
     public async Task<StoredDocumentFile> SaveSignedXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveSignedXmlAsync(document, xml, context, ct);
     public async Task<StoredDocumentFile> SaveAuthorizationXmlAsync(ElectronicDocument document, string xml, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveAuthorizationXmlAsync(document, xml, context, ct);
     public async Task<StoredDocumentFile> SaveRidePdfAsync(ElectronicDocument document, byte[] pdf, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveRidePdfAsync(document, pdf, context, ct);
+    public async Task<StoredDocumentFile> SaveRideHtmlPreviewAsync(ElectronicDocument document, string html, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveRideHtmlPreviewAsync(document, html, context, ct);
+    public async Task<StoredDocumentFile> SaveTaxExportAsync(TaxExportResult export, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveTaxExportAsync(export, context, ct);
+    public async Task<StoredDocumentFile> SaveAtsReadinessSnapshotAsync(AtsReadinessResult snapshot, PortalCallContext context, CancellationToken ct) => await ResolveAsync(context, ct).SaveAtsReadinessSnapshotAsync(snapshot, context, ct);
 
     private IElectronicDocumentStorageClient ResolveAsync(PortalCallContext context, CancellationToken ct)
     {
@@ -891,7 +932,9 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
                 configuration.GetBoolAsync("financial.sri.storage.retainXml", true, context, ct).GetAwaiter().GetResult(),
                 configuration.GetBoolAsync("financial.sri.storage.retainPdf", false, context, ct).GetAwaiter().GetResult(),
                 configuration.GetBoolAsync("financial.sri.storage.sendPayloads", false, context, ct).GetAwaiter().GetResult(),
-                configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct).GetAwaiter().GetResult());
+                configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct).GetAwaiter().GetResult(),
+                configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct).GetAwaiter().GetResult(),
+                configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct).GetAwaiter().GetResult());
             return new PortalContentFileStorageClient(options);
         }
         throw new FinancialApplicationException("sri.storage.provider.unsupported", $"Unsupported electronic document storage provider '{provider}'.");
@@ -1109,6 +1152,33 @@ public sealed class SriIntegrationReadinessService(IFinancialConfigurationReader
     }
 }
 
+public sealed class ContentFileReadinessService(IFinancialConfigurationReader configuration, IPortalAuditClient audit)
+{
+    public async Task<PortalContentFileReadinessResult> CheckAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var checks = new List<string>();
+        var issues = new List<string>();
+        var provider = await configuration.GetStringAsync("financial.sri.storage.provider", "Development", context, ct);
+        var baseUrl = await configuration.GetStringAsync("financial.sri.storage.portalBaseUrl", "", context, ct);
+        var sendPayloads = await configuration.GetBoolAsync("financial.sri.storage.sendPayloads", false, context, ct);
+        var maskPayloads = await configuration.GetBoolAsync("financial.sri.storage.maskPayloads", true, context, ct);
+        var allowProductionPayload = await configuration.GetBoolAsync("financial.sri.storage.allowProductionContentFilePayload", false, context, ct);
+        var timeout = await configuration.GetIntAsync("financial.sri.storage.timeoutSeconds", 30, context, ct);
+        var environment = await configuration.GetStringAsync("ASPNETCORE_ENVIRONMENT", "Development", context, ct);
+        checks.Add($"provider={provider}");
+        checks.Add($"sendPayloads={sendPayloads}");
+        checks.Add($"maskPayloads={maskPayloads}");
+        checks.Add($"timeoutSeconds={timeout}");
+        checks.Add($"environment={environment}");
+        if (string.Equals(provider, "PortalContentFile", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(baseUrl)) issues.Add("PortalContentFile provider requires portalBaseUrl.");
+        if (sendPayloads && !maskPayloads) issues.Add("Payload sending requires maskPayloads=true.");
+        if (sendPayloads && environment.Equals("Production", StringComparison.OrdinalIgnoreCase) && !allowProductionPayload) issues.Add("Production payload sending requires explicit approval.");
+        var status = string.Equals(provider, "Development", StringComparison.OrdinalIgnoreCase) ? "Healthy" : issues.Count > 0 ? "Unhealthy" : sendPayloads ? "Degraded" : "Degraded";
+        await audit.RecordAsync(new("ContentFileReadinessChecked", "financial.content-file", context.TenantId, new { Provider = provider, Status = status, SendPayloads = sendPayloads, PortalBaseUrl = SriSensitiveDataSanitizer.MaskUrl(baseUrl) }), context, ct);
+        return new(status, provider, checks, issues, SriSensitiveDataSanitizer.MaskUrl(baseUrl));
+    }
+}
+
 public interface ITaxReportingService
 {
     Task<TaxReportResult> GetSummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
@@ -1201,7 +1271,7 @@ public interface ITaxExportService
     Task<IReadOnlyCollection<MonthlyTaxSummaryItem>> GetMonthlySummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
 }
 
-public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IPortalAuditClient audit) : ITaxExportService
+public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit) : ITaxExportService
 {
     public async Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct)
     {
@@ -1217,8 +1287,15 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var contentType = format == TaxExportFormat.Json ? "application/json" : "text/csv";
         var safeKind = SafeToken(query.Kind);
         var metadata = new TaxExportFileMetadata($"tax-export-{safeKind}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.{extension}", contentType, format.ToString(), safeKind, rows.Length, hash, DateTimeOffset.UtcNow, query.IncludeSensitive);
+        var result = new TaxExportResult(bytes, metadata);
+        StoredDocumentFile? stored = null;
+        if (query.Store)
+        {
+            stored = await storage.SaveTaxExportAsync(result, context, ct);
+            await audit.RecordAsync(new("TaxExportStoredInContentFile", "financial.tax-export", context.TenantId, new { query.From, query.To, query.Kind, Format = format.ToString(), RowCount = rows.Length, Hash = hash, stored.StorageId, stored.Provider }), context, ct);
+        }
         await audit.RecordAsync(new("TaxExportGenerated", "financial.tax-export", context.TenantId, new { query.From, query.To, query.Kind, Format = format.ToString(), RowCount = rows.Length, Hash = hash }), context, ct);
-        return new(bytes, metadata);
+        return result with { StoredFile = stored };
     }
 
     public async Task<AtsReadinessResult> EvaluateAtsReadinessAsync(AtsReadinessQuery query, PortalCallContext context, CancellationToken ct)
@@ -1236,8 +1313,9 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var purchases = new AtsPurchaseSummary(items.Count(x => x.DocumentType == ElectronicDocumentType.Withholding), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
         var sales = new AtsSalesSummary(items.Count(x => x.DocumentType is ElectronicDocumentType.Invoice or ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote), items.Sum(x => x.SubtotalWithoutTaxes), items.Sum(x => x.TotalTaxes), items.Sum(x => x.TotalAmount));
         var withholdings = new AtsWithholdingSummary(items.SelectMany(x => x.WithholdingTaxes).Count(), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
+        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.");
         await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count }), context, ct);
-        return new(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.");
+        return result;
     }
 
     public async Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
@@ -1567,6 +1645,14 @@ public sealed class ElectronicDocumentsService(
         await AuditOutboxAsync("ElectronicDocumentRideGenerated", "ElectronicDocumentRideGenerated", document, context, ct);
         await AuditOutboxAsync("ElectronicDocumentStorageRegistered", "ElectronicDocumentStorageRegistered", document, context, ct);
         return ToDto(document);
+    }
+
+    public async Task<ElectronicDocumentDto> StoreRideAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var dto = await GenerateRidePdfAsync(id, context, ct);
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        await AuditOnlyAsync("RideStoredInContentFile", document, context, ct);
+        return dto;
     }
 
     public async Task<RidePreviewDto> GetRidePreviewAsync(Guid id, PortalCallContext context, CancellationToken ct)

@@ -105,7 +105,9 @@
 
 ## Sprint 4 — Reporting financiero/fiscal
 
-- [ ] RIDE legal final, ATS oficial y adapter productivo Content/File; requiere contrato productivo Portal y revisión fiscal/manual.
+- [x] P1 Portal Content/File storage readiness: adapter productivo-ready, health/readiness, store-ride, export/store, smoke y documentación.
+- [ ] P2 Upload HTTP real hacia Portal Content/File cuando el contrato productivo Portal esté estable.
+- [ ] RIDE legal final y ATS oficial; requiere revisión fiscal/manual.
 
 ## Sprint 5 — Frontend financiero
 
