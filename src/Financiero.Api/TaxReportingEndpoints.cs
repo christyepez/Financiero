@@ -44,6 +44,13 @@ public static class TaxReportingEndpoints
                 return BadRequestJson("ats.period.invalid", "ATS readiness period must use yyyy-MM or provide from/to dates.", http);
             return await ExecuteAsync(() => service.EvaluateAtsReadinessAsync(request, Context(http, options.Value), ct), http);
         }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/ats-official-design", async (ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+        {
+            var request = AtsOfficialDesignQueryFrom(http);
+            if (!IsValidAtsOfficialPeriodRequest(request))
+                return BadRequestJson("ats.period.invalid", "ATS official design period must use yyyy-MM or provide from/to dates.", http);
+            return await ExecuteAsync(() => service.EvaluateAtsOfficialDesignAsync(request, Context(http, options.Value), ct), http);
+        }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/action-queue", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetActionQueueAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/monthly-summary", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
@@ -88,6 +95,11 @@ public static class TaxReportingEndpoints
         if (!string.IsNullOrWhiteSpace(request.Period) && DateOnly.TryParseExact($"{request.Period}-01", "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _)) return true;
         return request.From.HasValue && request.To.HasValue && request.From.Value <= request.To.Value;
     }
+    private static bool IsValidAtsOfficialPeriodRequest(AtsOfficialDesignQuery request)
+    {
+        if (!string.IsNullOrWhiteSpace(request.Period) && DateOnly.TryParseExact($"{request.Period}-01", "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _)) return true;
+        return request.From.HasValue && request.To.HasValue && request.From.Value <= request.To.Value;
+    }
 
     private static TaxExportQuery TaxExportQueryFrom(HttpContext http) => new(
         From: Date(http, "from"),
@@ -101,6 +113,11 @@ public static class TaxReportingEndpoints
         Store: bool.TryParse(Value(http, "store"), out var store) && store);
 
     private static AtsReadinessQuery AtsReadinessQueryFrom(HttpContext http) => new(
+        Period: Value(http, "period") ?? "",
+        From: Date(http, "from"),
+        To: Date(http, "to"),
+        Environment: Value(http, "environment"));
+    private static AtsOfficialDesignQuery AtsOfficialDesignQueryFrom(HttpContext http) => new(
         Period: Value(http, "period") ?? "",
         From: Date(http, "from"),
         To: Date(http, "to"),

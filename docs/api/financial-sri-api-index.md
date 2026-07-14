@@ -21,6 +21,7 @@
 | POST | `/{id}/generate-ride` | generate | Dev | Medio | PDF placeholder | implemented |
 | POST | `/{id}/store-ride` | generate | Dev/Test | Medio | Storage id/hash | implemented Sprint 4 P1 |
 | GET | `/{id}/ride-preview` | read | Dev/Test | Medio | HTML sanitizado | implemented Sprint 3 P3 |
+| GET | `/{id}/ride-legal-readiness` | read | Dev/Test | Medio | Issues/disclaimer sanitizados | implemented Sprint 4 P3 |
 | GET | `/api/financial/tax-reporting/summary` | read | Dev/Test | Medio | Totales agregados | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/documents` | read | Dev/Test | Medio | Datos enmascarados | implemented Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/tax-totals` | read | Dev/Test | Medio | Totales impuestos | implemented Sprint 3 P3 |
@@ -28,6 +29,7 @@
 | GET | `/api/financial/tax-reporting/export` | read | Dev/Test | Medio | JSON/CSV en memoria | implemented Sprint 3 P4 |
 | POST | `/api/financial/tax-reporting/export/store` | manage | Dev/Test | Medio | Storage id/hash | implemented Sprint 4 P1 |
 | GET | `/api/financial/tax-reporting/ats-readiness` | read | Dev/Test | Medio | Evaluación interna no oficial | implemented Sprint 3 P4 |
+| GET | `/api/financial/tax-reporting/ats-official-design` | read | Dev/Test | Medio | Diseño no oficial | implemented Sprint 4 P3 |
 | GET | `/api/financial/tax-reporting/action-queue` | read | Dev/Test | Medio | Pendientes por acción | implemented Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | read | Dev/Test | Medio | Resumen mensual | implemented Sprint 3 P4 |
 | GET | `/{id}/ride-metadata` | read | Dev/Test | Bajo | Hash/id | implemented |
@@ -42,5 +44,7 @@
 Production SRI, XAdES real, RIDE legal final, ATS oficial y Content/File upload/payload real permanecen bloqueados.
 
 Sprint 4 P2 prepara el cliente HTTP Content/File detrás de configuración. No agrega endpoints públicos nuevos.
+
+Sprint 4 P3 agrega endpoints read-only para RIDE legal readiness y ATS official design foundation. No generan documentos legales finales.
 
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.

@@ -79,3 +79,10 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - Errores HTTP redactan token, querystring y payload.
 - `dryRun=true` es el modo seguro por defecto.
 - `dryRun=false` + `authRequired=true` exige token externo.
+
+## Sprint 4 P3
+
+- RIDE legal readiness y ATS official design no deben exponer XML ni secretos.
+- RIDE foundation debe mostrar disclaimer de no legal final.
+- ATS official design debe mostrar disclaimer de no ATS oficial.
+- No descargar catálogos/XSD oficiales desde runtime.

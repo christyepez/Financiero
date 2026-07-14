@@ -59,6 +59,8 @@ Sprint 4 P1 agrega readiness productivo de Portal Content/File: `PortalContentFi
 
 Sprint 4 P2 agrega `PortalContentFileHttpClient` con `HttpClientFactory`, contrato HTTP, validator, estrategia de token placeholder y `dryRun=true` por defecto. Las pruebas usan handler falso; no se llama Portal real.
 
+Sprint 4 P3 separa templates RIDE foundation por tipo documental y agrega ATS official design foundation. Ambos son modelos de preparación y revisión; no son outputs legales finales ni ATS oficial.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

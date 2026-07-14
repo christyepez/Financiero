@@ -107,7 +107,8 @@
 
 - [x] P1 Portal Content/File storage readiness: adapter productivo-ready, health/readiness, store-ride, export/store, smoke y documentación.
 - [x] P2 contrato HTTP productivo-ready hacia Portal Content/File con dry-run, validator, auth placeholder y fake HTTP tests.
-- [ ] P3 Upload HTTP real contra endpoint Portal Content/File estable y aprobado.
+- [x] P3 RIDE legal layout foundation y ATS official design foundation con disclaimers y endpoints read-only.
+- [ ] P4 revisión tributaria/legal y cierre de gaps compras/anulados antes de RIDE/ATS oficial.
 - [ ] RIDE legal final y ATS oficial; requiere revisión fiscal/manual.
 
 ## Sprint 5 — Frontend financiero

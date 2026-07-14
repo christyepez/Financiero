@@ -177,6 +177,17 @@ public sealed record WithholdingRideModel(string IssuerRuc, string IssuerName, s
 public sealed record RidePreviewDto(Guid Id, string DocumentType, string Html, string Hash, DateTimeOffset GeneratedAtUtc, string ContentType);
 public sealed record RidePdfGenerationResult(byte[] PdfBytes, string Html, string Hash, DateTimeOffset GeneratedAtUtc, string ContentType);
 public sealed record RideMetadataDto(string? RidePdfStorageId, string? RidePdfHash, DateTimeOffset? RideGeneratedAtUtc, string? StorageProvider);
+public sealed record RideTemplateContext(RideDocumentModel Model, RideQrPayload QrPayload, RideAuthorizationSummary Authorization, string Disclaimer);
+public sealed record RideTemplateSection(string Code, string Title, string Html);
+public sealed record RideTemplateValidationResult(bool IsValid, IReadOnlyCollection<string> Issues);
+public sealed record RideQrPayload(string Mode, string? AccessKeyMasked, string Hash, string Disclaimer);
+public sealed record RideAuthorizationSummary(string Status, string? AuthorizationNumberMasked, DateTimeOffset? AuthorizationDate, string Disclaimer);
+public sealed record RideAccessKeyDisplayPolicy(bool AllowFullAccessKeyInGeneratedDocument, bool MaskInApiResponsesAndLogs);
+public interface IRideTemplateRenderer { string DocumentType { get; } string Render(RideTemplateContext context); }
+public static class RideTemplateRendererFactory { public static IRideTemplateRenderer Resolve(RideDocumentModel model) => model switch { InvoiceRideModel => new InvoiceRideTemplate(), CreditNoteRideModel => new CreditNoteRideTemplate(), DebitNoteRideModel => new DebitNoteRideTemplate(), WithholdingRideModel => new WithholdingRideTemplate(), _ => throw new FinancialApplicationException("sri.ride.template.unsupported", "RIDE template is not supported.") }; }
+public enum RideLegalReadinessStatus { ReadyFoundation, MissingRequiredData, RequiresLegalReview, Unsupported }
+public sealed record RideLegalReadinessIssue(string Code, string Message, string Severity);
+public sealed record RideLegalReadinessResult(Guid Id, string DocumentType, RideLegalReadinessStatus Status, IReadOnlyCollection<RideLegalReadinessIssue> Issues, IReadOnlyCollection<string> Warnings, string Disclaimer);
 public sealed record TaxReportQuery(DateOnly? StartDate = null, DateOnly? EndDate = null, string? DocumentType = null, string? Status = null, string? Environment = null, string? CustomerIdentification = null, int Page = 1, int PageSize = 50);
 public sealed record TaxReportPeriod(DateOnly? StartDate, DateOnly? EndDate);
 public sealed record TaxReportDocumentSummary(Guid Id, string DocumentType, string Status, DateOnly IssueDate, string Environment, string? AccessKeyMasked, string? CustomerIdentificationMasked, decimal Subtotal, decimal Taxes, decimal Total);
@@ -197,6 +208,13 @@ public sealed record AtsSalesSummary(int Count, decimal Subtotal, decimal TaxAmo
 public sealed record AtsWithholdingSummary(int Count, decimal TaxBase, decimal WithheldAmount);
 public sealed record AtsValidationIssue(string Code, string Message, string Severity);
 public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer);
+public sealed record AtsOfficialDesignQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
+public enum AtsOfficialDesignStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
+public sealed record AtsOfficialSection(string Code, string Name, string Status, IReadOnlyCollection<AtsOfficialFieldMapping> Fields);
+public sealed record AtsOfficialFieldMapping(string Field, string Source, string Status, string Notes);
+public sealed record AtsOfficialValidationIssue(string Code, string Message, string Severity);
+public sealed record AtsOfficialUnsupportedReason(string Code, string Reason);
+public sealed record AtsOfficialDesignResult(string Period, AtsOfficialDesignStatus Status, IReadOnlyCollection<AtsOfficialSection> Sections, IReadOnlyCollection<AtsOfficialValidationIssue> Issues, IReadOnlyCollection<AtsOfficialUnsupportedReason> UnsupportedReasons, string Disclaimer);
 public sealed record TaxActionQueueItem(string Action, int Count, IReadOnlyCollection<TaxReportDocumentSummary> Documents);
 public sealed record MonthlyTaxSummaryItem(string Month, string DocumentType, int Count, decimal Subtotal, decimal Taxes, decimal Total);
 
@@ -908,7 +926,7 @@ public static class PortalContentFileContractValidator
     }
     private static bool LooksLikeXml(string? value) => !string.IsNullOrWhiteSpace(value) && value.Contains('<') && value.Contains('>');
     private static bool LooksLikeBearer(string? value) => !string.IsNullOrWhiteSpace(value) && value.Contains("Bearer ", StringComparison.OrdinalIgnoreCase);
-    private static bool LooksLikeSensitive(string? value) => !string.IsNullOrWhiteSpace(value) && (System.Text.RegularExpressions.Regex.IsMatch(value, "\\d{10,}") || value.Contains("claveAcceso", StringComparison.OrdinalIgnoreCase));
+    private static bool LooksLikeSensitive(string? value) => !string.IsNullOrWhiteSpace(value) && (System.Text.RegularExpressions.Regex.IsMatch(value, "(?<![A-Fa-f0-9])\\d{10,49}(?![A-Fa-f0-9])") || value.Contains("claveAcceso", StringComparison.OrdinalIgnoreCase));
     private static bool LooksLikeLargeBase64(string? value) => !string.IsNullOrWhiteSpace(value) && value.Length > 256 && value.All(x => char.IsLetterOrDigit(x) || x is '+' or '/' or '=');
 }
 
@@ -1099,45 +1117,136 @@ public sealed class ConfiguredElectronicDocumentStorageClient(IFinancialConfigur
     }
 }
 
+public abstract class RideTemplateBase : IRideTemplateRenderer
+{
+    public abstract string DocumentType { get; }
+    public string Render(RideTemplateContext context)
+    {
+        var model = context.Model;
+        var sections = CommonSections(context).Concat(TypeSections(model)).Append(new("disclaimer", "Disclaimer", $"<p>{E(context.Disclaimer)}</p>"));
+        return "<html><body><h1>RIDE Foundation - " + E(DocumentType) + "</h1>" + string.Concat(sections.Select(x => $"<section data-code=\"{E(x.Code)}\"><h2>{E(x.Title)}</h2>{x.Html}</section>")) + "</body></html>";
+    }
+    protected virtual IEnumerable<RideTemplateSection> CommonSections(RideTemplateContext context)
+    {
+        var m = context.Model;
+        yield return new("issuer", "Header emisor", $"<p>Emisor: {E(m.IssuerName)} - RUC {E(m.IssuerRuc)}</p>");
+        yield return new("tax-info", "InfoTributaria", $"<p>Documento: {E(m.DocumentNumber)} Ambiente: {E(m.Environment)} Estado: {E(m.Status)}</p>");
+        yield return new("subject", "Info cliente/sujeto", $"<p>{E(m.CustomerName)} - {E(m.CustomerIdentificationMasked ?? "****")}</p>");
+        yield return new("access-key", "Clave acceso", $"<p>{E(context.QrPayload.AccessKeyMasked ?? "PENDIENTE")}</p><p>QR foundation: {E(context.QrPayload.Hash)}</p>");
+        yield return new("authorization", "Autorización", $"<p>{E(context.Authorization.Status)} - {E(context.Authorization.AuthorizationNumberMasked ?? "PENDIENTE")}</p>");
+        yield return new("totals", "Totales", $"<p>Subtotal {m.Totals.SubtotalWithoutTaxes:0.00} Descuento {m.Totals.TotalDiscount:0.00} Impuestos {m.Totals.TotalTaxes:0.00} Total {m.Totals.TotalAmount:0.00}</p>");
+        yield return new("additional", "Info adicional", "<p>Foundation técnica sujeta a revisión tributaria/legal.</p>");
+    }
+    protected abstract IEnumerable<RideTemplateSection> TypeSections(RideDocumentModel model);
+    protected static string Lines(IEnumerable<RideLineModel> lines) => "<ul>" + string.Concat(lines.Select(x => $"<li>{x.LineNumber}. {E(x.Code)} - {E(x.Description)} qty={x.Quantity:0.00##} precio={x.UnitPrice:0.00} descuento={x.Discount:0.00} subtotal={x.Subtotal:0.00} total={x.Total:0.00}</li>")) + "</ul>";
+    protected static string Taxes(IEnumerable<RideTaxModel> taxes) => "<ul>" + string.Concat(taxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.TaxPercentageCode)} base={x.TaxBase:0.00} tarifa={x.TaxRate:0.00} valor={x.TaxAmount:0.00}</li>")) + "</ul>";
+    protected static string Reference(RideReferenceModel reference) => $"<p>{E(reference.DocumentTypeCode)} {E(reference.Number)} fecha={reference.IssueDate:yyyy-MM-dd} motivo/periodo={E(reference.ReasonOrPeriod)}</p>";
+    protected static string E(string value) => HtmlEncoder.Default.Encode(value);
+}
+
+public sealed class InvoiceRideTemplate : RideTemplateBase
+{
+    public override string DocumentType => "Factura";
+    protected override IEnumerable<RideTemplateSection> TypeSections(RideDocumentModel model)
+    {
+        var invoice = (InvoiceRideModel)model;
+        yield return new("details", "Detalles", Lines(invoice.Lines));
+        yield return new("taxes", "Impuestos", Taxes(invoice.Taxes));
+    }
+}
+
+public sealed class CreditNoteRideTemplate : RideTemplateBase
+{
+    public override string DocumentType => "Nota de Crédito";
+    protected override IEnumerable<RideTemplateSection> TypeSections(RideDocumentModel model)
+    {
+        var credit = (CreditNoteRideModel)model;
+        yield return new("modified-document", "Comprobante modificado", Reference(credit.Reference));
+        yield return new("details", "Detalles", Lines(credit.Lines));
+        yield return new("taxes", "Impuestos", Taxes(credit.Taxes));
+    }
+}
+
+public sealed class DebitNoteRideTemplate : RideTemplateBase
+{
+    public override string DocumentType => "Nota de Débito";
+    protected override IEnumerable<RideTemplateSection> TypeSections(RideDocumentModel model)
+    {
+        var debit = (DebitNoteRideModel)model;
+        yield return new("modified-document", "Comprobante modificado", Reference(debit.Reference));
+        yield return new("charges", "Motivos/cargos", "<ul>" + string.Concat(debit.Reasons.Select(x => $"<li>{E(x.Reason)} valor={x.Amount:0.00}</li>")) + "</ul>");
+        yield return new("taxes", "Impuestos", Taxes(debit.Taxes));
+    }
+}
+
+public sealed class WithholdingRideTemplate : RideTemplateBase
+{
+    public override string DocumentType => "Comprobante de Retención";
+    protected override IEnumerable<RideTemplateSection> TypeSections(RideDocumentModel model)
+    {
+        var withholding = (WithholdingRideModel)model;
+        yield return new("support-document", "Documento sustento", Reference(withholding.SupportDocument));
+        yield return new("withholdings", "Impuestos retenidos", "<ul>" + string.Concat(withholding.WithholdingTaxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.WithholdingCode)} periodo={E(x.FiscalPeriod)} base={x.TaxBase:0.00} porcentaje={x.WithholdingPercentage:0.00} retenido={x.WithheldAmount:0.00}</li>")) + "</ul>");
+    }
+}
+
+public static class RideQrPayloadFactory
+{
+    public static RideQrPayload Create(RideDocumentModel model)
+    {
+        var basis = $"{model.DocumentNumber}|{model.AccessKeyMasked}|{model.AuthorizationNumber}|{model.Totals.TotalAmount:0.00}";
+        return new("FoundationHashOnly", model.AccessKeyMasked, Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(basis)))[..16], "QR placeholder; not official final SRI QR.");
+    }
+}
+
+public sealed class RideLegalReadinessValidator
+{
+    public RideLegalReadinessResult Validate(ElectronicDocument document, IssuerSriOptions issuer)
+    {
+        var issues = new List<RideLegalReadinessIssue>();
+        var warnings = new List<string> { "Foundation only; not legal final RIDE.", "Requires Ecuador tax/legal review before production." };
+        if (string.IsNullOrWhiteSpace(document.AccessKey)) issues.Add(new("ride.access_key.missing", "Access key is required.", "Error"));
+        if (string.IsNullOrWhiteSpace(document.Sequential)) issues.Add(new("ride.sequential.missing", "Sequential is required.", "Error"));
+        if (string.IsNullOrWhiteSpace(issuer.Ruc) || string.IsNullOrWhiteSpace(issuer.LegalName) || string.IsNullOrWhiteSpace(issuer.Address)) issues.Add(new("ride.issuer.incomplete", "Issuer data is incomplete.", "Error"));
+        if (string.IsNullOrWhiteSpace(document.CustomerIdentification)) issues.Add(new("ride.subject.identification_missing", "Customer/subject identification is required.", "Error"));
+        if (document.TotalAmount <= 0) issues.Add(new("ride.total.invalid", "Total amount must be greater than zero.", "Error"));
+        if (document.Taxes.Count == 0 && document.DocumentType != ElectronicDocumentType.Withholding) issues.Add(new("ride.taxes.missing", "Taxes are required for legal layout readiness.", "Warning"));
+        if (document.Status == ElectronicDocumentStatus.Authorized && string.IsNullOrWhiteSpace(document.SriAuthorizationNumber)) issues.Add(new("ride.authorization.missing", "Authorization number is required for authorized documents.", "Error"));
+        if (document.Status != ElectronicDocumentStatus.Authorized) issues.Add(new("ride.authorization.pending", "Document is not authorized; RIDE legal layout remains pending.", "Warning"));
+        if (document.DocumentType is ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote && document.References.Count == 0) issues.Add(new("ride.related_document.missing", "Related modified document is required.", "Error"));
+        if (document.DocumentType == ElectronicDocumentType.Withholding)
+        {
+            if (document.References.Count == 0) issues.Add(new("ride.support_document.missing", "Support document is required for withholding.", "Error"));
+            if (document.WithholdingTaxes.Count == 0) issues.Add(new("ride.withholdings.missing", "Withholding taxes are required.", "Error"));
+        }
+        issues.Add(new("ride.legal_review.required", "RIDE layout is foundation and requires legal/tax review.", "Warning"));
+        var status = issues.Any(x => x.Severity == "Error") ? RideLegalReadinessStatus.MissingRequiredData : issues.Any(x => x.Severity == "Warning") ? RideLegalReadinessStatus.RequiresLegalReview : RideLegalReadinessStatus.ReadyFoundation;
+        return new(document.Id, document.DocumentType.ToString(), status, issues, warnings, "RIDE foundation only. This output is not a legal final RIDE.");
+    }
+}
+
 public sealed class DevelopmentRidePdfGenerator : IRidePdfGenerator
 {
     public Task<RidePdfGenerationResult> GenerateInvoiceRideAsync(InvoiceRideModel model, CancellationToken ct) =>
-        GenerateAsync(model, RenderLines(model.Lines) + RenderTaxes(model.Taxes));
+        GenerateAsync(model);
 
     public Task<RidePdfGenerationResult> GenerateCreditNoteRideAsync(CreditNoteRideModel model, CancellationToken ct) =>
-        GenerateAsync(model, RenderReference("Documento modificado", model.Reference) + RenderLines(model.Lines) + RenderTaxes(model.Taxes));
+        GenerateAsync(model);
 
     public Task<RidePdfGenerationResult> GenerateDebitNoteRideAsync(DebitNoteRideModel model, CancellationToken ct) =>
-        GenerateAsync(model, RenderReference("Documento modificado", model.Reference) + RenderReasons(model.Reasons) + RenderTaxes(model.Taxes));
+        GenerateAsync(model);
 
     public Task<RidePdfGenerationResult> GenerateWithholdingRideAsync(WithholdingRideModel model, CancellationToken ct) =>
-        GenerateAsync(model, RenderReference("Documento sustento", model.SupportDocument) + RenderWithholdings(model.WithholdingTaxes));
+        GenerateAsync(model);
 
-    private static Task<RidePdfGenerationResult> GenerateAsync(RideDocumentModel model, string body)
+    private static Task<RidePdfGenerationResult> GenerateAsync(RideDocumentModel model)
     {
-        var html = $"""
-<html><body><h1>RIDE {E(model.DocumentType)}</h1><p>Emisor: {E(model.IssuerName)} - {E(model.IssuerRuc)}</p><p>Documento: {E(model.DocumentNumber)}</p><p>Clave acceso: {E(model.AccessKeyMasked ?? "PENDIENTE")}</p><p>Cliente/Sujeto: {E(model.CustomerName)} - {E(model.CustomerIdentificationMasked ?? "****")}</p><p>Fecha: {model.IssueDate:yyyy-MM-dd}</p><p>Subtotal: {model.Totals.SubtotalWithoutTaxes:0.00}</p><p>Descuento: {model.Totals.TotalDiscount:0.00}</p><p>Impuestos: {model.Totals.TotalTaxes:0.00}</p><p>Total: {model.Totals.TotalAmount:0.00}</p><p>Autorizacion: {E(model.AuthorizationNumber ?? "PENDIENTE")}</p><p>Fecha autorizacion: {model.AuthorizationDate:yyyy-MM-dd HH:mm:ss}</p><p>Ambiente: {E(model.Environment)}</p><p>Estado: {E(model.Status)}</p>{body}</body></html>
-""";
+        var renderer = RideTemplateRendererFactory.Resolve(model);
+        var context = new RideTemplateContext(model, RideQrPayloadFactory.Create(model), new(model.Status, SriSensitiveDataSanitizer.MaskAccessKey(model.AuthorizationNumber), model.AuthorizationDate, "Authorization foundation summary; not final legal validation."), "Foundation RIDE layout. Not legal final. Requires Ecuador tax/legal review.");
+        var html = renderer.Render(context);
         var bytes = Encoding.UTF8.GetBytes("%PDF-DEV-RIDE-PLACEHOLDER\n" + html);
         return Task.FromResult(new RidePdfGenerationResult(bytes, html, Convert.ToHexString(SHA256.HashData(bytes)), DateTimeOffset.UtcNow, "application/pdf"));
     }
-
-    private static string RenderLines(IEnumerable<RideLineModel> lines) =>
-        "<h2>Detalle</h2><ul>" + string.Concat(lines.Select(x => $"<li>{x.LineNumber}. {E(x.Code)} - {E(x.Description)} qty={x.Quantity:0.00##} subtotal={x.Subtotal:0.00} total={x.Total:0.00}</li>")) + "</ul>";
-
-    private static string RenderTaxes(IEnumerable<RideTaxModel> taxes) =>
-        "<h2>Impuestos</h2><ul>" + string.Concat(taxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.TaxPercentageCode)} base={x.TaxBase:0.00} tarifa={x.TaxRate:0.00} valor={x.TaxAmount:0.00}</li>")) + "</ul>";
-
-    private static string RenderReference(string title, RideReferenceModel reference) =>
-        $"<h2>{E(title)}</h2><p>{E(reference.DocumentTypeCode)} {E(reference.Number)} fecha={reference.IssueDate:yyyy-MM-dd} motivo/periodo={E(reference.ReasonOrPeriod)}</p>";
-
-    private static string RenderReasons(IEnumerable<ElectronicDocumentDebitNoteReasonDto> reasons) =>
-        "<h2>Motivos</h2><ul>" + string.Concat(reasons.Select(x => $"<li>{E(x.Reason)} valor={x.Amount:0.00}</li>")) + "</ul>";
-
-    private static string RenderWithholdings(IEnumerable<ElectronicDocumentWithholdingTaxDto> taxes) =>
-        "<h2>Retenciones</h2><ul>" + string.Concat(taxes.Select(x => $"<li>{E(x.TaxCode)}/{E(x.WithholdingCode)} periodo={E(x.FiscalPeriod)} base={x.TaxBase:0.00} porcentaje={x.WithholdingPercentage:0.00} retenido={x.WithheldAmount:0.00}</li>")) + "</ul>";
-
-    private static string E(string value) => HtmlEncoder.Default.Encode(value);
 }
 
 public static class SecretMaskingHelper
@@ -1438,6 +1547,7 @@ public interface ITaxExportService
 {
     Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct);
     Task<AtsReadinessResult> EvaluateAtsReadinessAsync(AtsReadinessQuery query, PortalCallContext context, CancellationToken ct);
+    Task<AtsOfficialDesignResult> EvaluateAtsOfficialDesignAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct);
     Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
     Task<IReadOnlyCollection<MonthlyTaxSummaryItem>> GetMonthlySummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
 }
@@ -1487,6 +1597,32 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.");
         await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count }), context, ct);
         return result;
+    }
+
+    public async Task<AtsOfficialDesignResult> EvaluateAtsOfficialDesignAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var readiness = await EvaluateAtsReadinessAsync(new(query.Period, query.From, query.To, query.Environment), context, ct);
+        var issues = readiness.Issues.Select(x => new AtsOfficialValidationIssue(x.Code, x.Message, x.Severity)).ToList();
+        var unsupported = new List<AtsOfficialUnsupportedReason>
+        {
+            new("ats.purchases.module_missing", "Full purchases module is not implemented; withholding support documents are foundation-only inputs."),
+            new("ats.voided_documents.not_modeled", "Voided/cancelled document workflow is not modeled as official ATS source."),
+            new("ats.official_catalogs.pending_review", "Official ATS layout/catalogs require expert Ecuador tax review before final generation.")
+        };
+        var sections = new[]
+        {
+            Section("informant", "Informante", ("ruc", "financial.sri.issuer.ruc", "ReadyFoundation", "Issuer config source; verify before official ATS."), ("razonSocial", "financial.sri.issuer.legalName", "ReadyFoundation", "Issuer config source.")),
+            Section("sales", "Ventas", ("ventas", "ElectronicDocument Invoice/CreditNote/DebitNote summaries", readiness.Sales.Count > 0 ? "ReadyFoundation" : "MissingData", "Foundation mapping from electronic documents.")),
+            Section("purchases", "Compras", ("compras", "Future purchases module / withholding support documents", "Unsupported", "Purchases module remains pending.")),
+            Section("withholdings", "Retenciones", ("retenciones", "ElectronicDocument Withholding taxes", readiness.Withholdings.Count > 0 ? "ReadyFoundation" : "MissingData", "Requires official withholding code review.")),
+            Section("voided", "Anulados", ("anulados", "Future cancellation workflow", "Unsupported", "Cancellation/annulment not modeled.")),
+            Section("establishments", "Establecimientos", ("establecimientos", "ElectronicDocument establishmentCode", "RequiresTaxReview", "Requires official establishment aggregation rules.")),
+            Section("tax-summary", "Resumen impuestos", ("resumen", "Tax totals/reporting foundation", "RequiresTaxReview", "Requires official ATS validation."))
+        };
+        if (readiness.Status != AtsReadinessStatus.ReadyFoundation) issues.Add(new("ats.official.readiness_not_ready", "Internal ATS readiness has gaps before official design can be finalized.", "Warning"));
+        var status = issues.Any(x => x.Severity == "Error") ? AtsOfficialDesignStatus.MissingData : unsupported.Count > 0 || issues.Count > 0 ? AtsOfficialDesignStatus.RequiresTaxReview : AtsOfficialDesignStatus.ReadyFoundation;
+        await audit.RecordAsync(new("AtsOfficialDesignEvaluated", "financial.ats-official-design", context.TenantId, new { query.Period, Status = status.ToString(), IssueCount = issues.Count, UnsupportedCount = unsupported.Count }), context, ct);
+        return new(query.Period, status, sections, issues, unsupported, "ATS official design foundation only. It is not an official ATS file and does not certify tax compliance.");
     }
 
     public async Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
@@ -1578,6 +1714,8 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
     }
     private static TaxExportRow Row(params (string Key, string? Value)[] values) => new(values.ToDictionary(x => x.Key, x => x.Value));
     private static string SafeToken(string? value) => string.IsNullOrWhiteSpace(value) ? "DocumentSummary" : new string(value.Where(x => char.IsLetterOrDigit(x) || x is '-' or '_').ToArray());
+    private static AtsOfficialSection Section(string code, string name, params (string Field, string Source, string Status, string Notes)[] fields) =>
+        new(code, name, fields.All(x => x.Status == "ReadyFoundation") ? "ReadyFoundation" : fields.Any(x => x.Status == "Unsupported") ? "Unsupported" : "RequiresTaxReview", fields.Select(x => new AtsOfficialFieldMapping(x.Field, x.Source, x.Status, x.Notes)).ToArray());
     private static TaxReportDocumentSummary ToSummary(ElectronicDocument document) =>
         new(document.Id, document.DocumentType.ToString(), document.Status.ToString(), document.IssueDate, document.Environment.ToString(), SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskCustomerIdentification(document.CustomerIdentification), document.SubtotalWithoutTaxes, document.TotalTaxes, document.TotalAmount);
 }
@@ -1835,6 +1973,14 @@ public sealed class ElectronicDocumentsService(
         var ride = await GenerateRideAsync(model, ct);
         await AuditOnlyAsync("ElectronicDocumentRidePreviewGenerated", document, context, ct);
         return new(document.Id, document.DocumentType.ToString(), ride.Html, ride.Hash, ride.GeneratedAtUtc, ride.ContentType);
+    }
+
+    public async Task<RideLegalReadinessResult> GetRideLegalReadinessAsync(Guid id, PortalCallContext context, CancellationToken ct)
+    {
+        var document = await GetRequiredAsync(id, context.TenantId, ct);
+        var result = new RideLegalReadinessValidator().Validate(document, await GetIssuerAsync(context, ct));
+        await AuditOnlyAsync("RideLegalReadinessChecked", document, context, ct);
+        return result;
     }
 
     public async Task<RideMetadataDto> GetRideMetadataAsync(Guid id, PortalCallContext context, CancellationToken ct)

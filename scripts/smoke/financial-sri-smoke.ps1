@@ -76,6 +76,9 @@ $ridePreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electr
 if (($ridePreview | ConvertTo-Json -Depth 10) -match "<factura|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE|1790012345001") {
     throw "RIDE preview exposed XML, certificate material, or full customer identification."
 }
+$rideLegalReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$id/ride-legal-readiness" -Headers $headers
+if (-not $rideLegalReadiness.data.disclaimer -or $rideLegalReadiness.data.disclaimer -notmatch "not a legal final RIDE") { throw "RIDE legal readiness disclaimer is missing." }
+if (($rideLegalReadiness | ConvertTo-Json -Depth 20) -match "<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") { throw "RIDE legal readiness exposed sensitive payload." }
 
 $readiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/sri/readiness" -Headers $headers
 if ($readiness.data.status -ne "Healthy") {
@@ -122,6 +125,8 @@ if ($creditGenerated.data.accessKey.Substring(8, 2) -ne "04") { throw "Credit no
 PostJson "$BaseUrl/api/financial/electronic-documents/$creditNoteId/generate-ride" @{} | Out-Null
 $creditPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$creditNoteId/ride-preview" -Headers $headers
 if (($creditPreview | ConvertTo-Json -Depth 10) -match "<notaCredito|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Credit note RIDE preview exposed sensitive payload." }
+$creditReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$creditNoteId/ride-legal-readiness" -Headers $headers
+if (-not $creditReadiness.data.disclaimer) { throw "Credit note RIDE legal readiness failed." }
 
 $debitNote = PostJson "$BaseUrl/api/financial/electronic-documents/debit-notes" @{
     issueDate = "2026-01-16"
@@ -142,6 +147,8 @@ if ($debitGenerated.data.accessKey.Substring(8, 2) -ne "05") { throw "Debit note
 PostJson "$BaseUrl/api/financial/electronic-documents/$debitNoteId/generate-ride" @{} | Out-Null
 $debitPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$debitNoteId/ride-preview" -Headers $headers
 if (($debitPreview | ConvertTo-Json -Depth 10) -match "<notaDebito|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Debit note RIDE preview exposed sensitive payload." }
+$debitReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$debitNoteId/ride-legal-readiness" -Headers $headers
+if (-not $debitReadiness.data.disclaimer) { throw "Debit note RIDE legal readiness failed." }
 
 $withholding = PostJson "$BaseUrl/api/financial/electronic-documents/withholdings" @{
     issueDate = "2026-01-16"
@@ -172,6 +179,8 @@ if ($withholdingGenerated.data.accessKey.Substring(8, 2) -ne "07") { throw "With
 PostJson "$BaseUrl/api/financial/electronic-documents/$withholdingId/generate-ride" @{} | Out-Null
 $withholdingPreview = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$withholdingId/ride-preview" -Headers $headers
 if (($withholdingPreview | ConvertTo-Json -Depth 10) -match "<comprobanteRetencion|claveAcceso>|PRIVATE KEY|BEGIN CERTIFICATE") { throw "Withholding RIDE preview exposed sensitive payload." }
+$withholdingReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$withholdingId/ride-legal-readiness" -Headers $headers
+if (-not $withholdingReadiness.data.disclaimer) { throw "Withholding RIDE legal readiness failed." }
 
 $reportSummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/summary?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
 if (-not $reportSummary.data.totals -or $reportSummary.data.totals.count -lt 4) {
@@ -189,8 +198,11 @@ if ($storedExportJson.data.storedFile.storageId -notmatch "^dev://tax-export|^po
 if ($storedExportCsv.data.storedFile.storageId -notmatch "^dev://tax-export|^portal-content-file://") { throw "Stored CSV export did not return storage metadata." }
 $atsReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-readiness?period=2026-01" -Headers $headers
 if (-not $atsReadiness.data.disclaimer -or $atsReadiness.data.disclaimer -notmatch "not an official ATS") { throw "ATS readiness disclaimer is missing." }
+$atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
+if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
+if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }
 $reportPayload = $reportSummary | ConvertTo-Json -Depth 20
-if (($reportPayload + ($exportJson | ConvertTo-Json -Depth 20) + $exportCsvResponse.Content + ($storedExportJson | ConvertTo-Json -Depth 20) + ($storedExportCsv | ConvertTo-Json -Depth 20) + ($atsReadiness | ConvertTo-Json -Depth 20)) -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") {
+if (($reportPayload + ($exportJson | ConvertTo-Json -Depth 20) + $exportCsvResponse.Content + ($storedExportJson | ConvertTo-Json -Depth 20) + ($storedExportCsv | ConvertTo-Json -Depth 20) + ($atsReadiness | ConvertTo-Json -Depth 20) + ($atsOfficialDesign | ConvertTo-Json -Depth 20)) -match "<factura|<notaCredito|<notaDebito|<comprobanteRetencion|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") {
     throw "Tax reporting exposed XML or certificate material."
 }
 
