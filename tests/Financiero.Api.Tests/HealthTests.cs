@@ -80,6 +80,9 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/tax-reporting/export/store")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=2026-01")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-official-design?period=2026-01")]
+    [InlineData("GET", "/api/financial/tax-legal-review/ride-gaps")]
+    [InlineData("GET", "/api/financial/tax-legal-review/ats-gaps?period=2026-01")]
+    [InlineData("GET", "/api/financial/tax-legal-review/approval-checklist?scope=all")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
@@ -127,6 +130,9 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/tax-reporting/export/store?format=Json", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-official-design?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-legal-review/ride-gaps", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-legal-review/ats-gaps?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-legal-review/approval-checklist?scope=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
@@ -160,6 +166,24 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     public async Task Ats_official_design_invalid_period_returns_bad_request_without_500()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-reporting/ats-official-design?period=invalid");
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tax_legal_ats_gaps_invalid_period_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-legal-review/ats-gaps?period=invalid");
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tax_legal_approval_checklist_invalid_scope_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/tax-legal-review/approval-checklist?scope=production");
         request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

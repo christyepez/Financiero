@@ -37,6 +37,9 @@
 | POST | `/api/financial/tax-reporting/export/store` | `financial.electronicdocuments.manage` | Implementado Sprint 4 P1; storage metadata |
 | GET | `/api/financial/tax-reporting/ats-readiness` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4; no ATS oficial |
 | GET | `/api/financial/tax-reporting/ats-official-design` | `financial.electronicdocuments.read` | Implementado Sprint 4 P3; diseño foundation no oficial |
+| GET | `/api/financial/tax-legal-review/ride-gaps` | `financial.electronicdocuments.read` | Implementado Sprint 4 P4; gaps RIDE no oficial |
+| GET | `/api/financial/tax-legal-review/ats-gaps` | `financial.electronicdocuments.read` | Implementado Sprint 4 P4; gaps ATS no oficial |
+| GET | `/api/financial/tax-legal-review/approval-checklist` | `financial.electronicdocuments.read` | Implementado Sprint 4 P4; checklist advisory sin aprobación productiva |
 | GET | `/api/financial/tax-reporting/action-queue` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/electronic-documents/{id}/integration-status` | `financial.electronicdocuments.read` | Implementado P4 |
@@ -46,6 +49,8 @@
 Content/File P2 no agrega endpoints públicos nuevos. Fortalece `store-ride`, `export/store` y readiness para soportar `PortalContentFile` en `dryRun=true` o HTTP real controlado por configuración.
 | GET | `/api/financial/electronic-documents/sri/connectivity-probe` | `financial.electronicdocuments.manage` | Implementado P5 |
 | GET | `/api/financial/electronic-documents/by-access-key/{accessKey}` | `financial.electronicdocuments.read` | Implementado P1 |
+
+Sprint 4 P4 agrega endpoints read-only para gestión de gaps tributarios/legales. No generan RIDE legal final, XML ATS oficial, evidencia real ni aprobaciones mutables.
 
 ## Create invoice draft
 

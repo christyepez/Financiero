@@ -570,6 +570,9 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ElectronicDocumentsService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
+        services.AddScoped<IRideLegalGapAnalysisService, RideLegalGapAnalysisService>();
+        services.AddScoped<IAtsOfficialGapAnalysisService, AtsOfficialGapAnalysisService>();
+        services.AddScoped<ITaxLegalApprovalChecklistService, TaxLegalApprovalChecklistService>();
         services.AddScoped<SriIntegrationReadinessService>();
         services.AddScoped<ContentFileReadinessService>();
         services.AddScoped<SriManualTestConnectivityService>();

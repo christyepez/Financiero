@@ -215,6 +215,17 @@ public sealed record AtsOfficialFieldMapping(string Field, string Source, string
 public sealed record AtsOfficialValidationIssue(string Code, string Message, string Severity);
 public sealed record AtsOfficialUnsupportedReason(string Code, string Reason);
 public sealed record AtsOfficialDesignResult(string Period, AtsOfficialDesignStatus Status, IReadOnlyCollection<AtsOfficialSection> Sections, IReadOnlyCollection<AtsOfficialValidationIssue> Issues, IReadOnlyCollection<AtsOfficialUnsupportedReason> UnsupportedReasons, string Disclaimer);
+public enum TaxLegalReviewGapType { MissingOfficialCatalog, MissingOfficialSchema, MissingLegalTemplateReview, MissingTaxExpertApproval, MissingSRIValidationEvidence, MissingPurchaseModule, MissingVoidedDocumentModel, MissingProductionSecurityApproval, MissingContentFileApproval, MissingXadesApproval, MissingOperationalRunbook }
+public enum TaxLegalReviewGapSeverity { Critical, High, Medium, Low }
+public enum TaxLegalReviewGapStatus { Open, InReview, Approved, Rejected, Deferred, NotApplicable }
+public sealed record TaxLegalReviewEvidence(string Code, string Description, bool Required, TaxLegalReviewGapStatus Status);
+public sealed record TaxLegalReviewDecision(string Code, string Description, TaxLegalReviewGapStatus Status, string Owner);
+public sealed record TaxLegalReviewGap(string Code, TaxLegalReviewGapType Type, TaxLegalReviewGapSeverity Severity, TaxLegalReviewGapStatus Status, string Scope, string Description, IReadOnlyCollection<TaxLegalReviewEvidence> Evidence, TaxLegalReviewDecision? Decision);
+public sealed record TaxLegalReviewChecklistResult(string Scope, bool ApprovedForOfficialUse, IReadOnlyCollection<TaxLegalReviewDecision> Items, IReadOnlyCollection<TaxLegalReviewGap> BlockingGaps, string Disclaimer);
+public enum RideFinalEnablementStatus { ReadyForExpertReview, BlockedForOfficialUse, RequiresEvidence, ApprovedFoundationOnly }
+public enum AtsOfficialEnablementStatus { DesignOnly, MissingRequiredModules, RequiresTaxReview, RequiresOfficialSchema, NotReadyForOfficialGeneration }
+public sealed record RideLegalGapAnalysisResult(RideFinalEnablementStatus Status, IReadOnlyCollection<TaxLegalReviewGap> Gaps, string Disclaimer);
+public sealed record AtsOfficialGapAnalysisResult(string Period, AtsOfficialEnablementStatus Status, IReadOnlyCollection<TaxLegalReviewGap> Gaps, string Disclaimer);
 public sealed record TaxActionQueueItem(string Action, int Count, IReadOnlyCollection<TaxReportDocumentSummary> Documents);
 public sealed record MonthlyTaxSummaryItem(string Month, string DocumentType, int Count, decimal Subtotal, decimal Taxes, decimal Total);
 
@@ -1550,6 +1561,97 @@ public interface ITaxExportService
     Task<AtsOfficialDesignResult> EvaluateAtsOfficialDesignAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct);
     Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
     Task<IReadOnlyCollection<MonthlyTaxSummaryItem>> GetMonthlySummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+}
+
+public interface IRideLegalGapAnalysisService { Task<RideLegalGapAnalysisResult> AnalyzeAsync(PortalCallContext context, CancellationToken ct); }
+public interface IAtsOfficialGapAnalysisService { Task<AtsOfficialGapAnalysisResult> AnalyzeAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct); }
+public interface ITaxLegalApprovalChecklistService { Task<TaxLegalReviewChecklistResult> CheckAsync(string scope, PortalCallContext context, CancellationToken ct); }
+
+public sealed class RideLegalGapAnalysisService(IPortalAuditClient audit) : IRideLegalGapAnalysisService
+{
+    private const string Disclaimer = "RIDE gap analysis foundation only. It is not a legal final RIDE and does not certify tax compliance.";
+
+    public async Task<RideLegalGapAnalysisResult> AnalyzeAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var gaps = new[]
+        {
+            Gap("ride.layout.legal_review", TaxLegalReviewGapType.MissingLegalTemplateReview, TaxLegalReviewGapSeverity.Critical, "ride", "Falta revisión externa del layout legal final para factura, nota de crédito, nota de débito y retención."),
+            Gap("ride.qr.official_validation", TaxLegalReviewGapType.MissingSRIValidationEvidence, TaxLegalReviewGapSeverity.High, "ride", "Falta validación oficial del contenido QR y su comportamiento en representación impresa."),
+            Gap("ride.mandatory_texts.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ride", "Falta revisión tributaria de textos obligatorios, leyendas y notas por tipo documental."),
+            Gap("ride.authorization.representation", TaxLegalReviewGapType.MissingSRIValidationEvidence, TaxLegalReviewGapSeverity.High, "ride", "Falta evidencia de representación correcta de autorización, fechas y estados SRI."),
+            Gap("ride.issuer_data.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.Medium, "ride", "Falta validación de datos de emisor, establecimiento, punto de emisión y obligaciones."),
+            Gap("ride.totals_taxes.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ride", "Falta revisión experta de totales, impuestos, descuentos, retenciones y redondeos."),
+            Gap("ride.pdf.final_design_approval", TaxLegalReviewGapType.MissingLegalTemplateReview, TaxLegalReviewGapSeverity.Critical, "ride", "Falta aprobación del diseño PDF final antes de uso oficial."),
+            Gap("ride.content_file.production_approval", TaxLegalReviewGapType.MissingContentFileApproval, TaxLegalReviewGapSeverity.Medium, "ride", "Falta aprobación de integración productiva con Portal Content/File si el PDF final se almacena."),
+            Gap("ride.sri_test.evidence", TaxLegalReviewGapType.MissingSRIValidationEvidence, TaxLegalReviewGapSeverity.High, "ride", "Falta evidencia de validación SRI Test/manual para documentos representativos."),
+            Gap("ride.security.full_access_key_approval", TaxLegalReviewGapType.MissingProductionSecurityApproval, TaxLegalReviewGapSeverity.High, "ride", "Falta aprobación de seguridad para exponer clave de acceso completa en PDF final, si aplica.")
+        };
+        await audit.RecordAsync(new("RideLegalGapsQueried", "financial.tax-legal-review", context.TenantId, new { GapCount = gaps.Length }), context, ct);
+        return new(RideFinalEnablementStatus.BlockedForOfficialUse, gaps, Disclaimer);
+    }
+
+    private static TaxLegalReviewGap Gap(string code, TaxLegalReviewGapType type, TaxLegalReviewGapSeverity severity, string scope, string description) =>
+        new(code, type, severity, TaxLegalReviewGapStatus.Open, scope, description, new[] { new TaxLegalReviewEvidence($"{code}.evidence", "Evidence must be captured by external tax/legal review before official enablement.", true, TaxLegalReviewGapStatus.Open) }, new($"{code}.decision", "Pending expert approval.", TaxLegalReviewGapStatus.Open, "Tax/Legal Reviewer"));
+}
+
+public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit) : IAtsOfficialGapAnalysisService
+{
+    private const string Disclaimer = "ATS official gap analysis foundation only. It does not generate official ATS XML and does not certify tax compliance.";
+
+    public async Task<AtsOfficialGapAnalysisResult> AnalyzeAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var gaps = new[]
+        {
+            Gap("ats.purchases.module_missing", TaxLegalReviewGapType.MissingPurchaseModule, TaxLegalReviewGapSeverity.Critical, "ats", "Compras no está modelado; ATS oficial requiere compras/adquisiciones."),
+            Gap("ats.voided_documents.model_missing", TaxLegalReviewGapType.MissingVoidedDocumentModel, TaxLegalReviewGapSeverity.Critical, "ats", "Documentos anulados no están modelados para declaración oficial."),
+            Gap("ats.official_schema.missing", TaxLegalReviewGapType.MissingOfficialSchema, TaxLegalReviewGapSeverity.Critical, "ats", "No se incorporó ni validó XSD/esquema oficial ATS."),
+            Gap("ats.official_catalogs.pending", TaxLegalReviewGapType.MissingOfficialCatalog, TaxLegalReviewGapSeverity.High, "ats", "Catálogos oficiales SRI requieren aprobación y versión controlada."),
+            Gap("ats.identification_rules.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ats", "Reglas de identificación requieren revisión experta."),
+            Gap("ats.withholding_codes.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ats", "Retenciones requieren revisión de códigos, porcentajes y relación con sustentos."),
+            Gap("ats.xml_generation.missing", TaxLegalReviewGapType.MissingOfficialSchema, TaxLegalReviewGapSeverity.Critical, "ats", "No existe generación XML ATS oficial."),
+            Gap("ats.xsd_validation.missing", TaxLegalReviewGapType.MissingOfficialSchema, TaxLegalReviewGapSeverity.Critical, "ats", "No existe validación XSD oficial ATS."),
+            Gap("ats.sri_validation.evidence_missing", TaxLegalReviewGapType.MissingSRIValidationEvidence, TaxLegalReviewGapSeverity.Critical, "ats", "No existe evidencia de carga/validación SRI."),
+            Gap("ats.operational_runbook.missing", TaxLegalReviewGapType.MissingOperationalRunbook, TaxLegalReviewGapSeverity.High, "ats", "No existe runbook operativo de presentación ATS.")
+        };
+        await audit.RecordAsync(new("AtsOfficialGapsQueried", "financial.tax-legal-review", context.TenantId, new { query.Period, GapCount = gaps.Length }), context, ct);
+        return new(query.Period, AtsOfficialEnablementStatus.NotReadyForOfficialGeneration, gaps, Disclaimer);
+    }
+
+    private static TaxLegalReviewGap Gap(string code, TaxLegalReviewGapType type, TaxLegalReviewGapSeverity severity, string scope, string description) =>
+        new(code, type, severity, TaxLegalReviewGapStatus.Open, scope, description, new[] { new TaxLegalReviewEvidence($"{code}.evidence", "Evidence must be captured without real taxpayer XML or sensitive data.", true, TaxLegalReviewGapStatus.Open) }, new($"{code}.decision", "Pending official-readiness approval.", TaxLegalReviewGapStatus.Open, "Tax/Legal Reviewer"));
+}
+
+public sealed class TaxLegalApprovalChecklistService(IRideLegalGapAnalysisService ride, IAtsOfficialGapAnalysisService ats, IPortalAuditClient audit) : ITaxLegalApprovalChecklistService
+{
+    private const string Disclaimer = "Tax/legal approval checklist foundation only. Approval is not granted by this system in Sprint 4 P4.";
+
+    public async Task<TaxLegalReviewChecklistResult> CheckAsync(string scope, PortalCallContext context, CancellationToken ct)
+    {
+        var normalized = string.IsNullOrWhiteSpace(scope) ? "all" : scope.Trim().ToLowerInvariant();
+        if (normalized is not ("ride" or "ats" or "all")) throw new FinancialApplicationException("tax_legal.scope.invalid", "Approval checklist scope must be ride, ats or all.");
+        var decisions = new[]
+        {
+            Item("technical.foundation", "Technical foundation complete", TaxLegalReviewGapStatus.InReview, "Solution Architect"),
+            Item("official.catalogs", "Official catalogs approved", TaxLegalReviewGapStatus.Open, "Tax Reviewer"),
+            Item("official.schemas", "Official schemas approved", TaxLegalReviewGapStatus.Open, "Tax Reviewer"),
+            Item("tax.expert.review", "Tax expert review complete", TaxLegalReviewGapStatus.Open, "External Tax Expert"),
+            Item("legal.template.review", "Legal template review complete", TaxLegalReviewGapStatus.Open, "Legal Reviewer"),
+            Item("security.production.gate", "Security review complete", TaxLegalReviewGapStatus.Open, "Security Reviewer"),
+            Item("content_file.storage.approved", "Content/File storage approved", TaxLegalReviewGapStatus.Open, "Portal Owner"),
+            Item("xades.custody.approved", "XAdES/certificate custody approved", TaxLegalReviewGapStatus.Open, "Security Reviewer"),
+            Item("sri.test.evidence", "SRI Test validation evidence captured", TaxLegalReviewGapStatus.Open, "Integration Owner"),
+            Item("operational.runbook", "Operational runbook approved", TaxLegalReviewGapStatus.Open, "Operations"),
+            Item("rollback.plan", "Rollback plan approved", TaxLegalReviewGapStatus.Open, "Release Manager"),
+            Item("production.gate", "Production gate approved", TaxLegalReviewGapStatus.Open, "Business Owner")
+        };
+        var blocking = new List<TaxLegalReviewGap>();
+        if (normalized is "ride" or "all") blocking.AddRange((await ride.AnalyzeAsync(context, ct)).Gaps.Where(x => x.Severity is TaxLegalReviewGapSeverity.Critical or TaxLegalReviewGapSeverity.High));
+        if (normalized is "ats" or "all") blocking.AddRange((await ats.AnalyzeAsync(new("foundation"), context, ct)).Gaps.Where(x => x.Severity is TaxLegalReviewGapSeverity.Critical or TaxLegalReviewGapSeverity.High));
+        await audit.RecordAsync(new("TaxLegalApprovalChecklistQueried", "financial.tax-legal-review", context.TenantId, new { Scope = normalized, BlockingGapCount = blocking.Count }), context, ct);
+        return new(normalized, false, decisions, blocking, Disclaimer);
+    }
+
+    private static TaxLegalReviewDecision Item(string code, string description, TaxLegalReviewGapStatus status, string owner) => new(code, description, status, owner);
 }
 
 public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit) : ITaxExportService

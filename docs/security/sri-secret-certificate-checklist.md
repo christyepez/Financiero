@@ -85,4 +85,10 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - RIDE legal readiness y ATS official design no deben exponer XML ni secretos.
 - RIDE foundation debe mostrar disclaimer de no legal final.
 - ATS official design debe mostrar disclaimer de no ATS oficial.
+
+## Sprint 4 P4
+
+- Tax/legal review gaps y approval checklist son read-only y usan `financial.electronicdocuments.read`.
+- El checklist no aprueba producción ni habilita mutaciones.
+- Security production gate debe aprobar exposición de clave completa, custodia XAdES, Content/File productivo, redacción de logs y rollback antes de cualquier uso oficial.
 - No descargar catálogos/XSD oficiales desde runtime.

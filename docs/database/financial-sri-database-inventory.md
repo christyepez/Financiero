@@ -74,3 +74,7 @@ No se agrega migración 012. El contrato HTTP, dry-run, token placeholder y vali
 ## Sprint 4 P3 RIDE/ATS design foundation
 
 No se agrega migración 012. RIDE legal readiness y ATS official design son cálculos read-only sobre documentos existentes. No se guardan documentos finales, XML ATS, payloads ni secretos.
+
+## Sprint 4 P4 tax/legal review gaps
+
+No se agrega migración 012. Los gaps RIDE/ATS y checklist de aprobación son cálculos read-only. No se crean tablas de approvals, evidencias, archivos, XML ATS ni storage propio.

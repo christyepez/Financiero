@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 4 P3 RIDE Legal Layout Foundation / ATS Official Design Foundation implementado sobre Sprint 4 P2. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno y ATS official design foundation quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 4 P4 Tax/Legal Review Gaps implementado sobre Sprint 4 P3. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation y gestión de gaps tributarios/legales quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -77,6 +77,8 @@ Sprint 4 P2 agrega contrato HTTP productivo-ready para Portal Content/File. El p
 
 Sprint 4 P3 agrega templates RIDE foundation por tipo documental y diseño ATS oficial foundation. Ningún output debe considerarse legal final ni ATS oficial.
 
+Sprint 4 P4 agrega análisis read-only de gaps RIDE/ATS y checklist de aprobación. No aprueba uso productivo, no genera RIDE legal final, no genera XML ATS oficial y no persiste evidencia real.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -89,4 +91,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 4 P4. Revisión tributaria/legal Ecuador de RIDE/ATS y cierre de gaps de compras/anulados antes de cualquier generación oficial.
+Próximo paso recomendado: revisión externa tributaria/legal Ecuador y planificación de Sprint 4 P5 para cerrar gaps aprobados sin activar producción.
