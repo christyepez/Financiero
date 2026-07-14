@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 4 P4 Tax/Legal Review Gaps implementado sobre Sprint 4 P3. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation y gestión de gaps tributarios/legales quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 4 cerrado como etapa de readiness fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -50,6 +50,12 @@ Documentos principales:
 - `docs/architecture/decisions/adr-006-tax-documents-foundation.md`
 - `docs/coordination/financial-sprint-03-p2-sri-catalogs-tax-rules.md`
 - `docs/architecture/decisions/adr-007-sri-catalogs-tax-rules.md`
+- `docs/releases/financial-sprint-04-closure.md`
+- `docs/releases/financial-sprint-04-release-notes.md`
+- `docs/review/external-review-gate.md`
+- `docs/coordination/financial-sprint-05-backlog-readiness.md`
+- `docs/architecture/financial-sprint-04-architecture-snapshot.md`
+- `docs/qa/financial-sprint-04-qa-evidence.md`
 
 No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF final, firma XAdES productiva ni envío real a SRI.
 
@@ -79,6 +85,8 @@ Sprint 4 P3 agrega templates RIDE foundation por tipo documental y diseño ATS o
 
 Sprint 4 P4 agrega análisis read-only de gaps RIDE/ATS y checklist de aprobación. No aprueba uso productivo, no genera RIDE legal final, no genera XML ATS oficial y no persiste evidencia real.
 
+Sprint 4 P5 cierra formalmente la etapa como readiness. La producción SRI, RIDE legal final, ATS oficial, payloads reales y XAdES productivo siguen bloqueados hasta revisión externa y gates aprobados. Docker runtime debe reintentarse cuando MCR responda.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -91,4 +99,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: revisión externa tributaria/legal Ecuador y planificación de Sprint 4 P5 para cerrar gaps aprobados sin activar producción.
+Próximo paso recomendado: Sprint 5 Opción A, compras y anulados foundation, salvo que los gates externos aprueben XAdES/SRI Test, Portal Content/File real upload, RIDE legal final o ATS oficial.

@@ -52,6 +52,15 @@ Content/File P2 no agrega endpoints públicos nuevos. Fortalece `store-ride`, `e
 
 Sprint 4 P4 agrega endpoints read-only para gestión de gaps tributarios/legales. No generan RIDE legal final, XML ATS oficial, evidencia real ni aprobaciones mutables.
 
+## Sprint 4 endpoint summary
+
+- Content/File readiness: `GET /api/financial/electronic-documents/content-file/readiness`, permiso `financial.electronicdocuments.manage`, no secretos/XML.
+- Store RIDE/export: `POST /store-ride` y `POST /tax-reporting/export/store`, metadata/hash; no storage propio.
+- RIDE legal readiness: read-only, permiso `financial.electronicdocuments.read`, no RIDE legal final.
+- ATS official design: read-only, permiso `financial.electronicdocuments.read`, no ATS oficial.
+- Tax/legal review gaps and checklist: read-only, permiso `financial.electronicdocuments.read`, no aprobaciones productivas.
+- Todos los endpoints Sprint 4 deben mantener sanitización de XML, certificados, access keys completas, tokens y datos reales.
+
 ## Create invoice draft
 
 ```json

@@ -109,10 +109,16 @@
 - [x] P2 contrato HTTP productivo-ready hacia Portal Content/File con dry-run, validator, auth placeholder y fake HTTP tests.
 - [x] P3 RIDE legal layout foundation y ATS official design foundation con disclaimers y endpoints read-only.
 - [x] P4 revisión tributaria/legal y cierre de gaps compras/anulados antes de RIDE/ATS oficial como gap/readiness management foundation.
+- [x] P5 cierre Sprint 4, release notes, external review gate, QA evidence, architecture snapshot y backlog Sprint 5.
 - [ ] RIDE legal final y ATS oficial; requiere revisión fiscal/manual.
 
 ## Sprint 5 — Frontend financiero
 
+- [ ] Opción A recomendada: compras y anulados foundation para reducir gaps ATS sin activar producción.
+- [ ] Opción B gated: XAdES + SRI Test controlled send con certificado no productivo y custodia aprobada.
+- [ ] Opción C gated: Portal Content/File real upload con contrato estable y aprobación.
+- [ ] Opción D gated: RIDE legal final con revisión legal/tributaria.
+- [ ] Opción E gated: ATS official XML foundation con schema/catálogos oficiales revisados.
 - [ ] Integración con Angular Shell, Menu, Configuration y Security.
 
 ## Dependencias Portal Sprint 2

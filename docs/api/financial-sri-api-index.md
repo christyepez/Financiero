@@ -52,4 +52,6 @@ Sprint 4 P3 agrega endpoints read-only para RIDE legal readiness y ATS official 
 
 Sprint 4 P4 agrega endpoints read-only de gaps y checklist de aprobación. No aprueba uso oficial, no genera ATS oficial y no persiste evidencia real.
 
+Sprint 4 queda cerrado como readiness no productivo: Content/File readiness, store RIDE/export metadata, RIDE legal readiness, ATS official design, tax/legal gaps y approval checklist. Los permisos usan `financial.electronicdocuments.read/manage` según sensibilidad; las respuestas deben permanecer sanitizadas.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
