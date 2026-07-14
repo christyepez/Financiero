@@ -55,6 +55,8 @@ P4 agrega Secret Store, sanitización y readiness SRI. Los adapters productivos 
 
 P5 fortalece Key Vault wiring, probe manual SRI Test y observabilidad sanitizada. Production y envío real permanecen bloqueados.
 
+Sprint 4 P1 agrega readiness productivo de Portal Content/File: `PortalContentFileStorageClient`, `/health/content-file`, metadata estructurada, payload opcional apagado por defecto y bloqueo de payloads en Production sin aprobación explícita. No hay upload HTTP real todavía ni storage documental propio.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

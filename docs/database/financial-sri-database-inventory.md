@@ -62,3 +62,7 @@ No se agrega migración 012. RIDE/reporting foundation consulta `financial.elect
 ## Sprint 3 P4 exports/ATS readiness
 
 No se agrega migración 012. Exportaciones y ATS readiness se calculan en memoria sobre documentos electrónicos existentes. No se crean tablas de export, archivos persistidos ni SQL Server propio.
+
+## Sprint 4 P1 Content/File readiness
+
+No se agrega migración 012. RIDE y exports almacenables conservan metadata/hash usando campos existentes y storage ids externos. No se crean tablas de archivos, blobs, bases compartidas ni SQL Server propio.

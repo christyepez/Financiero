@@ -25,6 +25,7 @@
 | GET | `/api/financial/electronic-documents/{id}/status` | `financial.electronicdocuments.read` | Implementado P2 |
 | GET | `/api/financial/electronic-documents/{id}/storage-metadata` | `financial.electronicdocuments.read` | Implementado P2 |
 | POST | `/api/financial/electronic-documents/{id}/generate-ride` | `financial.electronicdocuments.generate` | Implementado P3 |
+| POST | `/api/financial/electronic-documents/{id}/store-ride` | `financial.electronicdocuments.generate` | Implementado Sprint 4 P1; registra metadata Content/File |
 | GET | `/api/financial/electronic-documents/{id}/ride-metadata` | `financial.electronicdocuments.read` | Implementado P3 |
 | GET | `/api/financial/electronic-documents/{id}/ride-preview` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3; HTML sanitizado |
 | GET | `/api/financial/tax-reporting/summary` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
@@ -32,11 +33,13 @@
 | GET | `/api/financial/tax-reporting/tax-totals` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/withholding-totals` | `financial.electronicdocuments.read` | Implementado Sprint 3 P3 |
 | GET | `/api/financial/tax-reporting/export` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4; JSON/CSV foundation |
+| POST | `/api/financial/tax-reporting/export/store` | `financial.electronicdocuments.manage` | Implementado Sprint 4 P1; storage metadata |
 | GET | `/api/financial/tax-reporting/ats-readiness` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4; no ATS oficial |
 | GET | `/api/financial/tax-reporting/action-queue` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/tax-reporting/monthly-summary` | `financial.electronicdocuments.read` | Implementado Sprint 3 P4 |
 | GET | `/api/financial/electronic-documents/{id}/integration-status` | `financial.electronicdocuments.read` | Implementado P4 |
 | GET | `/api/financial/electronic-documents/sri/readiness` | `financial.electronicdocuments.manage` | Implementado P4 |
+| GET | `/api/financial/electronic-documents/content-file/readiness` | `financial.electronicdocuments.manage` | Implementado Sprint 4 P1 |
 | GET | `/api/financial/electronic-documents/sri/connectivity-probe` | `financial.electronicdocuments.manage` | Implementado P5 |
 | GET | `/api/financial/electronic-documents/by-access-key/{accessKey}` | `financial.electronicdocuments.read` | Implementado P1 |
 

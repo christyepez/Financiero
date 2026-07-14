@@ -12,6 +12,9 @@ Financiero no crea storage documental transversal. El almacenamiento productivo 
 - `SaveSignedXmlAsync`.
 - `SaveAuthorizationXmlAsync`.
 - `SaveRidePdfAsync`.
+- `SaveRideHtmlPreviewAsync`.
+- `SaveTaxExportAsync`.
+- `SaveAtsReadinessSnapshotAsync`.
 
 ## Development
 
@@ -44,3 +47,14 @@ El contrato incluye metadata: purpose, content type, hash, container, tenant y c
 ## Sprint 2 P5
 
 `PortalContentFileRequest` estabiliza `IncludePayload` y `PayloadBase64`. Con `sendPayloads=false`, no se incluyen bytes/XML/PDF en el contrato.
+
+## Sprint 4 P1
+
+Se agrega readiness productivo de Content/File:
+
+- `/health/content-file`.
+- `GET /api/financial/electronic-documents/content-file/readiness`.
+- `POST /api/financial/electronic-documents/{id}/store-ride`.
+- `POST /api/financial/tax-reporting/export/store`.
+
+`allowProductionContentFilePayload=false` bloquea payloads productivos por defecto. El upload HTTP real queda diferido al contrato productivo de Portal Content/File.

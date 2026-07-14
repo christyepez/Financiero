@@ -345,8 +345,66 @@ public sealed class SriElectronicDocumentsServiceTests
         var request = PortalContentFileStorageClient.BuildRequest(doc, System.Text.Encoding.UTF8.GetBytes("<xml />"), "unsigned-xml", "application/xml", Context, new("PortalContentFile", "https://portal.test", "financial", 30, true, false));
         Assert.False(request.IncludePayload);
         Assert.Null(request.PayloadBase64);
-        Assert.Equal(request.Hash, request.Metadata["hash"]);
-        Assert.Equal("unsigned-xml", request.Metadata["purpose"]);
+        Assert.Equal(request.Hash, request.Metadata.Values["hash"]);
+        Assert.Equal("unsigned-xml", request.Metadata.Values["purpose"]);
+        Assert.DoesNotContain("<xml", request.ToString());
+        Assert.DoesNotContain("PayloadBase64=", request.ToString().Replace("PayloadBase64=**REDACTED**", ""));
+    }
+
+    [Fact]
+    public void Portal_content_file_request_can_include_payload_only_when_enabled()
+    {
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+        var request = PortalContentFileStorageClient.BuildRequest(doc, System.Text.Encoding.UTF8.GetBytes("<xml />"), "signed-xml", "application/xml", Context, new("PortalContentFile", "https://portal.test", "financial", 30, true, false, SendPayloads: true));
+
+        Assert.True(request.IncludePayload);
+        Assert.NotNull(request.PayloadBase64);
+        Assert.DoesNotContain(request.PayloadBase64!, request.ToString());
+        Assert.Contains("REDACTED", request.ToString());
+    }
+
+    [Fact]
+    public async Task Portal_content_file_blocks_production_payload_without_explicit_approval()
+    {
+        var client = new PortalContentFileStorageClient(new("PortalContentFile", "https://portal.test", "financial-electronic-documents", 30, true, true, SendPayloads: true, EnvironmentName: "Production"));
+        var doc = ElectronicDocument.CreateInvoice("default", SriEnvironment.Test, SriEmissionType.Normal, "001", "001", new DateOnly(2026, 1, 1), "04", "0999999999001", "Cliente", "USD", DateTimeOffset.UtcNow);
+
+        var ex = await Assert.ThrowsAsync<FinancialApplicationException>(() => client.SaveSignedXmlAsync(doc, "<factura />", Context, default));
+
+        Assert.Equal("sri.storage.payload.production_blocked", ex.Code);
+    }
+
+    [Fact]
+    public async Task Content_file_readiness_reports_development_healthy_and_portal_missing_url_unhealthy()
+    {
+        var development = await new ContentFileReadinessService(new StaticFinancialConfigurationReader(), new RecordingAudit()).CheckAsync(Context, default);
+        Assert.Equal("Healthy", development.Status);
+
+        var portalConfig = new StaticFinancialConfigurationReader(new Dictionary<string, string>
+        {
+            ["financial.sri.storage.provider"] = "PortalContentFile"
+        });
+        var portal = await new ContentFileReadinessService(portalConfig, new RecordingAudit()).CheckAsync(Context, default);
+        Assert.Equal("Unhealthy", portal.Status);
+        Assert.Contains(portal.Issues, x => x.Contains("portalBaseUrl"));
+    }
+
+    [Fact]
+    public async Task Tax_export_store_registers_development_storage_metadata()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 2, 1), "05", "0102030405", "Cliente Export"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
+
+        var stored = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Format: "Json", Store: true), Context, default);
+
+        Assert.NotNull(stored.StoredFile);
+        Assert.StartsWith("dev://tax-export", stored.StoredFile.StorageId);
+        Assert.Equal(stored.Metadata.Hash, stored.StoredFile.Hash);
+        Assert.Equal("tax-export-json", stored.StoredFile.Purpose);
     }
 
     [Fact]
@@ -454,7 +512,7 @@ public sealed class SriElectronicDocumentsServiceTests
         var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 2, 1), "05", "0102030405", "Cliente Export"), Context, default);
         await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
         var generated = await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
-        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
 
         var json = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Format: "Json"), Context, default);
         var csv = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Format: "Csv"), Context, default);
@@ -478,7 +536,7 @@ public sealed class SriElectronicDocumentsServiceTests
         var withholding = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 2, 2), "04", "0999999999001", "Proveedor", "02/2026", "01", "001-001-000000001", new DateOnly(2026, 2, 1)), Context, default);
         await service.AddWithholdingTaxAsync(withholding.Id, new("1", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 2, 1), "02/2026"), Context, default);
         await service.GenerateWithholdingXmlAsync(withholding.Id, Context, default);
-        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
 
         var csv = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Kind: "WithholdingTotals", Format: "Csv"), Context, default);
         var queue = await export.GetActionQueueAsync(new(StartDate: new DateOnly(2026, 2, 1), EndDate: new DateOnly(2026, 2, 28)), Context, default);
@@ -496,7 +554,7 @@ public sealed class SriElectronicDocumentsServiceTests
         var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 3, 1), "04", "0999999999001", "Cliente ATS"), Context, default);
         await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
         await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
-        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
 
         var readiness = await export.EvaluateAtsReadinessAsync(new("2026-03"), Context, default);
 
@@ -513,7 +571,7 @@ public sealed class SriElectronicDocumentsServiceTests
         var invoice = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 4, 1), "04", "0999999999001", "Cliente Monthly"), Context, default);
         await service.AddInvoiceLineAsync(invoice.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
         await service.GenerateInvoiceXmlAsync(invoice.Id, Context, default);
-        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new DevelopmentElectronicDocumentStorageClient(), new RecordingAudit());
 
         var summary = await export.GetMonthlySummaryAsync(new(StartDate: new DateOnly(2026, 4, 1), EndDate: new DateOnly(2026, 4, 30)), Context, default);
 

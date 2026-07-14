@@ -55,6 +55,7 @@ services:
       financial__sri__storage__timeoutSeconds: ${SRI_STORAGE_TIMEOUT_SECONDS:-30}
       financial__sri__storage__sendPayloads: ${SRI_STORAGE_SEND_PAYLOADS:-false}
       financial__sri__storage__maskPayloads: ${SRI_STORAGE_MASK_PAYLOADS:-true}
+      financial__sri__storage__allowProductionContentFilePayload: ${SRI_STORAGE_ALLOW_PRODUCTION_CONTENT_FILE_PAYLOAD:-false}
       financial__sri__storage__retainXml: ${SRI_STORAGE_RETAIN_XML:-true}
       financial__sri__storage__retainPdf: ${SRI_STORAGE_RETAIN_PDF:-false}
       Jwt__Issuer: ${JWT_ISSUER:-portal-corporativo}

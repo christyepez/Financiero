@@ -10,6 +10,7 @@ public sealed class HealthTests : IClassFixture<FinancialApiFactory>
     public HealthTests(FinancialApiFactory factory) => _client = factory.CreateClient();
     [Fact] public async Task Health_is_anonymous_and_healthy() => Assert.True((await _client.GetAsync("/health")).IsSuccessStatusCode);
     [Fact] public async Task Sri_health_is_anonymous() => Assert.False((await _client.GetAsync("/health/sri")).StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
+    [Fact] public async Task Content_file_health_is_anonymous() => Assert.False((await _client.GetAsync("/health/content-file")).StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     [Fact] public async Task Correlation_id_is_preserved()
     { using var request=new HttpRequestMessage(HttpMethod.Get,"/health");request.Headers.Add("X-Correlation-ID","api-test-correlation");var response=await _client.SendAsync(request);Assert.Equal("api-test-correlation",response.Headers.GetValues("X-Correlation-ID").Single()); }
 }
@@ -59,7 +60,9 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/send")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/authorize")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/store-ride")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/readiness")]
+    [InlineData("GET", "/api/financial/electronic-documents/content-file/readiness")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe")]
     [InlineData("POST", "/api/financial/electronic-documents/credit-notes")]
     [InlineData("POST", "/api/financial/electronic-documents/debit-notes")]
@@ -73,6 +76,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals")]
     [InlineData("GET", "/api/financial/tax-reporting/withholding-totals")]
     [InlineData("GET", "/api/financial/tax-reporting/export")]
+    [InlineData("POST", "/api/financial/tax-reporting/export/store")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=2026-01")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
@@ -103,10 +107,12 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/electronic-documents/debit-notes", "financial.electronicdocuments.create")]
     [InlineData("POST", "/api/financial/electronic-documents/withholdings", "financial.electronicdocuments.create")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-ride", "financial.electronicdocuments.generate")]
+    [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/store-ride", "financial.electronicdocuments.generate")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-credit-note-xml", "financial.electronicdocuments.generate")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-debit-note-xml", "financial.electronicdocuments.generate")]
     [InlineData("POST", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/generate-withholding-xml", "financial.electronicdocuments.generate")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/readiness", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/electronic-documents/content-file/readiness", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/sri/connectivity-probe", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/integration-status", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/electronic-documents/00000000-0000-0000-0000-000000000001/ride-preview", "financial.electronicdocuments.read")]
@@ -115,6 +121,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/tax-totals", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/withholding-totals", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/export?format=Xml", "financial.electronicdocuments.read")]
+    [InlineData("POST", "/api/financial/tax-reporting/export/store?format=Json", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-readiness?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]

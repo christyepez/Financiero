@@ -21,6 +21,7 @@
 - `financial.sri.test.allowConnectivityProbe=true`.
 - `financial.sri.test.allowDocumentSend=true`.
 - `financial.sri.storage.sendPayloads=true`.
+- `financial.sri.storage.allowProductionContentFilePayload=true`.
 - Provider Azure Key Vault real.
 - Firma XAdES real.
 
@@ -62,3 +63,10 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - AccessKey e identificación se enmascaran por defecto.
 - `includeSensitive` existe solo como flag interno y permanece false por defecto.
 - ATS readiness debe indicar que no es ATS oficial.
+
+## Sprint 4 P1
+
+- Content/File usa `sendPayloads=false` por defecto.
+- `PayloadBase64` se redacta en logs y `ToString()`.
+- Production bloquea payloads salvo aprobación explícita.
+- Storage documental propio sigue prohibido.
