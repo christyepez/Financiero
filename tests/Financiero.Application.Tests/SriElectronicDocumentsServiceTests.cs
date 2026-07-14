@@ -445,6 +445,80 @@ public sealed class SriElectronicDocumentsServiceTests
         Assert.All(report.Documents, x => Assert.DoesNotContain("0999999999001", x.CustomerIdentificationMasked));
         Assert.All(report.Documents.Where(x => x.AccessKeyMasked is not null), x => Assert.DoesNotContain(invoice.AccessKey!, x.AccessKeyMasked));
     }
+
+    [Fact]
+    public async Task Tax_export_json_and_csv_are_sanitized_and_hashed()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 2, 1), "05", "0102030405", "Cliente Export"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        var generated = await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+
+        var json = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Format: "Json"), Context, default);
+        var csv = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Format: "Csv"), Context, default);
+        var jsonText = System.Text.Encoding.UTF8.GetString(json.Content);
+        var csvText = System.Text.Encoding.UTF8.GetString(csv.Content);
+
+        Assert.Equal("application/json", json.Metadata.ContentType);
+        Assert.Equal("text/csv", csv.Metadata.ContentType);
+        Assert.NotEmpty(json.Metadata.Hash);
+        Assert.DoesNotContain(generated.AccessKey!, jsonText + csvText);
+        Assert.DoesNotContain("0102030405", jsonText + csvText);
+        Assert.DoesNotContain("<factura", jsonText + csvText);
+        Assert.DoesNotContain("PRIVATE KEY", jsonText + csvText);
+    }
+
+    [Fact]
+    public async Task Tax_export_withholding_totals_and_action_queue_are_foundation_safe()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var withholding = await service.CreateWithholdingDraftAsync(new(new DateOnly(2026, 2, 2), "04", "0999999999001", "Proveedor", "02/2026", "01", "001-001-000000001", new DateOnly(2026, 2, 1)), Context, default);
+        await service.AddWithholdingTaxAsync(withholding.Id, new("1", "312", 100, 1.75m, 1.75m, "001-001-000000001", new DateOnly(2026, 2, 1), "02/2026"), Context, default);
+        await service.GenerateWithholdingXmlAsync(withholding.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+
+        var csv = await export.ExportAsync(new(From: new DateOnly(2026, 2, 1), To: new DateOnly(2026, 2, 28), Kind: "WithholdingTotals", Format: "Csv"), Context, default);
+        var queue = await export.GetActionQueueAsync(new(StartDate: new DateOnly(2026, 2, 1), EndDate: new DateOnly(2026, 2, 28)), Context, default);
+
+        Assert.Contains("withheldAmount", System.Text.Encoding.UTF8.GetString(csv.Content));
+        Assert.Contains(queue, x => x.Action == "GeneratedNotSigned" && x.Count == 1);
+        Assert.Contains(queue, x => x.Action == "MissingRide" && x.Count == 1);
+    }
+
+    [Fact]
+    public async Task Ats_readiness_detects_missing_authorization_and_disclaims_official_compliance()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var draft = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 3, 1), "04", "0999999999001", "Cliente ATS"), Context, default);
+        await service.AddInvoiceLineAsync(draft.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        await service.GenerateInvoiceXmlAsync(draft.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+
+        var readiness = await export.EvaluateAtsReadinessAsync(new("2026-03"), Context, default);
+
+        Assert.Equal(AtsReadinessStatus.MissingData, readiness.Status);
+        Assert.Contains(readiness.Issues, x => x.Code == "ats.document.not_authorized");
+        Assert.Contains("not an official ATS", readiness.Disclaimer);
+    }
+
+    [Fact]
+    public async Task Monthly_summary_groups_by_month_and_document_type()
+    {
+        var repo = new InMemoryElectronicDocumentRepository();
+        var service = NewService(repo, new RecordingAudit(), new RecordingOutbox());
+        var invoice = await service.CreateInvoiceDraftAsync(new(new DateOnly(2026, 4, 1), "04", "0999999999001", "Cliente Monthly"), Context, default);
+        await service.AddInvoiceLineAsync(invoice.Id, new("SKU", "Servicio", 1, 10, 0), Context, default);
+        await service.GenerateInvoiceXmlAsync(invoice.Id, Context, default);
+        var export = new TaxExportService(new TaxReportingService(repo, new RecordingAudit()), repo, new RecordingAudit());
+
+        var summary = await export.GetMonthlySummaryAsync(new(StartDate: new DateOnly(2026, 4, 1), EndDate: new DateOnly(2026, 4, 30)), Context, default);
+
+        Assert.Contains(summary, x => x.Month == "2026-04" && x.DocumentType == "Invoice" && x.Count == 1);
+    }
 }
 
 internal sealed class InMemoryElectronicDocumentRepository : IElectronicDocumentRepository

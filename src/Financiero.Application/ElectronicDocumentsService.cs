@@ -152,6 +152,20 @@ public sealed record TaxReportTaxTotal(string TaxCode, string TaxPercentageCode,
 public sealed record TaxReportWithholdingTotal(string TaxCode, string WithholdingCode, decimal TaxBase, decimal WithheldAmount);
 public sealed record TaxReportPendingSummary(int GeneratedNotSigned, int SignedNotSent, int SentPendingAuthorization, int Rejected);
 public sealed record TaxReportResult(TaxReportPeriod Period, TaxReportTotals Totals, IReadOnlyCollection<TaxReportDocumentSummary> Documents, IReadOnlyDictionary<string, TaxReportTotals> ByDocumentType, IReadOnlyDictionary<string, int> ByStatus, IReadOnlyCollection<TaxReportTaxTotal> TaxTotals, IReadOnlyCollection<TaxReportWithholdingTotal> WithholdingTotals, TaxReportPendingSummary Pending);
+public enum TaxExportFormat { Json, Csv }
+public sealed record TaxExportQuery(DateOnly? From = null, DateOnly? To = null, string? DocumentType = null, string? Status = null, string? Environment = null, string Kind = "DocumentSummary", string Format = "Json", bool IncludeSensitive = false);
+public sealed record TaxExportRow(IReadOnlyDictionary<string, string?> Columns);
+public sealed record TaxExportFileMetadata(string FileName, string ContentType, string Format, string Kind, int RowCount, string Hash, DateTimeOffset GeneratedAtUtc, bool SensitiveValuesIncluded);
+public sealed record TaxExportResult(byte[] Content, TaxExportFileMetadata Metadata);
+public sealed record AtsReadinessQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
+public enum AtsReadinessStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
+public sealed record AtsPurchaseSummary(int Count, decimal TaxBase, decimal TaxAmount);
+public sealed record AtsSalesSummary(int Count, decimal Subtotal, decimal TaxAmount, decimal Total);
+public sealed record AtsWithholdingSummary(int Count, decimal TaxBase, decimal WithheldAmount);
+public sealed record AtsValidationIssue(string Code, string Message, string Severity);
+public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer);
+public sealed record TaxActionQueueItem(string Action, int Count, IReadOnlyCollection<TaxReportDocumentSummary> Documents);
+public sealed record MonthlyTaxSummaryItem(string Month, string DocumentType, int Count, decimal Subtotal, decimal Taxes, decimal Total);
 
 public interface IElectronicDocumentXmlGenerator
 {
@@ -1177,6 +1191,146 @@ public sealed class TaxReportingService(IElectronicDocumentRepository documents,
     }
     private async Task AuditAsync(string action, TaxReportQuery query, PortalCallContext context, CancellationToken ct) =>
         await audit.RecordAsync(new(action, "financial.tax-reporting", context.TenantId, new { query.StartDate, query.EndDate, query.DocumentType, query.Status, query.Environment }), context, ct);
+}
+
+public interface ITaxExportService
+{
+    Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct);
+    Task<AtsReadinessResult> EvaluateAtsReadinessAsync(AtsReadinessQuery query, PortalCallContext context, CancellationToken ct);
+    Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+    Task<IReadOnlyCollection<MonthlyTaxSummaryItem>> GetMonthlySummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct);
+}
+
+public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IPortalAuditClient audit) : ITaxExportService
+{
+    public async Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        ValidateDateRange(query.From, query.To);
+        var format = ParseFormat(query.Format);
+        var reportQuery = new TaxReportQuery(query.From, query.To, query.DocumentType, query.Status, query.Environment, null, 1, 100);
+        var report = await reporting.GetSummaryAsync(reportQuery, context, ct);
+        var rows = BuildExportRows(query.Kind, report).ToArray();
+        var payload = format == TaxExportFormat.Json ? Json(rows) : Csv(rows);
+        var bytes = Encoding.UTF8.GetBytes(payload);
+        var hash = Convert.ToHexString(SHA256.HashData(bytes));
+        var extension = format == TaxExportFormat.Json ? "json" : "csv";
+        var contentType = format == TaxExportFormat.Json ? "application/json" : "text/csv";
+        var safeKind = SafeToken(query.Kind);
+        var metadata = new TaxExportFileMetadata($"tax-export-{safeKind}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.{extension}", contentType, format.ToString(), safeKind, rows.Length, hash, DateTimeOffset.UtcNow, query.IncludeSensitive);
+        await audit.RecordAsync(new("TaxExportGenerated", "financial.tax-export", context.TenantId, new { query.From, query.To, query.Kind, Format = format.ToString(), RowCount = rows.Length, Hash = hash }), context, ct);
+        return new(bytes, metadata);
+    }
+
+    public async Task<AtsReadinessResult> EvaluateAtsReadinessAsync(AtsReadinessQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        var (from, to) = ResolvePeriod(query);
+        var items = await LoadAsync(new(from, to, Environment: query.Environment), context, ct);
+        var issues = new List<AtsValidationIssue>();
+        if (items.Count == 0) issues.Add(new("ats.missing_documents", "No electronic documents were found for the requested period.", "Warning"));
+        issues.AddRange(items.Where(x => x.Status != ElectronicDocumentStatus.Authorized).Select(x => new AtsValidationIssue("ats.document.not_authorized", $"Document {x.DocumentType} {x.Id} is not authorized.", "Error")));
+        issues.AddRange(items.Where(x => string.IsNullOrWhiteSpace(x.XmlContentHash)).Select(x => new AtsValidationIssue("ats.document.xml_missing", $"Document {x.DocumentType} {x.Id} does not have generated XML metadata.", "Error")));
+        issues.AddRange(items.SelectMany(x => x.WithholdingTaxes).Where(x => string.IsNullOrWhiteSpace(x.WithholdingCode)).Select(_ => new AtsValidationIssue("ats.withholding.code_missing", "A withholding row is missing withholding code.", "Error")));
+        issues.AddRange(items.SelectMany(x => x.Taxes).Where(x => !SriCatalogService.IsTaxCodeAllowed(x.TaxCode)).Select(x => new AtsValidationIssue("ats.tax.catalog_review", $"Tax code {x.TaxCode} requires foundation catalog review.", "Warning")));
+        if (items.Any(x => x.DocumentType is ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote or ElectronicDocumentType.Withholding)) issues.Add(new("ats.tax_review.required", "Credit/debit notes and withholdings require tax review before official ATS generation.", "Warning"));
+        var status = issues.Any(x => x.Severity == "Error") ? AtsReadinessStatus.MissingData : issues.Count > 0 ? AtsReadinessStatus.RequiresTaxReview : AtsReadinessStatus.ReadyFoundation;
+        var purchases = new AtsPurchaseSummary(items.Count(x => x.DocumentType == ElectronicDocumentType.Withholding), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
+        var sales = new AtsSalesSummary(items.Count(x => x.DocumentType is ElectronicDocumentType.Invoice or ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote), items.Sum(x => x.SubtotalWithoutTaxes), items.Sum(x => x.TotalTaxes), items.Sum(x => x.TotalAmount));
+        var withholdings = new AtsWithholdingSummary(items.SelectMany(x => x.WithholdingTaxes).Count(), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
+        await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count }), context, ct);
+        return new(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.");
+    }
+
+    public async Task<IReadOnlyCollection<TaxActionQueueItem>> GetActionQueueAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        ValidateDateRange(query.StartDate, query.EndDate);
+        var items = await LoadAsync(query, context, ct);
+        var result = new[]
+        {
+            Queue("GeneratedNotSigned", items.Where(x => x.Status is ElectronicDocumentStatus.Generated or ElectronicDocumentStatus.SignedPending)),
+            Queue("SignedNotSent", items.Where(x => x.Status == ElectronicDocumentStatus.Signed)),
+            Queue("SentNotAuthorized", items.Where(x => x.Status == ElectronicDocumentStatus.Sent)),
+            Queue("ReturnedRejected", items.Where(x => x.Status == ElectronicDocumentStatus.Rejected)),
+            Queue("MissingRide", items.Where(x => string.IsNullOrWhiteSpace(x.RidePdfStorageId)))
+        };
+        await audit.RecordAsync(new("TaxActionQueueQueried", "financial.tax-reporting", context.TenantId, new { query.StartDate, query.EndDate, Count = result.Sum(x => x.Count) }), context, ct);
+        return result;
+    }
+
+    public async Task<IReadOnlyCollection<MonthlyTaxSummaryItem>> GetMonthlySummaryAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        ValidateDateRange(query.StartDate, query.EndDate);
+        var items = await LoadAsync(query, context, ct);
+        var result = items.GroupBy(x => new { Month = $"{x.IssueDate.Year:0000}-{x.IssueDate.Month:00}", Type = x.DocumentType.ToString() })
+            .Select(x => new MonthlyTaxSummaryItem(x.Key.Month, x.Key.Type, x.Count(), x.Sum(d => d.SubtotalWithoutTaxes), x.Sum(d => d.TotalTaxes), x.Sum(d => d.TotalAmount)))
+            .OrderBy(x => x.Month).ThenBy(x => x.DocumentType).ToArray();
+        await audit.RecordAsync(new("MonthlyTaxSummaryQueried", "financial.tax-reporting", context.TenantId, new { query.StartDate, query.EndDate, Count = result.Length }), context, ct);
+        return result;
+    }
+
+    private static TaxActionQueueItem Queue(string action, IEnumerable<ElectronicDocument> source) =>
+        new(action, source.Count(), source.Take(50).Select(ToSummary).ToArray());
+
+    private async Task<IReadOnlyCollection<ElectronicDocument>> LoadAsync(TaxReportQuery query, PortalCallContext context, CancellationToken ct)
+    {
+        ElectronicDocumentStatus? status = string.IsNullOrWhiteSpace(query.Status) ? null : Enum.Parse<ElectronicDocumentStatus>(query.Status, true);
+        var (items, _) = await documents.SearchAsync(context.TenantId, status, null, 1, 1000, ct);
+        return items.Where(x =>
+            (!query.StartDate.HasValue || x.IssueDate >= query.StartDate.Value) &&
+            (!query.EndDate.HasValue || x.IssueDate <= query.EndDate.Value) &&
+            (string.IsNullOrWhiteSpace(query.DocumentType) || x.DocumentType.ToString().Equals(query.DocumentType, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(query.Environment) || x.Environment.ToString().Equals(query.Environment, StringComparison.OrdinalIgnoreCase))).ToArray();
+    }
+
+    private static IEnumerable<TaxExportRow> BuildExportRows(string kind, TaxReportResult report)
+    {
+        var normalized = SafeToken(kind).ToLowerInvariant();
+        if (normalized.Contains("tax") && !normalized.Contains("withholding"))
+            return report.TaxTotals.Select(x => Row(("taxCode", x.TaxCode), ("taxPercentageCode", x.TaxPercentageCode), ("taxBase", x.TaxBase.ToString("0.00", CultureInfo.InvariantCulture)), ("taxAmount", x.TaxAmount.ToString("0.00", CultureInfo.InvariantCulture))));
+        if (normalized.Contains("withholding"))
+            return report.WithholdingTotals.Select(x => Row(("taxCode", x.TaxCode), ("withholdingCode", x.WithholdingCode), ("taxBase", x.TaxBase.ToString("0.00", CultureInfo.InvariantCulture)), ("withheldAmount", x.WithheldAmount.ToString("0.00", CultureInfo.InvariantCulture))));
+        if (normalized.Contains("pending"))
+            return new[] { Row(("generatedNotSigned", report.Pending.GeneratedNotSigned.ToString(CultureInfo.InvariantCulture)), ("signedNotSent", report.Pending.SignedNotSent.ToString(CultureInfo.InvariantCulture)), ("sentPendingAuthorization", report.Pending.SentPendingAuthorization.ToString(CultureInfo.InvariantCulture)), ("rejected", report.Pending.Rejected.ToString(CultureInfo.InvariantCulture))) };
+        if (normalized.Contains("aging") || normalized.Contains("status"))
+            return report.ByStatus.Select(x => Row(("status", x.Key), ("count", x.Value.ToString(CultureInfo.InvariantCulture))));
+        return report.Documents.Select(x => Row(("id", x.Id.ToString()), ("documentType", x.DocumentType), ("status", x.Status), ("issueDate", x.IssueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), ("environment", x.Environment), ("accessKey", x.AccessKeyMasked), ("customerIdentification", x.CustomerIdentificationMasked), ("subtotal", x.Subtotal.ToString("0.00", CultureInfo.InvariantCulture)), ("taxes", x.Taxes.ToString("0.00", CultureInfo.InvariantCulture)), ("total", x.Total.ToString("0.00", CultureInfo.InvariantCulture))));
+    }
+
+    private static TaxExportFormat ParseFormat(string? format) =>
+        Enum.TryParse<TaxExportFormat>(format ?? "Json", true, out var parsed) ? parsed : throw new FinancialApplicationException("tax_export.format.invalid", "Tax export format must be Json or Csv.");
+    private static void ValidateDateRange(DateOnly? from, DateOnly? to)
+    {
+        if (from.HasValue && to.HasValue && from.Value > to.Value) throw new FinancialApplicationException("tax_report.date_range.invalid", "The from date must be less than or equal to the to date.");
+    }
+    private static (DateOnly From, DateOnly To) ResolvePeriod(AtsReadinessQuery query)
+    {
+        if (!string.IsNullOrWhiteSpace(query.Period) && DateOnly.TryParseExact($"{query.Period}-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
+            return (start, start.AddMonths(1).AddDays(-1));
+        if (query.From.HasValue && query.To.HasValue)
+        {
+            ValidateDateRange(query.From, query.To);
+            return (query.From.Value, query.To.Value);
+        }
+        throw new FinancialApplicationException("ats.period.invalid", "ATS readiness period must use yyyy-MM or provide from/to dates.");
+    }
+    private static string Json(IReadOnlyCollection<TaxExportRow> rows) => JsonSerializer.Serialize(rows.Select(x => x.Columns));
+    private static string Csv(IReadOnlyCollection<TaxExportRow> rows)
+    {
+        var headers = rows.SelectMany(x => x.Columns.Keys).Distinct().ToArray();
+        var sb = new StringBuilder();
+        sb.AppendLine(string.Join(",", headers.Select(EscapeCsv)));
+        foreach (var row in rows) sb.AppendLine(string.Join(",", headers.Select(h => EscapeCsv(row.Columns.TryGetValue(h, out var value) ? value : ""))));
+        return sb.ToString();
+    }
+    private static string EscapeCsv(string? value)
+    {
+        var sanitized = (value ?? "").Replace("\r", " ").Replace("\n", " ");
+        if (sanitized.StartsWith("=") || sanitized.StartsWith("+") || sanitized.StartsWith("-") || sanitized.StartsWith("@")) sanitized = "'" + sanitized;
+        return "\"" + sanitized.Replace("\"", "\"\"") + "\"";
+    }
+    private static TaxExportRow Row(params (string Key, string? Value)[] values) => new(values.ToDictionary(x => x.Key, x => x.Value));
+    private static string SafeToken(string? value) => string.IsNullOrWhiteSpace(value) ? "DocumentSummary" : new string(value.Where(x => char.IsLetterOrDigit(x) || x is '-' or '_').ToArray());
+    private static TaxReportDocumentSummary ToSummary(ElectronicDocument document) =>
+        new(document.Id, document.DocumentType.ToString(), document.Status.ToString(), document.IssueDate, document.Environment.ToString(), SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskCustomerIdentification(document.CustomerIdentification), document.SubtotalWithoutTaxes, document.TotalTaxes, document.TotalAmount);
 }
 
 public sealed class ElectronicDocumentsService(

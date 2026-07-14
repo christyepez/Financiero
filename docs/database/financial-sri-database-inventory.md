@@ -58,3 +58,7 @@ Tipos de comprobante, identificación, IVA e impuestos mínimos para foundation.
 ## Sprint 3 P3 RIDE/reporting
 
 No se agrega migración 012. RIDE/reporting foundation consulta `financial.electronic_documents` y tablas relacionadas existentes (`lines`, `taxes`, `references`, `debit_note_reasons`, `withholding_taxes`). No se crea SQL Server propio ni base compartida.
+
+## Sprint 3 P4 exports/ATS readiness
+
+No se agrega migración 012. Exportaciones y ATS readiness se calculan en memoria sobre documentos electrónicos existentes. No se crean tablas de export, archivos persistidos ni SQL Server propio.

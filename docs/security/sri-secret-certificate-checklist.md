@@ -55,3 +55,10 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - No incluir XML, certificados, claves privadas ni secretos en HTML/reportes.
 - No cargar archivos `.p12`, `.pfx`, `.key`, `.pem`, `.crt`, `.cer`.
 - El RIDE final legal y ATS oficial requieren revisión manual antes de producción.
+
+## Sprint 3 P4
+
+- Exports JSON/CSV deben excluir XML, secretos, certificados y claves privadas.
+- AccessKey e identificación se enmascaran por defecto.
+- `includeSensitive` existe solo como flag interno y permanece false por defecto.
+- ATS readiness debe indicar que no es ATS oficial.

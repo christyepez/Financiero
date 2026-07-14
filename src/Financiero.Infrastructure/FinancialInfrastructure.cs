@@ -555,6 +555,7 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<JournalEntriesService>();
         services.AddScoped<ElectronicDocumentsService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
+        services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<SriIntegrationReadinessService>();
         services.AddScoped<SriManualTestConnectivityService>();
         services.AddScoped<IElectronicDocumentXmlGenerator, ElectronicInvoiceXmlGenerator>();

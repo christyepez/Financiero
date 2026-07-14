@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 3 P3 RIDE / Tax Reporting Foundation implementado sobre Sprint 3 P2. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development por tipo documental, foundation de Nota de Crédito, Nota de Débito y Retenciones, catálogos internos foundation, reglas tributarias básicas y reporting tributario foundation quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 3 P4 Tax Exports / ATS Readiness implementado sobre Sprint 3 P3. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, storage placeholder delegado a Portal Content/File, RIDE/PDF Development por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation y ATS readiness interno quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -85,4 +85,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 3 P4/Sprint 4. Definir RIDE legal final, ATS oficial y adapter productivo Portal Content/File solo cuando exista contrato estable y aprobación manual fuera del repositorio.
+Próximo paso recomendado: Sprint 4. Definir ATS oficial, RIDE legal final y adapter productivo Portal Content/File solo cuando exista contrato estable, validación fiscal y aprobación manual fuera del repositorio.
