@@ -62,9 +62,13 @@ Sprint 4 P4 agrega endpoints read-only para gestión de gaps tributarios/legales
 | POST | `/api/financial/purchases/{id}/validate` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
 | GET | `/api/financial/purchases?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
 | GET | `/api/financial/purchases/{id}` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/purchases/{id}/ats-mapping` | `financial.electronicdocuments.read` | Implementado Sprint 5 P2; read-only sanitizado |
 | POST | `/api/financial/voided-documents` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
 | GET | `/api/financial/voided-documents?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
 | GET | `/api/financial/voided-documents/{id}` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/voided-documents/{id}/ats-mapping` | `financial.electronicdocuments.read` | Implementado Sprint 5 P2; read-only sanitizado |
+| GET | `/api/financial/tax-reporting/ats-section-readiness?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P2; no ATS oficial |
+| GET | `/api/financial/tax-reporting/support-document-mappings` | `financial.electronicdocuments.read` | Implementado Sprint 5 P2; catálogo foundation |
 
 Las respuestas enmascaran identificación de proveedor, clave de acceso y autorización. Estos endpoints reducen gaps ATS, pero no generan XML ATS oficial.
 

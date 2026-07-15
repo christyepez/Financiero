@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 5 P1 en foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 5 P2 en foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -54,6 +54,9 @@ Documentos principales:
 - `docs/releases/financial-sprint-04-release-notes.md`
 - `docs/review/external-review-gate.md`
 - `docs/coordination/financial-sprint-05-backlog-readiness.md`
+- `docs/coordination/financial-sprint-05-p1-purchases-voided-foundation.md`
+- `docs/coordination/financial-sprint-05-p2-ats-support-mapping-hardening.md`
+- `docs/architecture/decisions/adr-015-ats-support-document-mapping.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
 - `docs/qa/financial-sprint-04-qa-evidence.md`
 
@@ -89,6 +92,8 @@ Sprint 4 P5 cierra formalmente la etapa como readiness. La producción SRI, RIDE
 
 Sprint 5 P1 agrega compras tributarias y documentos anulados foundation para reducir gaps ATS. No genera ATS oficial ni almacena XML real; usa permisos runtime existentes y Audit/Outbox del Portal.
 
+Sprint 5 P2 agrega mapping/readiness ATS de sustentos como consultas read-only sanitizadas. No genera XML ATS oficial, no agrega migración `013` y no crea storage documental propio.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -101,4 +106,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 5 P2 para sustento/ATS mapping avanzado o gates externos para XAdES/SRI Test, Portal Content/File real upload, RIDE legal final o ATS oficial.
+Próximo paso recomendado: cierre/release Sprint 5 P2 y decidir Sprint 5 P3: ATS XML official foundation gated, RIDE legal final gated o integración Angular Shell.

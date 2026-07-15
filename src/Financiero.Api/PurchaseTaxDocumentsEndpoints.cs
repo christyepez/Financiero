@@ -22,6 +22,8 @@ public static class PurchaseTaxDocumentsEndpoints
             !PurchaseTaxDocumentValidator.IsFiscalPeriod(period) ? BadRequestJson("purchase.period.invalid", "Purchase period must use YYYY-MM.", http) : await ExecuteAsync(() => service.GetByPeriodAsync(period, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         purchases.MapGet("/{id:guid}", async (Guid id, PurchaseTaxDocumentService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetByIdAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        purchases.MapGet("/{id:guid}/ats-mapping", async (Guid id, AtsSupportMappingService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.MapPurchaseAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
 
         var voided = app.MapGroup("/api/financial/voided-documents").WithTags("Voided Tax Documents");
         voided.MapPost("/", async (RegisterVoidedTaxDocumentRequest request, VoidedTaxDocumentService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
@@ -30,6 +32,8 @@ public static class PurchaseTaxDocumentsEndpoints
             !PurchaseTaxDocumentValidator.IsFiscalPeriod(period) ? BadRequestJson("voided.period.invalid", "Voided period must use YYYY-MM.", http) : await ExecuteAsync(() => service.GetByPeriodAsync(period, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         voided.MapGet("/{id:guid}", async (Guid id, VoidedTaxDocumentService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetByIdAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        voided.MapGet("/{id:guid}/ats-mapping", async (Guid id, AtsSupportMappingService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.MapVoidedAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         return app;
     }
 

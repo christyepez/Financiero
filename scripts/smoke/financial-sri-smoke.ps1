@@ -220,6 +220,9 @@ if ($validatedPurchase.data.status -ne "Validated") { throw "Purchase foundation
 $purchaseQuery = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/purchases?period=2026-01" -Headers $headers
 if (-not ($purchaseQuery.data | Where-Object { $_.id -eq $purchaseId })) { throw "Purchase foundation query did not return smoke purchase." }
 if (($purchaseQuery | ConvertTo-Json -Depth 20) -match "0999999999001|PRIVATE KEY|BEGIN CERTIFICATE|<factura") { throw "Purchase foundation exposed sensitive data." }
+$purchaseAtsMapping = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/purchases/$purchaseId/ats-mapping" -Headers $headers
+if ($purchaseAtsMapping.data.mapping.atsSection -ne "Purchases") { throw "Purchase ATS mapping endpoint failed." }
+if (($purchaseAtsMapping | ConvertTo-Json -Depth 20) -match "0999999999001|PRIVATE KEY|BEGIN CERTIFICATE|<factura") { throw "Purchase ATS mapping exposed sensitive payload." }
 
 $voidSequential = Get-Date -Format "HHmmssfff"
 $voided = PostJson "$BaseUrl/api/financial/voided-documents" @{
@@ -235,6 +238,9 @@ $voided = PostJson "$BaseUrl/api/financial/voided-documents" @{
 $voidedId = $voided.data.id
 $voidedQuery = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/voided-documents?period=2026-01" -Headers $headers
 if (-not ($voidedQuery.data | Where-Object { $_.id -eq $voidedId })) { throw "Voided foundation query did not return smoke voided document." }
+$voidedAtsMapping = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/voided-documents/$voidedId/ats-mapping" -Headers $headers
+if ($voidedAtsMapping.data.mapping.atsSection -ne "VoidedDocuments") { throw "Voided ATS mapping endpoint failed." }
+if (($voidedAtsMapping | ConvertTo-Json -Depth 20) -match "PRIVATE KEY|BEGIN CERTIFICATE|<factura|claveAcceso>") { throw "Voided ATS mapping exposed sensitive payload." }
 
 $reportSummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/summary?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
 if (-not $reportSummary.data.totals -or $reportSummary.data.totals.count -lt 4) {
@@ -253,6 +259,12 @@ if ($storedExportCsv.data.storedFile.storageId -notmatch "^dev://tax-export|^por
 $atsReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-readiness?period=2026-01" -Headers $headers
 if (-not $atsReadiness.data.disclaimer -or $atsReadiness.data.disclaimer -notmatch "not an official ATS") { throw "ATS readiness disclaimer is missing." }
 if ($atsReadiness.data.purchases.count -lt 1 -or $atsReadiness.data.voided.count -lt 1) { throw "ATS readiness did not include purchases and voided foundation counts." }
+$atsSectionReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-section-readiness?period=2026-01" -Headers $headers
+if (-not ($atsSectionReadiness.data.sections | Where-Object { $_.section -eq "Purchases" })) { throw "ATS section readiness purchases section is missing." }
+if (-not ($atsSectionReadiness.data.sections | Where-Object { $_.section -eq "VoidedDocuments" })) { throw "ATS section readiness voided section is missing." }
+$supportMappings = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/support-document-mappings" -Headers $headers
+if (-not ($supportMappings.data | Where-Object { $_.atsSection -eq "Purchases" })) { throw "Support document mappings catalog is missing purchases." }
+if ((($atsSectionReadiness | ConvertTo-Json -Depth 20) + ($supportMappings | ConvertTo-Json -Depth 20)) -match "<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") { throw "ATS mapping readiness exposed sensitive payload." }
 $atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
 if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
 if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }

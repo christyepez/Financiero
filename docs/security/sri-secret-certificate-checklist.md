@@ -104,3 +104,7 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 
 Compras y anulados foundation no agregan secretos, certificados ni payloads XML. Los identificadores sensibles se devuelven enmascarados y el smoke usa datos sintéticos. Mantener bloqueado cualquier uso de datos reales, XML ATS oficial o evidencia productiva hasta aprobación externa.
 - No descargar catálogos/XSD oficiales desde runtime.
+
+## Sprint 5 P2
+
+Mapping/readiness ATS es read-only y sanitizado. No debe exponer XML, access key completa, autorizaciones completas, identificación completa, secretos, certificados ni payloads. No se permite persistir evidencias ATS oficiales ni habilitar generación oficial desde estos endpoints.
