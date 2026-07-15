@@ -69,4 +69,10 @@ Sprint 5 P2 agrega mapping/readiness ATS read-only:
 - `/api/financial/tax-reporting/support-document-mappings`.
 - Todos usan `financial.electronicdocuments.read`, respuesta sanitizada y disclaimer de no ATS oficial.
 
+Sprint 5 P3 agrega catálogos foundation read-only:
+
+- `/api/financial/tax-catalogs`.
+- `/purchase-document-types`, `/support-document-types`, `/voided-document-types`, `/purchase-tax-codes`, `/supplier-identification-types`.
+- Versión `2026-07-sprint-5-p3-foundation`; no oficiales finales y sujetos a revisión tributaria.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.

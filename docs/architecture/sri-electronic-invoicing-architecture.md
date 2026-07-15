@@ -67,6 +67,8 @@ Sprint 5 P1 agrega foundation de compras tributarias y documentos anulados para 
 
 Sprint 5 P2 agrega `AtsSupportMappingService` como capa application read-only para mapear sustentos y secciones ATS sobre compras/anulados. El servicio alimenta readiness, gaps y endpoints de consulta, audita por Portal Audit y no persiste mapping ni genera XML oficial.
 
+Sprint 5 P3 agrega `FinancialTaxCatalogService` y `FoundationFinancialTaxCatalogProvider` para catálogos foundation versionados de compras/anulados. Los catálogos se consumen desde mapping/readiness, se exponen read-only y no requieren migración.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

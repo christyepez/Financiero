@@ -116,6 +116,7 @@
 
 - [x] Opción A recomendada: compras y anulados foundation para reducir gaps ATS sin activar producción.
 - [x] Sprint 5 P2: hardening de mapping de sustentos ATS, readiness por sección, endpoints read-only y documentación ADR-015.
+- [x] Sprint 5 P3: catálogos foundation de compras/anulados, endpoints read-only, validación y documentación ADR-016.
 - [ ] Opción B gated: XAdES + SRI Test controlled send con certificado no productivo y custodia aprobada.
 - [ ] Opción C gated: Portal Content/File real upload con contrato estable y aprobación.
 - [ ] Opción D gated: RIDE legal final con revisión legal/tributaria.

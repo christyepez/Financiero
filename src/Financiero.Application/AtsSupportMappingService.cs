@@ -5,16 +5,17 @@ namespace Financiero.Application;
 public enum SupportDocumentMappingStatus { MappedFoundation, MissingRequiredData, UnsupportedFoundation, RequiresTaxReview }
 public sealed record SupportDocumentMappingRule(string DocumentType, string SupportDocumentType, string AtsSection, string AtsFieldGroup, bool RequiresAuthorization, bool RequiresAccessKey, bool RequiresSupplierIdentification, bool RequiresTaxBreakdown, bool RequiresRetentionLink, bool IsFoundationOnly, bool RequiresTaxReview);
 public sealed record SupportDocumentMappingIssue(string Code, string Message, string Severity, string Field);
-public sealed record SupportDocumentMappingResult(string DocumentType, string SupportDocumentType, string AtsSection, string AtsFieldGroup, SupportDocumentMappingStatus Status, IReadOnlyCollection<SupportDocumentMappingIssue> Issues, SupportDocumentMappingRule? Rule, string Disclaimer);
+public sealed record SupportDocumentMappingResult(string DocumentType, string SupportDocumentType, string AtsSection, string AtsFieldGroup, SupportDocumentMappingStatus Status, IReadOnlyCollection<SupportDocumentMappingIssue> Issues, SupportDocumentMappingRule? Rule, string CatalogVersion, string Disclaimer);
 public sealed record AtsFieldReadiness(string Field, string Status, string Source, string Notes);
 public sealed record AtsSectionReadiness(string Section, int MappedCount, int MissingCount, int UnsupportedCount, IReadOnlyCollection<string> RequiredFields, IReadOnlyCollection<string> MissingFields, IReadOnlyCollection<string> Warnings, string Disclaimer);
 public sealed record AtsPurchaseMappingResult(Guid Id, string DocumentNumber, string SupplierIdentificationMasked, string? AccessKeyMasked, string? AuthorizationNumberMasked, SupportDocumentMappingResult Mapping, IReadOnlyCollection<AtsFieldReadiness> Fields, string Disclaimer);
 public sealed record AtsVoidedMappingResult(Guid Id, string DocumentNumber, string? AccessKeyMasked, string? AuthorizationNumberMasked, SupportDocumentMappingResult Mapping, IReadOnlyCollection<AtsFieldReadiness> Fields, string Disclaimer);
-public sealed record AtsSectionReadinessResult(string Period, IReadOnlyCollection<AtsSectionReadiness> Sections, IReadOnlyCollection<SupportDocumentMappingIssue> Issues, string Disclaimer);
+public sealed record AtsSectionReadinessResult(string Period, string CatalogVersion, IReadOnlyCollection<AtsSectionReadiness> Sections, IReadOnlyCollection<SupportDocumentMappingIssue> Issues, string Disclaimer);
 
-public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purchases, IVoidedTaxDocumentRepository voided, IPortalAuditClient audit)
+public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purchases, IVoidedTaxDocumentRepository voided, IPortalAuditClient audit, FinancialTaxCatalogService? catalog = null)
 {
     private const string Disclaimer = "ATS support document mapping foundation only. It is not official ATS XML and does not certify tax compliance.";
+    private string CatalogVersion => catalog?.Version.Version ?? FoundationFinancialTaxCatalogProvider.CatalogVersion;
     private static readonly SupportDocumentMappingRule[] Rules =
     [
         new("01", "01", "Purchases", "PurchaseInvoice", true, false, true, true, false, true, true),
@@ -34,7 +35,7 @@ public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purc
     public async Task<AtsPurchaseMappingResult> MapPurchaseAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await purchases.GetByIdAsync(id, context.TenantId, ct) ?? throw new FinancialApplicationException("purchase.not_found", "Purchase tax document was not found.");
-        var result = MapPurchase(document);
+        var result = MapPurchase(document, catalog);
         await audit.RecordAsync(new("PurchaseAtsMappingQueried", "financial.ats-support-mapping", context.TenantId, new { id, result.Mapping.Status, IssueCount = result.Mapping.Issues.Count }), context, ct);
         return result;
     }
@@ -42,7 +43,7 @@ public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purc
     public async Task<AtsVoidedMappingResult> MapVoidedAsync(Guid id, PortalCallContext context, CancellationToken ct)
     {
         var document = await voided.GetByIdAsync(id, context.TenantId, ct) ?? throw new FinancialApplicationException("voided.not_found", "Voided tax document was not found.");
-        var result = MapVoided(document);
+        var result = MapVoided(document, catalog);
         await audit.RecordAsync(new("VoidedAtsMappingQueried", "financial.ats-support-mapping", context.TenantId, new { id, result.Mapping.Status, IssueCount = result.Mapping.Issues.Count }), context, ct);
         return result;
     }
@@ -51,8 +52,8 @@ public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purc
     {
         var purchaseItems = await purchases.GetByPeriodAsync(context.TenantId, period, ct);
         var voidedItems = await voided.GetByPeriodAsync(context.TenantId, period, ct);
-        var purchaseMappings = purchaseItems.Select(MapPurchase).ToArray();
-        var voidedMappings = voidedItems.Select(MapVoided).ToArray();
+        var purchaseMappings = purchaseItems.Select(x => MapPurchase(x, catalog)).ToArray();
+        var voidedMappings = voidedItems.Select(x => MapVoided(x, catalog)).ToArray();
         var issues = purchaseMappings.SelectMany(x => x.Mapping.Issues).Concat(voidedMappings.SelectMany(x => x.Mapping.Issues)).ToArray();
         var sections = new[]
         {
@@ -65,33 +66,41 @@ public sealed class AtsSupportMappingService(IPurchaseTaxDocumentRepository purc
             Section("TaxSummary", purchaseItems.Count, purchaseMappings.Count(x => x.Fields.Any(f => f.Field == "taxBreakdown" && f.Status == "MissingRequiredData")), 0, ["taxBase", "taxAmount"], [], ["Tax summary requires official ATS schema/catalog review."])
         };
         await audit.RecordAsync(new("AtsSectionReadinessQueried", "financial.ats-support-mapping", context.TenantId, new { period, PurchaseCount = purchaseItems.Count, VoidedCount = voidedItems.Count, IssueCount = issues.Length }), context, ct);
-        return new(period, sections, issues, Disclaimer);
+        return new(period, CatalogVersion, sections, issues, Disclaimer);
     }
 
-    public static AtsPurchaseMappingResult MapPurchase(PurchaseTaxDocument document)
+    public static AtsPurchaseMappingResult MapPurchase(PurchaseTaxDocument document, FinancialTaxCatalogService? catalog = null)
     {
         var rule = Rules.FirstOrDefault(x => x.DocumentType == document.DocumentType && x.SupportDocumentType == document.SupportDocumentType);
         var issues = new List<SupportDocumentMappingIssue>();
         if (rule is null) issues.Add(Issue("support.mapping.unsupported", "Purchase support document mapping is not supported by foundation catalog.", "Warning", "supportDocumentType"));
+        AddCatalogIssues(issues, catalog?.ValidatePurchase(document));
         var effectiveRule = rule ?? new(document.DocumentType, document.SupportDocumentType, "Purchases", "UnsupportedFoundation", false, false, true, true, false, true, true);
         AddRequiredIssues(issues, effectiveRule, document.SupplierIdentification, document.AuthorizationNumber, document.AccessKey, document.Taxes.Count, "purchase");
         try { PurchaseTaxCalculationValidator.Validate(document); }
         catch (FinancialDomainException ex) { issues.Add(Issue("purchase.mapping.tax_breakdown.invalid", ex.Message, "Warning", "taxBreakdown")); }
         if (effectiveRule.RequiresTaxReview) issues.Add(Issue("support.mapping.tax_review.required", "Support document mapping is foundation-only and requires Ecuador tax review.", "Info", "supportDocumentType"));
         var status = Status(effectiveRule, issues);
-        return new(document.Id, $"{document.Establishment}-{document.EmissionPoint}-{document.Sequential}", SriSensitiveDataSanitizer.MaskCustomerIdentification(document.SupplierIdentification) ?? "", SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskAccessKey(document.AuthorizationNumber), new(document.DocumentType, document.SupportDocumentType, effectiveRule.AtsSection, effectiveRule.AtsFieldGroup, status, issues, rule, Disclaimer), PurchaseFields(document, effectiveRule, issues), Disclaimer);
+        return new(document.Id, $"{document.Establishment}-{document.EmissionPoint}-{document.Sequential}", SriSensitiveDataSanitizer.MaskCustomerIdentification(document.SupplierIdentification) ?? "", SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskAccessKey(document.AuthorizationNumber), new(document.DocumentType, document.SupportDocumentType, effectiveRule.AtsSection, effectiveRule.AtsFieldGroup, status, issues, rule, catalog?.Version.Version ?? FoundationFinancialTaxCatalogProvider.CatalogVersion, Disclaimer), PurchaseFields(document, effectiveRule, issues), Disclaimer);
     }
 
-    public static AtsVoidedMappingResult MapVoided(VoidedTaxDocument document)
+    public static AtsVoidedMappingResult MapVoided(VoidedTaxDocument document, FinancialTaxCatalogService? catalog = null)
     {
         var rule = Rules.First(x => x.DocumentType == "Voided");
         var issues = new List<SupportDocumentMappingIssue>();
+        AddCatalogIssues(issues, catalog?.ValidateVoided(document));
         if (!PurchaseTaxDocumentValidator.IsFiscalPeriod(document.FiscalPeriod)) issues.Add(Issue("voided.mapping.period.invalid", "Voided fiscal period must use YYYY-MM.", "Error", "fiscalPeriod"));
         if (string.IsNullOrWhiteSpace(document.Reason)) issues.Add(Issue("voided.mapping.reason.required", "Voided document reason is required.", "Error", "reason"));
         if (!PurchaseTaxDocumentValidator.IsDocumentNumber(document.Establishment, document.EmissionPoint, document.Sequential)) issues.Add(Issue("voided.mapping.document_number.invalid", "Voided document number must use ###-###-######### parts.", "Error", "documentNumber"));
         issues.Add(Issue("voided.mapping.tax_review.required", "Voided document mapping is foundation-only and requires Ecuador tax review.", "Info", "voidedDocument"));
         var status = Status(rule, issues);
-        return new(document.Id, document.DocumentNumber, SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskAccessKey(document.AuthorizationNumber), new(document.DocumentType, "Voided", rule.AtsSection, rule.AtsFieldGroup, status, issues, rule, Disclaimer), VoidedFields(document, issues), Disclaimer);
+        return new(document.Id, document.DocumentNumber, SriSensitiveDataSanitizer.MaskAccessKey(document.AccessKey), SriSensitiveDataSanitizer.MaskAccessKey(document.AuthorizationNumber), new(document.DocumentType, "Voided", rule.AtsSection, rule.AtsFieldGroup, status, issues, rule, catalog?.Version.Version ?? FoundationFinancialTaxCatalogProvider.CatalogVersion, Disclaimer), VoidedFields(document, issues), Disclaimer);
+    }
+
+    private static void AddCatalogIssues(List<SupportDocumentMappingIssue> issues, FinancialTaxCatalogValidationResult? validation)
+    {
+        if (validation is null) return;
+        issues.AddRange(validation.Issues.Select(x => Issue(x.Code, x.Message, x.Severity, x.Field)));
     }
 
     private static void AddRequiredIssues(List<SupportDocumentMappingIssue> issues, SupportDocumentMappingRule rule, string? supplierIdentification, string? authorizationNumber, string? accessKey, int taxCount, string prefix)

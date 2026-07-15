@@ -709,6 +709,8 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<ElectronicDocumentsService>();
         services.AddScoped<PurchaseTaxDocumentService>();
         services.AddScoped<VoidedTaxDocumentService>();
+        services.AddSingleton<IFinancialTaxCatalogProvider, FoundationFinancialTaxCatalogProvider>();
+        services.AddScoped<FinancialTaxCatalogService>();
         services.AddScoped<AtsSupportMappingService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();

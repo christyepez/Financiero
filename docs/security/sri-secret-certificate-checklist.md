@@ -108,3 +108,7 @@ Compras y anulados foundation no agregan secretos, certificados ni payloads XML.
 ## Sprint 5 P2
 
 Mapping/readiness ATS es read-only y sanitizado. No debe exponer XML, access key completa, autorizaciones completas, identificación completa, secretos, certificados ni payloads. No se permite persistir evidencias ATS oficiales ni habilitar generación oficial desde estos endpoints.
+
+## Sprint 5 P3
+
+Catálogos foundation no contienen datos personales, XML, secretos, certificados, tokens ni URLs privadas. Las respuestas deben incluir disclaimer de no oficial final y no deben habilitar SRI producción, SRI Test real ni ATS oficial.
