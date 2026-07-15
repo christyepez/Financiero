@@ -99,4 +99,8 @@ Catálogos y reglas tributarias foundation no agregan secretos, certificados ni 
 - Sin XML reales, datos personales reales ni respuestas reales del SRI.
 - Payloads Content/File bloqueados por defecto; `dryRun=true` y `sendPayloads=false` son el estándar seguro.
 - SRI Production y payload productivo siguen bloqueados hasta security production gate, certificate custody approval, evidencia SRI Test y aprobación operacional.
+
+## Sprint 5 P1
+
+Compras y anulados foundation no agregan secretos, certificados ni payloads XML. Los identificadores sensibles se devuelven enmascarados y el smoke usa datos sintéticos. Mantener bloqueado cualquier uso de datos reales, XML ATS oficial o evidencia productiva hasta aprobación externa.
 - No descargar catálogos/XSD oficiales desde runtime.

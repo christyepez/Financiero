@@ -63,6 +63,8 @@ Sprint 4 P3 separa templates RIDE foundation por tipo documental y agrega ATS of
 
 Sprint 4 P4 agrega gestión calculada de gaps tributarios/legales para RIDE final y ATS oficial. Los resultados son read-only, auditados por Portal Audit y no crean evidencia persistida, aprobaciones mutables ni artefactos oficiales.
 
+Sprint 5 P1 agrega foundation de compras tributarias y documentos anulados para readiness ATS. Son modelos del dominio Financiero, persistidos en `FinancieroDb`, auditados/outbox vía Portal y consultados por ATS readiness/design. No generan XML ATS oficial ni almacenan payloads reales.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

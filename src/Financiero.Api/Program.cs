@@ -41,6 +41,7 @@ app.MapJournalEntries();
 app.MapElectronicDocuments();
 app.MapTaxReporting();
 app.MapTaxLegalReview();
+app.MapPurchaseTaxDocuments();
 app.Run();
 
 public partial class Program;

@@ -52,6 +52,22 @@ Content/File P2 no agrega endpoints públicos nuevos. Fortalece `store-ride`, `e
 
 Sprint 4 P4 agrega endpoints read-only para gestión de gaps tributarios/legales. No generan RIDE legal final, XML ATS oficial, evidencia real ni aprobaciones mutables.
 
+## Purchases and voided documents foundation
+
+| Método | Ruta | Permiso | Estado |
+|---|---|---|---|
+| POST | `/api/financial/purchases` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
+| POST | `/api/financial/purchases/{id}/lines` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
+| POST | `/api/financial/purchases/{id}/taxes` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
+| POST | `/api/financial/purchases/{id}/validate` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/purchases?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/purchases/{id}` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+| POST | `/api/financial/voided-documents` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/voided-documents?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+| GET | `/api/financial/voided-documents/{id}` | `financial.electronicdocuments.read` | Implementado Sprint 5 P1 |
+
+Las respuestas enmascaran identificación de proveedor, clave de acceso y autorización. Estos endpoints reducen gaps ATS, pero no generan XML ATS oficial.
+
 ## Sprint 4 endpoint summary
 
 - Content/File readiness: `GET /api/financial/electronic-documents/content-file/readiness`, permiso `financial.electronicdocuments.manage`, no secretos/XML.

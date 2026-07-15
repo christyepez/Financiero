@@ -798,6 +798,8 @@ internal sealed class InMemoryElectronicDocumentRepository : IElectronicDocument
     private readonly Dictionary<string, long> _sequences = [];
     public Task AddAsync(ElectronicDocument document, CancellationToken ct) { _documents.Add(document); return Task.CompletedTask; }
     public Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => Task.CompletedTask;
+    public Task AddDebitNoteReasonAsync(ElectronicDocumentDebitNoteReason reason, CancellationToken ct) => Task.CompletedTask;
+    public Task AddWithholdingTaxAsync(ElectronicDocumentWithholdingTax tax, CancellationToken ct) => Task.CompletedTask;
     public Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromResult(_documents.FirstOrDefault(x => x.Id == id && x.TenantId == tenantId));
     public Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) => Task.FromResult(_documents.FirstOrDefault(x => x.AccessKey == accessKey && x.TenantId == tenantId));
     public Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct)
