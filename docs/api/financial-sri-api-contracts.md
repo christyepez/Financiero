@@ -72,6 +72,19 @@ Sprint 4 P4 agrega endpoints read-only para gestión de gaps tributarios/legales
 
 Las respuestas enmascaran identificación de proveedor, clave de acceso y autorización. Estos endpoints reducen gaps ATS, pero no generan XML ATS oficial.
 
+## Tax catalogs foundation
+
+| Método | Ruta | Permiso | Estado |
+|---|---|---|---|
+| GET | `/api/financial/tax-catalogs` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3; versionado foundation |
+| GET | `/api/financial/tax-catalogs/purchase-document-types` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3 |
+| GET | `/api/financial/tax-catalogs/support-document-types` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3 |
+| GET | `/api/financial/tax-catalogs/voided-document-types` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3 |
+| GET | `/api/financial/tax-catalogs/purchase-tax-codes` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3 |
+| GET | `/api/financial/tax-catalogs/supplier-identification-types` | `financial.electronicdocuments.read` | Implementado Sprint 5 P3 |
+
+Versión: `2026-07-sprint-5-p3-foundation`. Todos los items son foundation-only, requieren revisión tributaria y no son catálogos oficiales finales.
+
 ## Sprint 4 endpoint summary
 
 - Content/File readiness: `GET /api/financial/electronic-documents/content-file/readiness`, permiso `financial.electronicdocuments.manage`, no secretos/XML.

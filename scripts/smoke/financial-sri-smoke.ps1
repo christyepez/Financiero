@@ -14,6 +14,21 @@ Invoke-RestMethod -Method Get -Uri "$BaseUrl/health/ready" | Out-Null
 Invoke-RestMethod -Method Get -Uri "$BaseUrl/health/sri" | Out-Null
 Invoke-RestMethod -Method Get -Uri "$BaseUrl/health/content-file" | Out-Null
 
+$taxCatalogs = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs" -Headers $headers
+$purchaseCatalog = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs/purchase-document-types" -Headers $headers
+$supportCatalog = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs/support-document-types" -Headers $headers
+$voidedCatalog = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs/voided-document-types" -Headers $headers
+$taxCodeCatalog = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs/purchase-tax-codes" -Headers $headers
+$supplierCatalog = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-catalogs/supplier-identification-types" -Headers $headers
+if ($taxCatalogs.data.version -ne "2026-07-sprint-5-p3-foundation") { throw "Tax catalog version mismatch." }
+if ($taxCatalogs.data.disclaimer -notmatch "not an official") { throw "Tax catalog disclaimer is missing." }
+if (-not ($purchaseCatalog.data.items | Where-Object { $_.code -eq "01" })) { throw "Purchase document catalog missing invoice." }
+if (-not ($supportCatalog.data.items | Where-Object { $_.code -eq "01" })) { throw "Support document catalog missing goods." }
+if (-not ($voidedCatalog.data.items | Where-Object { $_.code -eq "01" })) { throw "Voided document catalog missing invoice." }
+if (-not ($taxCodeCatalog.data.items | Where-Object { $_.code -eq "2" })) { throw "Purchase tax code catalog missing IVA." }
+if (-not ($supplierCatalog.data.items | Where-Object { $_.code -eq "04" })) { throw "Supplier identification catalog missing RUC." }
+if ((($taxCatalogs | ConvertTo-Json -Depth 20) + ($purchaseCatalog | ConvertTo-Json -Depth 20) + ($supportCatalog | ConvertTo-Json -Depth 20) + ($voidedCatalog | ConvertTo-Json -Depth 20) + ($taxCodeCatalog | ConvertTo-Json -Depth 20) + ($supplierCatalog | ConvertTo-Json -Depth 20)) -match "<factura|PRIVATE KEY|BEGIN CERTIFICATE|Producci[oó]n") { throw "Tax catalogs exposed sensitive or production payload." }
+
 $suffix = Get-Date -Format "HHmmss"
 $invoice = PostJson "$BaseUrl/api/financial/electronic-documents/invoices" @{
     issueDate = "2026-01-15"

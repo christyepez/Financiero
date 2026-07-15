@@ -43,3 +43,7 @@ El mapping de sustentos ATS se endurece como evaluación read-only:
 - `ats-readiness`, `ats-official-design` y gaps agregan detalle de secciones con campos faltantes o unsupported.
 
 La salida sigue siendo no oficial: no se genera XML ATS, no se valida XSD oficial y no se certifica cumplimiento.
+
+## Sprint 5 P3
+
+ATS readiness y mapping declaran `catalogVersion=2026-07-sprint-5-p3-foundation`. Los catálogos foundation reducen ambigüedad para compras/anulados, pero los gaps oficiales se mantienen hasta revisión tributaria, XSD/layout oficial y aprobación externa.

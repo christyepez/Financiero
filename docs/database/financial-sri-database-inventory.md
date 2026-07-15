@@ -95,3 +95,7 @@ Las tablas mantienen datos foundation de compras y anulados para readiness ATS. 
 ## Sprint 5 P2 ATS support mapping
 
 No se crea migración `013`. El mapping de sustentos ATS y readiness por sección se calcula en aplicación sobre tablas existentes de compras/anulados y reglas foundation versionadas en código. No se crean tablas de mapping, XML ATS, evidencias, archivos ni storage propio.
+
+## Sprint 5 P3 tax catalogs foundation
+
+No se crea migración `013`. Los catálogos foundation de compras/anulados se versionan en código/configuración de aplicación con versión `2026-07-sprint-5-p3-foundation`. No se crean tablas de catálogo administrable, seeds oficiales, XML, evidencias ni storage propio.

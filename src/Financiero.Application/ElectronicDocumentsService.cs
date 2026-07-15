@@ -210,7 +210,7 @@ public sealed record AtsSalesSummary(int Count, decimal Subtotal, decimal TaxAmo
 public sealed record AtsWithholdingSummary(int Count, decimal TaxBase, decimal WithheldAmount);
 public sealed record AtsVoidedSummary(int Count);
 public sealed record AtsValidationIssue(string Code, string Message, string Severity);
-public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer, AtsVoidedSummary? Voided = null, IReadOnlyCollection<AtsSectionReadiness>? Sections = null);
+public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer, AtsVoidedSummary? Voided = null, IReadOnlyCollection<AtsSectionReadiness>? Sections = null, string? CatalogVersion = null);
 public sealed record AtsOfficialDesignQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
 public enum AtsOfficialDesignStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
 public sealed record AtsOfficialSection(string Code, string Name, string Status, IReadOnlyCollection<AtsOfficialFieldMapping> Fields);
@@ -1714,7 +1714,7 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var purchases = new AtsPurchaseSummary(purchaseSummary.Count, purchaseSummary.Subtotal, purchaseSummary.TaxTotal);
         var sales = new AtsSalesSummary(items.Count(x => x.DocumentType is ElectronicDocumentType.Invoice or ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote), items.Sum(x => x.SubtotalWithoutTaxes), items.Sum(x => x.TotalTaxes), items.Sum(x => x.TotalAmount));
         var withholdings = new AtsWithholdingSummary(items.SelectMany(x => x.WithholdingTaxes).Count(), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
-        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.", new AtsVoidedSummary(voidedCount), sectionReadiness?.Sections);
+        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.", new AtsVoidedSummary(voidedCount), sectionReadiness?.Sections, sectionReadiness?.CatalogVersion ?? FoundationFinancialTaxCatalogProvider.CatalogVersion);
         await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count, PurchaseCount = purchaseSummary.Count, VoidedCount = voidedCount }), context, ct);
         return result;
     }
