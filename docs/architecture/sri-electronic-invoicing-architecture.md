@@ -65,6 +65,8 @@ Sprint 4 P4 agrega gestión calculada de gaps tributarios/legales para RIDE fina
 
 Sprint 5 P1 agrega foundation de compras tributarias y documentos anulados para readiness ATS. Son modelos del dominio Financiero, persistidos en `FinancieroDb`, auditados/outbox vía Portal y consultados por ATS readiness/design. No generan XML ATS oficial ni almacenan payloads reales.
 
+Sprint 5 P2 agrega `AtsSupportMappingService` como capa application read-only para mapear sustentos y secciones ATS sobre compras/anulados. El servicio alimenta readiness, gaps y endpoints de consulta, audita por Portal Audit y no persiste mapping ni genera XML oficial.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

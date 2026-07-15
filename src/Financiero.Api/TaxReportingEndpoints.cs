@@ -51,6 +51,15 @@ public static class TaxReportingEndpoints
                 return BadRequestJson("ats.period.invalid", "ATS official design period must use yyyy-MM or provide from/to dates.", http);
             return await ExecuteAsync(() => service.EvaluateAtsOfficialDesignAsync(request, Context(http, options.Value), ct), http);
         }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/ats-section-readiness", async (AtsSupportMappingService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+        {
+            var period = http.Request.Query["period"].ToString();
+            if (!PurchaseTaxDocumentValidator.IsFiscalPeriod(period))
+                return BadRequestJson("ats.period.invalid", "ATS section readiness period must use yyyy-MM.", http);
+            return await ExecuteAsync(() => service.GetSectionReadinessAsync(period, Context(http, options.Value), ct), http);
+        }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/support-document-mappings", async (AtsSupportMappingService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.GetMappingsAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/action-queue", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetActionQueueAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/monthly-summary", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>

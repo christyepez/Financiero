@@ -89,9 +89,13 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("POST", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/validate")]
     [InlineData("GET", "/api/financial/purchases?period=2026-01")]
     [InlineData("GET", "/api/financial/purchases/00000000-0000-0000-0000-000000000001")]
+    [InlineData("GET", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/ats-mapping")]
     [InlineData("POST", "/api/financial/voided-documents")]
     [InlineData("GET", "/api/financial/voided-documents?period=2026-01")]
     [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001")]
+    [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001/ats-mapping")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-section-readiness?period=2026-01")]
+    [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
@@ -144,8 +148,12 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-legal-review/approval-checklist?scope=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/purchases?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/purchases", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/ats-mapping", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/voided-documents?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/voided-documents", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001/ats-mapping", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-section-readiness?period=2026-01", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
@@ -205,6 +213,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [Theory]
     [InlineData("/api/financial/purchases?period=invalid")]
     [InlineData("/api/financial/voided-documents?period=invalid")]
+    [InlineData("/api/financial/tax-reporting/ats-section-readiness?period=invalid")]
     public async Task Purchase_and_voided_invalid_period_returns_bad_request_without_500(string url)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);

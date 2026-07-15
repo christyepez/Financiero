@@ -210,7 +210,7 @@ public sealed record AtsSalesSummary(int Count, decimal Subtotal, decimal TaxAmo
 public sealed record AtsWithholdingSummary(int Count, decimal TaxBase, decimal WithheldAmount);
 public sealed record AtsVoidedSummary(int Count);
 public sealed record AtsValidationIssue(string Code, string Message, string Severity);
-public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer, AtsVoidedSummary? Voided = null);
+public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer, AtsVoidedSummary? Voided = null, IReadOnlyCollection<AtsSectionReadiness>? Sections = null);
 public sealed record AtsOfficialDesignQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
 public enum AtsOfficialDesignStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
 public sealed record AtsOfficialSection(string Code, string Name, string Status, IReadOnlyCollection<AtsOfficialFieldMapping> Fields);
@@ -1597,7 +1597,7 @@ public sealed class RideLegalGapAnalysisService(IPortalAuditClient audit) : IRid
         new(code, type, severity, TaxLegalReviewGapStatus.Open, scope, description, new[] { new TaxLegalReviewEvidence($"{code}.evidence", "Evidence must be captured by external tax/legal review before official enablement.", true, TaxLegalReviewGapStatus.Open) }, new($"{code}.decision", "Pending expert approval.", TaxLegalReviewGapStatus.Open, "Tax/Legal Reviewer"));
 }
 
-public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchases = null, IVoidedTaxDocumentRepository? voided = null) : IAtsOfficialGapAnalysisService
+public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchases = null, IVoidedTaxDocumentRepository? voided = null, AtsSupportMappingService? supportMapping = null) : IAtsOfficialGapAnalysisService
 {
     private const string Disclaimer = "ATS official gap analysis foundation only. It does not generate official ATS XML and does not certify tax compliance.";
 
@@ -1606,6 +1606,7 @@ public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit, IPur
         var (from, to) = TaxExportService.ResolveAtsPeriodForIntegration(query.Period, query.From, query.To);
         var purchaseSummary = purchases is null ? new PurchaseTaxSummary(0, 0, 0, 0) : await purchases.GetSummaryAsync(context.TenantId, from, to, ct);
         var voidedCount = voided is null ? 0 : await voided.CountByPeriodAsync(context.TenantId, from, to, ct);
+        var sectionReadiness = supportMapping is null ? null : await supportMapping.GetSectionReadinessAsync(query.Period, context, ct);
         var gaps = new List<TaxLegalReviewGap>
         {
             Gap("ats.official_schema.missing", TaxLegalReviewGapType.MissingOfficialSchema, TaxLegalReviewGapSeverity.Critical, "ats", "No se incorporó ni validó XSD/esquema oficial ATS."),
@@ -1619,6 +1620,8 @@ public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit, IPur
         };
         if (purchaseSummary.Count == 0) gaps.Insert(0, Gap("ats.purchases.module_missing", TaxLegalReviewGapType.MissingPurchaseModule, TaxLegalReviewGapSeverity.Critical, "ats", "Compras foundation no tiene registros para el periodo; ATS oficial requiere compras/adquisiciones."));
         if (voidedCount == 0) gaps.Insert(0, Gap("ats.voided_documents.model_missing", TaxLegalReviewGapType.MissingVoidedDocumentModel, TaxLegalReviewGapSeverity.Critical, "ats", "Anulados foundation no tiene registros para el periodo; ATS oficial requiere documentos anulados si existen."));
+        if (sectionReadiness?.Sections.Any(x => x.MissingCount > 0 || x.UnsupportedCount > 0) == true)
+            gaps.Insert(0, Gap("ats.support_mapping.section_issues", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ats", "Mapping foundation de sustentos tiene campos faltantes o no soportados por sección."));
         await audit.RecordAsync(new("AtsOfficialGapsQueried", "financial.tax-legal-review", context.TenantId, new { query.Period, GapCount = gaps.Count, PurchaseCount = purchaseSummary.Count, VoidedCount = voidedCount }), context, ct);
         return new(query.Period, AtsOfficialEnablementStatus.NotReadyForOfficialGeneration, gaps, Disclaimer);
     }
@@ -1660,7 +1663,7 @@ public sealed class TaxLegalApprovalChecklistService(IRideLegalGapAnalysisServic
     private static TaxLegalReviewDecision Item(string code, string description, TaxLegalReviewGapStatus status, string owner) => new(code, description, status, owner);
 }
 
-public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchasesRepository = null, IVoidedTaxDocumentRepository? voidedRepository = null) : ITaxExportService
+public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchasesRepository = null, IVoidedTaxDocumentRepository? voidedRepository = null, AtsSupportMappingService? supportMapping = null) : ITaxExportService
 {
     public async Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct)
     {
@@ -1693,6 +1696,7 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var items = await LoadAsync(new(from, to, Environment: query.Environment), context, ct);
         var purchaseSummary = purchasesRepository is null ? new PurchaseTaxSummary(0, 0, 0, 0) : await purchasesRepository.GetSummaryAsync(context.TenantId, from, to, ct);
         var voidedCount = voidedRepository is null ? 0 : await voidedRepository.CountByPeriodAsync(context.TenantId, from, to, ct);
+        var sectionReadiness = supportMapping is null ? null : await supportMapping.GetSectionReadinessAsync(query.Period, context, ct);
         var issues = new List<AtsValidationIssue>();
         if (items.Count == 0) issues.Add(new("ats.missing_documents", "No electronic documents were found for the requested period.", "Warning"));
         if (purchaseSummary.Count == 0) issues.Add(new("ats.purchases.foundation_missing", "No purchase tax documents foundation were found for the requested period.", "Warning"));
@@ -1701,11 +1705,16 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         issues.AddRange(items.SelectMany(x => x.WithholdingTaxes).Where(x => string.IsNullOrWhiteSpace(x.WithholdingCode)).Select(_ => new AtsValidationIssue("ats.withholding.code_missing", "A withholding row is missing withholding code.", "Error")));
         issues.AddRange(items.SelectMany(x => x.Taxes).Where(x => !SriCatalogService.IsTaxCodeAllowed(x.TaxCode)).Select(x => new AtsValidationIssue("ats.tax.catalog_review", $"Tax code {x.TaxCode} requires foundation catalog review.", "Warning")));
         if (items.Any(x => x.DocumentType is ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote or ElectronicDocumentType.Withholding)) issues.Add(new("ats.tax_review.required", "Credit/debit notes and withholdings require tax review before official ATS generation.", "Warning"));
+        if (sectionReadiness is not null)
+        {
+            issues.AddRange(sectionReadiness.Sections.Where(x => x.MissingCount > 0).Select(x => new AtsValidationIssue($"ats.section.{x.Section.ToLowerInvariant()}.missing_fields", $"ATS section {x.Section} has {x.MissingCount} foundation mapping records with missing fields.", "Warning")));
+            issues.AddRange(sectionReadiness.Sections.Where(x => x.UnsupportedCount > 0).Select(x => new AtsValidationIssue($"ats.section.{x.Section.ToLowerInvariant()}.unsupported", $"ATS section {x.Section} has {x.UnsupportedCount} unsupported foundation mapping records.", "Warning")));
+        }
         var status = issues.Any(x => x.Severity == "Error") ? AtsReadinessStatus.MissingData : issues.Count > 0 ? AtsReadinessStatus.RequiresTaxReview : AtsReadinessStatus.ReadyFoundation;
         var purchases = new AtsPurchaseSummary(purchaseSummary.Count, purchaseSummary.Subtotal, purchaseSummary.TaxTotal);
         var sales = new AtsSalesSummary(items.Count(x => x.DocumentType is ElectronicDocumentType.Invoice or ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote), items.Sum(x => x.SubtotalWithoutTaxes), items.Sum(x => x.TotalTaxes), items.Sum(x => x.TotalAmount));
         var withholdings = new AtsWithholdingSummary(items.SelectMany(x => x.WithholdingTaxes).Count(), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
-        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.", new AtsVoidedSummary(voidedCount));
+        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.", new AtsVoidedSummary(voidedCount), sectionReadiness?.Sections);
         await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count, PurchaseCount = purchaseSummary.Count, VoidedCount = voidedCount }), context, ct);
         return result;
     }
@@ -1714,6 +1723,8 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
     {
         var readiness = await EvaluateAtsReadinessAsync(new(query.Period, query.From, query.To, query.Environment), context, ct);
         var issues = readiness.Issues.Select(x => new AtsOfficialValidationIssue(x.Code, x.Message, x.Severity)).ToList();
+        if (readiness.Sections is not null)
+            issues.AddRange(readiness.Sections.SelectMany(x => x.Warnings.Select(w => new AtsOfficialValidationIssue($"ats.section.{x.Section.ToLowerInvariant()}.warning", w, "Warning"))));
         var unsupported = new List<AtsOfficialUnsupportedReason>
         {
             new("ats.official_catalogs.pending_review", "Official ATS layout/catalogs require expert Ecuador tax review before final generation.")

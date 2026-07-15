@@ -91,3 +91,7 @@ Migración `012_purchases_voided_documents_foundation.sql` agrega tablas idempot
 - `financial.voided_tax_documents`
 
 Las tablas mantienen datos foundation de compras y anulados para readiness ATS. No almacenan XML, certificados, secretos, tokens, payloads SRI ni archivos. Se conserva SQL Server común local y base lógica separada `FinancieroDb`.
+
+## Sprint 5 P2 ATS support mapping
+
+No se crea migración `013`. El mapping de sustentos ATS y readiness por sección se calcula en aplicación sobre tablas existentes de compras/anulados y reglas foundation versionadas en código. No se crean tablas de mapping, XML ATS, evidencias, archivos ni storage propio.

@@ -61,4 +61,12 @@ Sprint 5 P1 agrega foundation de compras y documentos anulados:
 - Impacto ATS: readiness/design usa conteos foundation y reduce gaps de compras/anulados cuando existen registros del periodo.
 - No genera ATS oficial, no almacena XML real y no duplica Audit/Outbox/Security del Portal.
 
+Sprint 5 P2 agrega mapping/readiness ATS read-only:
+
+- `/api/financial/purchases/{id}/ats-mapping`.
+- `/api/financial/voided-documents/{id}/ats-mapping`.
+- `/api/financial/tax-reporting/ats-section-readiness?period=YYYY-MM`.
+- `/api/financial/tax-reporting/support-document-mappings`.
+- Todos usan `financial.electronicdocuments.read`, respuesta sanitizada y disclaimer de no ATS oficial.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
