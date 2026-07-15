@@ -182,6 +182,60 @@ if (($withholdingPreview | ConvertTo-Json -Depth 10) -match "<comprobanteRetenci
 $withholdingReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/electronic-documents/$withholdingId/ride-legal-readiness" -Headers $headers
 if (-not $withholdingReadiness.data.disclaimer) { throw "Withholding RIDE legal readiness failed." }
 
+$purchaseSequential = Get-Date -Format "HHmmssfff"
+$purchase = PostJson "$BaseUrl/api/financial/purchases" @{
+    supplierIdentificationType = "04"
+    supplierIdentification = "0999999999001"
+    supplierName = "Proveedor Smoke ATS $suffix"
+    establishment = "001"
+    emissionPoint = "001"
+    sequential = $purchaseSequential
+    documentType = "01"
+    issueDate = "2026-01-17"
+    registrationDate = "2026-01-17"
+    fiscalPeriod = "2026-01"
+    supportDocumentType = "01"
+    subtotal = 100
+    taxTotal = 12
+    total = 112
+    currency = "USD"
+}
+$purchaseId = $purchase.data.id
+PostJson "$BaseUrl/api/financial/purchases/$purchaseId/lines" @{
+    productCode = "PUR-$suffix"
+    description = "Compra smoke ATS"
+    quantity = 1
+    unitPrice = 100
+    discount = 0
+} | Out-Null
+PostJson "$BaseUrl/api/financial/purchases/$purchaseId/taxes" @{
+    taxCode = "2"
+    taxPercentageCode = "2"
+    taxBase = 100
+    taxRate = 12
+    taxAmount = 12
+} | Out-Null
+$validatedPurchase = PostJson "$BaseUrl/api/financial/purchases/$purchaseId/validate" @{}
+if ($validatedPurchase.data.status -ne "Validated") { throw "Purchase foundation validation failed." }
+$purchaseQuery = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/purchases?period=2026-01" -Headers $headers
+if (-not ($purchaseQuery.data | Where-Object { $_.id -eq $purchaseId })) { throw "Purchase foundation query did not return smoke purchase." }
+if (($purchaseQuery | ConvertTo-Json -Depth 20) -match "0999999999001|PRIVATE KEY|BEGIN CERTIFICATE|<factura") { throw "Purchase foundation exposed sensitive data." }
+
+$voidSequential = Get-Date -Format "HHmmssfff"
+$voided = PostJson "$BaseUrl/api/financial/voided-documents" @{
+    documentType = "01"
+    establishment = "001"
+    emissionPoint = "001"
+    sequential = $voidSequential
+    issueDate = "2026-01-10"
+    voidDate = "2026-01-18"
+    fiscalPeriod = "2026-01"
+    reason = "Anulado smoke ATS"
+}
+$voidedId = $voided.data.id
+$voidedQuery = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/voided-documents?period=2026-01" -Headers $headers
+if (-not ($voidedQuery.data | Where-Object { $_.id -eq $voidedId })) { throw "Voided foundation query did not return smoke voided document." }
+
 $reportSummary = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/summary?startDate=2026-01-01&endDate=2026-01-31" -Headers $headers
 if (-not $reportSummary.data.totals -or $reportSummary.data.totals.count -lt 4) {
     throw "Tax reporting summary did not include smoke documents."
@@ -198,15 +252,17 @@ if ($storedExportJson.data.storedFile.storageId -notmatch "^dev://tax-export|^po
 if ($storedExportCsv.data.storedFile.storageId -notmatch "^dev://tax-export|^portal-content-file://") { throw "Stored CSV export did not return storage metadata." }
 $atsReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-readiness?period=2026-01" -Headers $headers
 if (-not $atsReadiness.data.disclaimer -or $atsReadiness.data.disclaimer -notmatch "not an official ATS") { throw "ATS readiness disclaimer is missing." }
+if ($atsReadiness.data.purchases.count -lt 1 -or $atsReadiness.data.voided.count -lt 1) { throw "ATS readiness did not include purchases and voided foundation counts." }
 $atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
 if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
 if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }
+if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "voided" })) { throw "ATS official design voided section is missing." }
 $rideGaps = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/ride-gaps" -Headers $headers
 if (-not $rideGaps.data.disclaimer -or $rideGaps.data.disclaimer -notmatch "not a legal final RIDE") { throw "RIDE legal gap disclaimer is missing." }
 if (-not ($rideGaps.data.gaps | Where-Object { $_.code -eq "ride.layout.legal_review" })) { throw "RIDE legal layout gap is missing." }
 $atsGaps = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/ats-gaps?period=2026-01" -Headers $headers
 if (-not $atsGaps.data.disclaimer -or $atsGaps.data.disclaimer -notmatch "does not generate official ATS XML") { throw "ATS gap disclaimer is missing." }
-if (-not ($atsGaps.data.gaps | Where-Object { $_.code -eq "ats.purchases.module_missing" })) { throw "ATS purchases gap is missing." }
+if ($atsGaps.data.gaps | Where-Object { $_.code -eq "ats.purchases.module_missing" -or $_.code -eq "ats.voided_documents.model_missing" }) { throw "ATS purchase/voided foundation gaps should be reduced after smoke seed." }
 $approvalChecklist = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-legal-review/approval-checklist?scope=all" -Headers $headers
 if ($approvalChecklist.data.approvedForOfficialUse) { throw "Tax/legal approval checklist must not approve official use in P4." }
 if (-not ($approvalChecklist.data.items | Where-Object { $_.code -eq "security.production.gate" })) { throw "Security production gate checklist item is missing." }

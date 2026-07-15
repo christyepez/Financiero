@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 4 cerrado como etapa de readiness fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 5 P1 en foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, catálogos internos, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -87,6 +87,8 @@ Sprint 4 P4 agrega análisis read-only de gaps RIDE/ATS y checklist de aprobaci�
 
 Sprint 4 P5 cierra formalmente la etapa como readiness. La producción SRI, RIDE legal final, ATS oficial, payloads reales y XAdES productivo siguen bloqueados hasta revisión externa y gates aprobados. Docker runtime debe reintentarse cuando MCR responda.
 
+Sprint 5 P1 agrega compras tributarias y documentos anulados foundation para reducir gaps ATS. No genera ATS oficial ni almacena XML real; usa permisos runtime existentes y Audit/Outbox del Portal.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -99,4 +101,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 5 Opción A, compras y anulados foundation, salvo que los gates externos aprueben XAdES/SRI Test, Portal Content/File real upload, RIDE legal final o ATS oficial.
+Próximo paso recomendado: Sprint 5 P2 para sustento/ATS mapping avanzado o gates externos para XAdES/SRI Test, Portal Content/File real upload, RIDE legal final o ATS oficial.

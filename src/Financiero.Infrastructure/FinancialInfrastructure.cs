@@ -27,6 +27,11 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
     public DbSet<ElectronicDocumentDebitNoteReason> ElectronicDocumentDebitNoteReasons => Set<ElectronicDocumentDebitNoteReason>();
     public DbSet<ElectronicDocumentWithholdingTax> ElectronicDocumentWithholdingTaxes => Set<ElectronicDocumentWithholdingTax>();
     public DbSet<SriDocumentSequence> SriDocumentSequences => Set<SriDocumentSequence>();
+    public DbSet<PurchaseTaxDocument> PurchaseTaxDocuments => Set<PurchaseTaxDocument>();
+    public DbSet<PurchaseTaxDocumentLine> PurchaseTaxDocumentLines => Set<PurchaseTaxDocumentLine>();
+    public DbSet<PurchaseTax> PurchaseTaxes => Set<PurchaseTax>();
+    public DbSet<PurchaseSupportDocumentReference> PurchaseSupportDocumentReferences => Set<PurchaseSupportDocumentReference>();
+    public DbSet<VoidedTaxDocument> VoidedTaxDocuments => Set<VoidedTaxDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -220,6 +225,106 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.Property(x => x.EmissionPointCode).HasMaxLength(3).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Environment, x.EstablishmentCode, x.EmissionPointCode }).IsUnique();
         });
+        modelBuilder.Entity<PurchaseTaxDocument>(entity =>
+        {
+            entity.ToTable("purchase_tax_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SupplierIdentificationType).HasColumnName("supplier_identification_type").HasMaxLength(2).IsRequired();
+            entity.Property(x => x.SupplierIdentification).HasColumnName("supplier_identification").HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SupplierName).HasColumnName("supplier_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Establishment).HasColumnName("establishment").HasMaxLength(3).IsRequired();
+            entity.Property(x => x.EmissionPoint).HasColumnName("emission_point").HasMaxLength(3).IsRequired();
+            entity.Property(x => x.Sequential).HasColumnName("sequential").HasMaxLength(9).IsRequired();
+            entity.Property(x => x.DocumentType).HasColumnName("document_type").HasMaxLength(2).IsRequired();
+            entity.Property(x => x.AuthorizationNumber).HasColumnName("authorization_number").HasMaxLength(64);
+            entity.Property(x => x.AccessKey).HasColumnName("access_key").HasMaxLength(49);
+            entity.Property(x => x.IssueDate).HasColumnName("issue_date");
+            entity.Property(x => x.RegistrationDate).HasColumnName("registration_date");
+            entity.Property(x => x.FiscalPeriod).HasColumnName("fiscal_period").HasMaxLength(7).IsRequired();
+            entity.Property(x => x.SupportDocumentType).HasColumnName("support_document_type").HasMaxLength(2).IsRequired();
+            entity.Property(x => x.Subtotal).HasColumnName("subtotal").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TaxTotal).HasColumnName("tax_total").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Total).HasColumnName("total").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Currency).HasColumnName("currency").HasMaxLength(8).IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+            entity.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
+            entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Establishment, x.EmissionPoint, x.Sequential }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.FiscalPeriod });
+            entity.Navigation(x => x.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.Taxes).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.References).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.PurchaseTaxDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.Taxes).WithOne().HasForeignKey(x => x.PurchaseTaxDocumentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.References).WithOne().HasForeignKey(x => x.PurchaseTaxDocumentId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<PurchaseTaxDocumentLine>(entity =>
+        {
+            entity.ToTable("purchase_tax_document_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PurchaseTaxDocumentId).HasColumnName("purchase_tax_document_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.LineNumber).HasColumnName("line_number");
+            entity.Property(x => x.ProductCode).HasColumnName("product_code").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Quantity).HasColumnName("quantity").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.UnitPrice).HasColumnName("unit_price").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Discount).HasColumnName("discount").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.Subtotal).HasColumnName("subtotal").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.HasIndex(x => new { x.TenantId, x.PurchaseTaxDocumentId, x.LineNumber }).IsUnique();
+        });
+        modelBuilder.Entity<PurchaseTax>(entity =>
+        {
+            entity.ToTable("purchase_taxes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PurchaseTaxDocumentId).HasColumnName("purchase_tax_document_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TaxCode).HasColumnName("tax_code").HasMaxLength(8).IsRequired();
+            entity.Property(x => x.TaxPercentageCode).HasColumnName("tax_percentage_code").HasMaxLength(8).IsRequired();
+            entity.Property(x => x.TaxBase).HasColumnName("tax_base").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TaxRate).HasColumnName("tax_rate").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.Property(x => x.TaxAmount).HasColumnName("tax_amount").HasPrecision(FinancialPrecision.Precision, FinancialPrecision.Scale);
+            entity.HasIndex(x => new { x.TenantId, x.PurchaseTaxDocumentId });
+        });
+        modelBuilder.Entity<PurchaseSupportDocumentReference>(entity =>
+        {
+            entity.ToTable("purchase_support_document_references");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.PurchaseTaxDocumentId).HasColumnName("purchase_tax_document_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DocumentTypeCode).HasColumnName("document_type_code").HasMaxLength(2).IsRequired();
+            entity.Property(x => x.Number).HasColumnName("number").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IssueDate).HasColumnName("issue_date");
+            entity.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(512).IsRequired();
+        });
+        modelBuilder.Entity<VoidedTaxDocument>(entity =>
+        {
+            entity.ToTable("voided_tax_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DocumentType).HasColumnName("document_type").HasMaxLength(2).IsRequired();
+            entity.Property(x => x.Establishment).HasColumnName("establishment").HasMaxLength(3).IsRequired();
+            entity.Property(x => x.EmissionPoint).HasColumnName("emission_point").HasMaxLength(3).IsRequired();
+            entity.Property(x => x.Sequential).HasColumnName("sequential").HasMaxLength(9).IsRequired();
+            entity.Property(x => x.AccessKey).HasColumnName("access_key").HasMaxLength(49);
+            entity.Property(x => x.AuthorizationNumber).HasColumnName("authorization_number").HasMaxLength(64);
+            entity.Property(x => x.IssueDate).HasColumnName("issue_date");
+            entity.Property(x => x.VoidDate).HasColumnName("void_date");
+            entity.Property(x => x.FiscalPeriod).HasColumnName("fiscal_period").HasMaxLength(7).IsRequired();
+            entity.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.SourceDocumentId).HasColumnName("source_document_id");
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+            entity.Ignore(x => x.DocumentNumber);
+            entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Establishment, x.EmissionPoint, x.Sequential }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.FiscalPeriod });
+        });
     }
 }
 
@@ -396,6 +501,8 @@ public sealed class EfElectronicDocumentRepository(FinancialDbContext db) : IEle
 {
     public async Task AddAsync(ElectronicDocument document, CancellationToken ct) => await db.ElectronicDocuments.AddAsync(document, ct);
     public async Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => await db.ElectronicDocumentLines.AddAsync(line, ct);
+    public async Task AddDebitNoteReasonAsync(ElectronicDocumentDebitNoteReason reason, CancellationToken ct) => await db.ElectronicDocumentDebitNoteReasons.AddAsync(reason, ct);
+    public async Task AddWithholdingTaxAsync(ElectronicDocumentWithholdingTax tax, CancellationToken ct) => await db.ElectronicDocumentWithholdingTaxes.AddAsync(tax, ct);
     public async Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
         await db.ElectronicDocuments.Include(x => x.Lines).Include(x => x.Taxes).Include(x => x.References).Include(x => x.DebitNoteReasons).Include(x => x.WithholdingTaxes).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
     public async Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) =>
@@ -468,6 +575,38 @@ SELECT @value;
     }
     public async Task<bool> SequenceDocumentExistsAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, string sequential, Guid? excludingId, CancellationToken ct) =>
         await db.ElectronicDocuments.AnyAsync(x => x.TenantId == tenantId && x.DocumentType == documentType && x.Environment == environment && x.EstablishmentCode == establishmentCode && x.EmissionPointCode == emissionPointCode && x.Sequential == sequential && (!excludingId.HasValue || x.Id != excludingId), ct);
+    public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
+}
+
+public sealed class EfPurchaseTaxDocumentRepository(FinancialDbContext db) : IPurchaseTaxDocumentRepository
+{
+    public async Task AddAsync(PurchaseTaxDocument document, CancellationToken ct) => await db.PurchaseTaxDocuments.AddAsync(document, ct);
+    public async Task AddLineAsync(PurchaseTaxDocumentLine line, CancellationToken ct) => await db.PurchaseTaxDocumentLines.AddAsync(line, ct);
+    public async Task AddTaxAsync(PurchaseTax tax, CancellationToken ct) => await db.PurchaseTaxes.AddAsync(tax, ct);
+    public async Task AddReferenceAsync(PurchaseSupportDocumentReference reference, CancellationToken ct) => await db.PurchaseSupportDocumentReferences.AddAsync(reference, ct);
+    public async Task<PurchaseTaxDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
+        await db.PurchaseTaxDocuments.Include(x => x.Lines).Include(x => x.Taxes).Include(x => x.References).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
+    public async Task<IReadOnlyCollection<PurchaseTaxDocument>> GetByPeriodAsync(string tenantId, string period, CancellationToken ct) =>
+        await db.PurchaseTaxDocuments.Include(x => x.Lines).Include(x => x.Taxes).Where(x => x.TenantId == tenantId && x.FiscalPeriod == period).OrderBy(x => x.IssueDate).AsNoTracking().ToArrayAsync(ct);
+    public async Task<PurchaseTaxSummary> GetSummaryAsync(string tenantId, DateOnly from, DateOnly to, CancellationToken ct)
+    {
+        var items = await db.PurchaseTaxDocuments.Where(x => x.TenantId == tenantId && x.IssueDate >= from && x.IssueDate <= to && x.Status != PurchaseTaxDocumentStatus.Archived).ToArrayAsync(ct);
+        return new(items.Length, items.Sum(x => x.Subtotal), items.Sum(x => x.TaxTotal), items.Sum(x => x.Total));
+    }
+    public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
+}
+
+public sealed class EfVoidedTaxDocumentRepository(FinancialDbContext db) : IVoidedTaxDocumentRepository
+{
+    public async Task AddAsync(VoidedTaxDocument document, CancellationToken ct) => await db.VoidedTaxDocuments.AddAsync(document, ct);
+    public async Task<VoidedTaxDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
+        await db.VoidedTaxDocuments.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
+    public async Task<IReadOnlyCollection<VoidedTaxDocument>> GetByPeriodAsync(string tenantId, string period, CancellationToken ct) =>
+        await db.VoidedTaxDocuments.Where(x => x.TenantId == tenantId && x.FiscalPeriod == period).OrderBy(x => x.VoidDate).AsNoTracking().ToArrayAsync(ct);
+    public async Task<int> CountByPeriodAsync(string tenantId, DateOnly from, DateOnly to, CancellationToken ct) =>
+        await db.VoidedTaxDocuments.CountAsync(x => x.TenantId == tenantId && x.VoidDate >= from && x.VoidDate <= to, ct);
+    public async Task<bool> ExistsDocumentNumberAsync(string tenantId, string documentType, string establishment, string emissionPoint, string sequential, Guid? excludingId, CancellationToken ct) =>
+        await db.VoidedTaxDocuments.AnyAsync(x => x.TenantId == tenantId && x.DocumentType == documentType && x.Establishment == establishment && x.EmissionPoint == emissionPoint && x.Sequential == sequential && (!excludingId.HasValue || x.Id != excludingId.Value), ct);
     public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
 }
 
@@ -568,6 +707,8 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<FiscalPeriodsService>();
         services.AddScoped<JournalEntriesService>();
         services.AddScoped<ElectronicDocumentsService>();
+        services.AddScoped<PurchaseTaxDocumentService>();
+        services.AddScoped<VoidedTaxDocumentService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<IRideLegalGapAnalysisService, RideLegalGapAnalysisService>();
@@ -598,6 +739,8 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IFiscalRepository, EfFiscalRepository>();
             services.AddScoped<IJournalEntryRepository, EfJournalEntryRepository>();
             services.AddScoped<IElectronicDocumentRepository, EfElectronicDocumentRepository>();
+            services.AddScoped<IPurchaseTaxDocumentRepository, EfPurchaseTaxDocumentRepository>();
+            services.AddScoped<IVoidedTaxDocumentRepository, EfVoidedTaxDocumentRepository>();
             services.AddHealthChecks().AddCheck<FinancialSqlHealthCheck>("financial-sql", tags: ["ready"]);
             if (configuration.GetValue<bool>("Database:Initialize") || configuration.GetValue<bool>("Database:RunMigrations")) services.AddHostedService<FinancialDatabaseInitializer>();
         }
@@ -607,6 +750,8 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IFiscalRepository, UnconfiguredFiscalRepository>();
             services.AddScoped<IJournalEntryRepository, UnconfiguredJournalEntryRepository>();
             services.AddScoped<IElectronicDocumentRepository, UnconfiguredElectronicDocumentRepository>();
+            services.AddScoped<IPurchaseTaxDocumentRepository, UnconfiguredPurchaseTaxDocumentRepository>();
+            services.AddScoped<IVoidedTaxDocumentRepository, UnconfiguredVoidedTaxDocumentRepository>();
         }
         services.AddHealthChecks().AddCheck<SriReadinessHealthCheck>("financial-sri", tags: ["sri"]);
         services.AddHealthChecks().AddCheck<ContentFileReadinessHealthCheck>("financial-content-file", tags: ["content-file"]);
@@ -667,11 +812,37 @@ internal sealed class UnconfiguredElectronicDocumentRepository : IElectronicDocu
     private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
     public Task AddAsync(ElectronicDocument document, CancellationToken ct) => Task.FromException(Error);
     public Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct) => Task.FromException(Error);
+    public Task AddDebitNoteReasonAsync(ElectronicDocumentDebitNoteReason reason, CancellationToken ct) => Task.FromException(Error);
+    public Task AddWithholdingTaxAsync(ElectronicDocumentWithholdingTax tax, CancellationToken ct) => Task.FromException(Error);
     public Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<ElectronicDocument?>(Error);
     public Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct) => Task.FromException<ElectronicDocument?>(Error);
     public Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct) => Task.FromException<(IReadOnlyCollection<ElectronicDocument>, long)>(Error);
     public Task<string> GetNextSequentialAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, CancellationToken ct) => Task.FromException<string>(Error);
     public Task<bool> SequenceDocumentExistsAsync(string tenantId, ElectronicDocumentType documentType, SriEnvironment environment, string establishmentCode, string emissionPointCode, string sequential, Guid? excludingId, CancellationToken ct) => Task.FromException<bool>(Error);
+    public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
+}
+
+internal sealed class UnconfiguredPurchaseTaxDocumentRepository : IPurchaseTaxDocumentRepository
+{
+    private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
+    public Task AddAsync(PurchaseTaxDocument document, CancellationToken ct) => Task.FromException(Error);
+    public Task AddLineAsync(PurchaseTaxDocumentLine line, CancellationToken ct) => Task.FromException(Error);
+    public Task AddTaxAsync(PurchaseTax tax, CancellationToken ct) => Task.FromException(Error);
+    public Task AddReferenceAsync(PurchaseSupportDocumentReference reference, CancellationToken ct) => Task.FromException(Error);
+    public Task<PurchaseTaxDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<PurchaseTaxDocument?>(Error);
+    public Task<IReadOnlyCollection<PurchaseTaxDocument>> GetByPeriodAsync(string tenantId, string period, CancellationToken ct) => Task.FromException<IReadOnlyCollection<PurchaseTaxDocument>>(Error);
+    public Task<PurchaseTaxSummary> GetSummaryAsync(string tenantId, DateOnly from, DateOnly to, CancellationToken ct) => Task.FromException<PurchaseTaxSummary>(Error);
+    public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
+}
+
+internal sealed class UnconfiguredVoidedTaxDocumentRepository : IVoidedTaxDocumentRepository
+{
+    private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
+    public Task AddAsync(VoidedTaxDocument document, CancellationToken ct) => Task.FromException(Error);
+    public Task<VoidedTaxDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<VoidedTaxDocument?>(Error);
+    public Task<IReadOnlyCollection<VoidedTaxDocument>> GetByPeriodAsync(string tenantId, string period, CancellationToken ct) => Task.FromException<IReadOnlyCollection<VoidedTaxDocument>>(Error);
+    public Task<int> CountByPeriodAsync(string tenantId, DateOnly from, DateOnly to, CancellationToken ct) => Task.FromException<int>(Error);
+    public Task<bool> ExistsDocumentNumberAsync(string tenantId, string documentType, string establishment, string emissionPoint, string sequential, Guid? excludingId, CancellationToken ct) => Task.FromException<bool>(Error);
     public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
 }
 

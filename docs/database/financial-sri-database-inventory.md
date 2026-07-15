@@ -18,6 +18,7 @@
 - `009_sri_signature_storage_metadata.sql`
 - `010_sri_ride_and_integration_metadata.sql`
 - `011_tax_documents_foundation.sql`
+- `012_purchases_voided_documents_foundation.sql`
 
 ## Reglas
 
@@ -78,3 +79,15 @@ No se agrega migración 012. RIDE legal readiness y ATS official design son cál
 ## Sprint 4 P4 tax/legal review gaps
 
 No se agrega migración 012. Los gaps RIDE/ATS y checklist de aprobación son cálculos read-only. No se crean tablas de approvals, evidencias, archivos, XML ATS ni storage propio.
+
+## Sprint 5 P1 purchases/voided foundation
+
+Migración `012_purchases_voided_documents_foundation.sql` agrega tablas idempotentes para:
+
+- `financial.purchase_tax_documents`
+- `financial.purchase_tax_document_lines`
+- `financial.purchase_taxes`
+- `financial.purchase_support_document_references`
+- `financial.voided_tax_documents`
+
+Las tablas mantienen datos foundation de compras y anulados para readiness ATS. No almacenan XML, certificados, secretos, tokens, payloads SRI ni archivos. Se conserva SQL Server común local y base lógica separada `FinancieroDb`.

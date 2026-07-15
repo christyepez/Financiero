@@ -63,6 +63,8 @@ public interface IElectronicDocumentRepository
 {
     Task AddAsync(ElectronicDocument document, CancellationToken ct);
     Task AddLineAsync(ElectronicDocumentLine line, CancellationToken ct);
+    Task AddDebitNoteReasonAsync(ElectronicDocumentDebitNoteReason reason, CancellationToken ct);
+    Task AddWithholdingTaxAsync(ElectronicDocumentWithholdingTax tax, CancellationToken ct);
     Task<ElectronicDocument?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct);
     Task<ElectronicDocument?> GetByAccessKeyAsync(string accessKey, string tenantId, CancellationToken ct);
     Task<(IReadOnlyCollection<ElectronicDocument> Items, long Total)> SearchAsync(string tenantId, ElectronicDocumentStatus? status, string? accessKey, int page, int pageSize, CancellationToken ct);
@@ -206,8 +208,9 @@ public enum AtsReadinessStatus { ReadyFoundation, MissingData, RequiresTaxReview
 public sealed record AtsPurchaseSummary(int Count, decimal TaxBase, decimal TaxAmount);
 public sealed record AtsSalesSummary(int Count, decimal Subtotal, decimal TaxAmount, decimal Total);
 public sealed record AtsWithholdingSummary(int Count, decimal TaxBase, decimal WithheldAmount);
+public sealed record AtsVoidedSummary(int Count);
 public sealed record AtsValidationIssue(string Code, string Message, string Severity);
-public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer);
+public sealed record AtsReadinessResult(string Period, AtsReadinessStatus Status, AtsPurchaseSummary Purchases, AtsSalesSummary Sales, AtsWithholdingSummary Withholdings, IReadOnlyCollection<AtsValidationIssue> Issues, string Disclaimer, AtsVoidedSummary? Voided = null);
 public sealed record AtsOfficialDesignQuery(string Period, DateOnly? From = null, DateOnly? To = null, string? Environment = null);
 public enum AtsOfficialDesignStatus { ReadyFoundation, MissingData, RequiresTaxReview, Unsupported }
 public sealed record AtsOfficialSection(string Code, string Name, string Status, IReadOnlyCollection<AtsOfficialFieldMapping> Fields);
@@ -1594,16 +1597,17 @@ public sealed class RideLegalGapAnalysisService(IPortalAuditClient audit) : IRid
         new(code, type, severity, TaxLegalReviewGapStatus.Open, scope, description, new[] { new TaxLegalReviewEvidence($"{code}.evidence", "Evidence must be captured by external tax/legal review before official enablement.", true, TaxLegalReviewGapStatus.Open) }, new($"{code}.decision", "Pending expert approval.", TaxLegalReviewGapStatus.Open, "Tax/Legal Reviewer"));
 }
 
-public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit) : IAtsOfficialGapAnalysisService
+public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchases = null, IVoidedTaxDocumentRepository? voided = null) : IAtsOfficialGapAnalysisService
 {
     private const string Disclaimer = "ATS official gap analysis foundation only. It does not generate official ATS XML and does not certify tax compliance.";
 
     public async Task<AtsOfficialGapAnalysisResult> AnalyzeAsync(AtsOfficialDesignQuery query, PortalCallContext context, CancellationToken ct)
     {
-        var gaps = new[]
+        var (from, to) = TaxExportService.ResolveAtsPeriodForIntegration(query.Period, query.From, query.To);
+        var purchaseSummary = purchases is null ? new PurchaseTaxSummary(0, 0, 0, 0) : await purchases.GetSummaryAsync(context.TenantId, from, to, ct);
+        var voidedCount = voided is null ? 0 : await voided.CountByPeriodAsync(context.TenantId, from, to, ct);
+        var gaps = new List<TaxLegalReviewGap>
         {
-            Gap("ats.purchases.module_missing", TaxLegalReviewGapType.MissingPurchaseModule, TaxLegalReviewGapSeverity.Critical, "ats", "Compras no está modelado; ATS oficial requiere compras/adquisiciones."),
-            Gap("ats.voided_documents.model_missing", TaxLegalReviewGapType.MissingVoidedDocumentModel, TaxLegalReviewGapSeverity.Critical, "ats", "Documentos anulados no están modelados para declaración oficial."),
             Gap("ats.official_schema.missing", TaxLegalReviewGapType.MissingOfficialSchema, TaxLegalReviewGapSeverity.Critical, "ats", "No se incorporó ni validó XSD/esquema oficial ATS."),
             Gap("ats.official_catalogs.pending", TaxLegalReviewGapType.MissingOfficialCatalog, TaxLegalReviewGapSeverity.High, "ats", "Catálogos oficiales SRI requieren aprobación y versión controlada."),
             Gap("ats.identification_rules.review", TaxLegalReviewGapType.MissingTaxExpertApproval, TaxLegalReviewGapSeverity.High, "ats", "Reglas de identificación requieren revisión experta."),
@@ -1613,7 +1617,9 @@ public sealed class AtsOfficialGapAnalysisService(IPortalAuditClient audit) : IA
             Gap("ats.sri_validation.evidence_missing", TaxLegalReviewGapType.MissingSRIValidationEvidence, TaxLegalReviewGapSeverity.Critical, "ats", "No existe evidencia de carga/validación SRI."),
             Gap("ats.operational_runbook.missing", TaxLegalReviewGapType.MissingOperationalRunbook, TaxLegalReviewGapSeverity.High, "ats", "No existe runbook operativo de presentación ATS.")
         };
-        await audit.RecordAsync(new("AtsOfficialGapsQueried", "financial.tax-legal-review", context.TenantId, new { query.Period, GapCount = gaps.Length }), context, ct);
+        if (purchaseSummary.Count == 0) gaps.Insert(0, Gap("ats.purchases.module_missing", TaxLegalReviewGapType.MissingPurchaseModule, TaxLegalReviewGapSeverity.Critical, "ats", "Compras foundation no tiene registros para el periodo; ATS oficial requiere compras/adquisiciones."));
+        if (voidedCount == 0) gaps.Insert(0, Gap("ats.voided_documents.model_missing", TaxLegalReviewGapType.MissingVoidedDocumentModel, TaxLegalReviewGapSeverity.Critical, "ats", "Anulados foundation no tiene registros para el periodo; ATS oficial requiere documentos anulados si existen."));
+        await audit.RecordAsync(new("AtsOfficialGapsQueried", "financial.tax-legal-review", context.TenantId, new { query.Period, GapCount = gaps.Count, PurchaseCount = purchaseSummary.Count, VoidedCount = voidedCount }), context, ct);
         return new(query.Period, AtsOfficialEnablementStatus.NotReadyForOfficialGeneration, gaps, Disclaimer);
     }
 
@@ -1646,7 +1652,7 @@ public sealed class TaxLegalApprovalChecklistService(IRideLegalGapAnalysisServic
         };
         var blocking = new List<TaxLegalReviewGap>();
         if (normalized is "ride" or "all") blocking.AddRange((await ride.AnalyzeAsync(context, ct)).Gaps.Where(x => x.Severity is TaxLegalReviewGapSeverity.Critical or TaxLegalReviewGapSeverity.High));
-        if (normalized is "ats" or "all") blocking.AddRange((await ats.AnalyzeAsync(new("foundation"), context, ct)).Gaps.Where(x => x.Severity is TaxLegalReviewGapSeverity.Critical or TaxLegalReviewGapSeverity.High));
+        if (normalized is "ats" or "all") blocking.AddRange((await ats.AnalyzeAsync(new($"{DateTime.UtcNow:yyyy-MM}"), context, ct)).Gaps.Where(x => x.Severity is TaxLegalReviewGapSeverity.Critical or TaxLegalReviewGapSeverity.High));
         await audit.RecordAsync(new("TaxLegalApprovalChecklistQueried", "financial.tax-legal-review", context.TenantId, new { Scope = normalized, BlockingGapCount = blocking.Count }), context, ct);
         return new(normalized, false, decisions, blocking, Disclaimer);
     }
@@ -1654,7 +1660,7 @@ public sealed class TaxLegalApprovalChecklistService(IRideLegalGapAnalysisServic
     private static TaxLegalReviewDecision Item(string code, string description, TaxLegalReviewGapStatus status, string owner) => new(code, description, status, owner);
 }
 
-public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit) : ITaxExportService
+public sealed class TaxExportService(ITaxReportingService reporting, IElectronicDocumentRepository documents, IElectronicDocumentStorageClient storage, IPortalAuditClient audit, IPurchaseTaxDocumentRepository? purchasesRepository = null, IVoidedTaxDocumentRepository? voidedRepository = null) : ITaxExportService
 {
     public async Task<TaxExportResult> ExportAsync(TaxExportQuery query, PortalCallContext context, CancellationToken ct)
     {
@@ -1685,19 +1691,22 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
     {
         var (from, to) = ResolvePeriod(query);
         var items = await LoadAsync(new(from, to, Environment: query.Environment), context, ct);
+        var purchaseSummary = purchasesRepository is null ? new PurchaseTaxSummary(0, 0, 0, 0) : await purchasesRepository.GetSummaryAsync(context.TenantId, from, to, ct);
+        var voidedCount = voidedRepository is null ? 0 : await voidedRepository.CountByPeriodAsync(context.TenantId, from, to, ct);
         var issues = new List<AtsValidationIssue>();
         if (items.Count == 0) issues.Add(new("ats.missing_documents", "No electronic documents were found for the requested period.", "Warning"));
+        if (purchaseSummary.Count == 0) issues.Add(new("ats.purchases.foundation_missing", "No purchase tax documents foundation were found for the requested period.", "Warning"));
         issues.AddRange(items.Where(x => x.Status != ElectronicDocumentStatus.Authorized).Select(x => new AtsValidationIssue("ats.document.not_authorized", $"Document {x.DocumentType} {x.Id} is not authorized.", "Error")));
         issues.AddRange(items.Where(x => string.IsNullOrWhiteSpace(x.XmlContentHash)).Select(x => new AtsValidationIssue("ats.document.xml_missing", $"Document {x.DocumentType} {x.Id} does not have generated XML metadata.", "Error")));
         issues.AddRange(items.SelectMany(x => x.WithholdingTaxes).Where(x => string.IsNullOrWhiteSpace(x.WithholdingCode)).Select(_ => new AtsValidationIssue("ats.withholding.code_missing", "A withholding row is missing withholding code.", "Error")));
         issues.AddRange(items.SelectMany(x => x.Taxes).Where(x => !SriCatalogService.IsTaxCodeAllowed(x.TaxCode)).Select(x => new AtsValidationIssue("ats.tax.catalog_review", $"Tax code {x.TaxCode} requires foundation catalog review.", "Warning")));
         if (items.Any(x => x.DocumentType is ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote or ElectronicDocumentType.Withholding)) issues.Add(new("ats.tax_review.required", "Credit/debit notes and withholdings require tax review before official ATS generation.", "Warning"));
         var status = issues.Any(x => x.Severity == "Error") ? AtsReadinessStatus.MissingData : issues.Count > 0 ? AtsReadinessStatus.RequiresTaxReview : AtsReadinessStatus.ReadyFoundation;
-        var purchases = new AtsPurchaseSummary(items.Count(x => x.DocumentType == ElectronicDocumentType.Withholding), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
+        var purchases = new AtsPurchaseSummary(purchaseSummary.Count, purchaseSummary.Subtotal, purchaseSummary.TaxTotal);
         var sales = new AtsSalesSummary(items.Count(x => x.DocumentType is ElectronicDocumentType.Invoice or ElectronicDocumentType.CreditNote or ElectronicDocumentType.DebitNote), items.Sum(x => x.SubtotalWithoutTaxes), items.Sum(x => x.TotalTaxes), items.Sum(x => x.TotalAmount));
         var withholdings = new AtsWithholdingSummary(items.SelectMany(x => x.WithholdingTaxes).Count(), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.TaxBase), items.SelectMany(x => x.WithholdingTaxes).Sum(x => x.WithheldAmount));
-        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.");
-        await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count }), context, ct);
+        var result = new AtsReadinessResult(query.Period, status, purchases, sales, withholdings, issues, "Foundation readiness only. This is not an official ATS file and does not certify tax compliance.", new AtsVoidedSummary(voidedCount));
+        await audit.RecordAsync(new("AtsReadinessEvaluated", "financial.ats-readiness", context.TenantId, new { query.Period, From = from, To = to, Status = status.ToString(), IssueCount = issues.Count, PurchaseCount = purchaseSummary.Count, VoidedCount = voidedCount }), context, ct);
         return result;
     }
 
@@ -1707,17 +1716,17 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         var issues = readiness.Issues.Select(x => new AtsOfficialValidationIssue(x.Code, x.Message, x.Severity)).ToList();
         var unsupported = new List<AtsOfficialUnsupportedReason>
         {
-            new("ats.purchases.module_missing", "Full purchases module is not implemented; withholding support documents are foundation-only inputs."),
-            new("ats.voided_documents.not_modeled", "Voided/cancelled document workflow is not modeled as official ATS source."),
             new("ats.official_catalogs.pending_review", "Official ATS layout/catalogs require expert Ecuador tax review before final generation.")
         };
+        if (readiness.Purchases.Count == 0) unsupported.Add(new("ats.purchases.module_missing", "Purchases foundation has no period records; official purchases remain gated."));
+        if ((readiness.Voided?.Count ?? 0) == 0) unsupported.Add(new("ats.voided_documents.model_missing", "Voided documents foundation has no period records; official annulment source remains gated."));
         var sections = new[]
         {
             Section("informant", "Informante", ("ruc", "financial.sri.issuer.ruc", "ReadyFoundation", "Issuer config source; verify before official ATS."), ("razonSocial", "financial.sri.issuer.legalName", "ReadyFoundation", "Issuer config source.")),
             Section("sales", "Ventas", ("ventas", "ElectronicDocument Invoice/CreditNote/DebitNote summaries", readiness.Sales.Count > 0 ? "ReadyFoundation" : "MissingData", "Foundation mapping from electronic documents.")),
-            Section("purchases", "Compras", ("compras", "Future purchases module / withholding support documents", "Unsupported", "Purchases module remains pending.")),
+            Section("purchases", "Compras", ("compras", "PurchaseTaxDocument foundation", readiness.Purchases.Count > 0 ? "ReadyFoundation" : "Unsupported", "Foundation purchases only; official schema/catalog review remains pending.")),
             Section("withholdings", "Retenciones", ("retenciones", "ElectronicDocument Withholding taxes", readiness.Withholdings.Count > 0 ? "ReadyFoundation" : "MissingData", "Requires official withholding code review.")),
-            Section("voided", "Anulados", ("anulados", "Future cancellation workflow", "Unsupported", "Cancellation/annulment not modeled.")),
+            Section("voided", "Anulados", ("anulados", "VoidedTaxDocument foundation", (readiness.Voided?.Count ?? 0) > 0 ? "ReadyFoundation" : "Unsupported", "Foundation voided documents only; no official SRI annulment is asserted.")),
             Section("establishments", "Establecimientos", ("establecimientos", "ElectronicDocument establishmentCode", "RequiresTaxReview", "Requires official establishment aggregation rules.")),
             Section("tax-summary", "Resumen impuestos", ("resumen", "Tax totals/reporting foundation", "RequiresTaxReview", "Requires official ATS validation."))
         };
@@ -1799,6 +1808,7 @@ public sealed class TaxExportService(ITaxReportingService reporting, IElectronic
         }
         throw new FinancialApplicationException("ats.period.invalid", "ATS readiness period must use yyyy-MM or provide from/to dates.");
     }
+    public static (DateOnly From, DateOnly To) ResolveAtsPeriodForIntegration(string period, DateOnly? from, DateOnly? to) => ResolvePeriod(new(period, from, to));
     private static string Json(IReadOnlyCollection<TaxExportRow> rows) => JsonSerializer.Serialize(rows.Select(x => x.Columns));
     private static string Csv(IReadOnlyCollection<TaxExportRow> rows)
     {
@@ -1907,7 +1917,8 @@ public sealed class ElectronicDocumentsService(
     public async Task<ElectronicDocumentDto> AddDebitNoteReasonAsync(Guid id, AddDebitNoteReasonRequest request, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
-        document.AddDebitNoteReason(request.Reason, request.Amount, DateTimeOffset.UtcNow);
+        var reason = document.AddDebitNoteReason(request.Reason, request.Amount, DateTimeOffset.UtcNow);
+        await documents.AddDebitNoteReasonAsync(reason, ct);
         await documents.SaveChangesAsync(ct);
         await AuditOutboxAsync("DebitNoteReasonAdded", "DebitNoteReasonAdded", document, context, ct);
         return ToDto(document);
@@ -1916,8 +1927,9 @@ public sealed class ElectronicDocumentsService(
     public async Task<ElectronicDocumentDto> AddWithholdingTaxAsync(Guid id, AddWithholdingTaxRequest request, PortalCallContext context, CancellationToken ct)
     {
         var document = await GetRequiredAsync(id, context.TenantId, ct);
-        document.AddWithholdingTax(request.TaxCode, request.WithholdingCode, request.TaxBase, request.WithholdingPercentage, request.WithheldAmount,
+        var tax = document.AddWithholdingTax(request.TaxCode, request.WithholdingCode, request.TaxBase, request.WithholdingPercentage, request.WithheldAmount,
             request.SupportDocumentNumber, request.SupportDocumentIssueDate, request.FiscalPeriod, DateTimeOffset.UtcNow);
+        await documents.AddWithholdingTaxAsync(tax, ct);
         await documents.SaveChangesAsync(ct);
         await AuditOutboxAsync("WithholdingTaxAdded", "WithholdingTaxAdded", document, context, ct);
         return ToDto(document);

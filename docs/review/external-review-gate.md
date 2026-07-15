@@ -11,5 +11,6 @@ All gates start as `Open`. None of these gates approve production by themselves;
 | Certificate custody approval | Security/operations | Custody model, vault reference, rotation procedure | Open | Non-repo custody and rotation approved | Local/real cert in repo or unclear custody | Certificate compromise |
 | Portal Content/File contract approval | Portal owner | Contract version, auth, retention, dry-run evidence | Open | Stable contract and ownership accepted | Payload/storage ownership unclear | Duplicated or unsafe storage |
 | SRI Test validation evidence | Integration owner | Sanitized test evidence with synthetic data | Open | Accepted test evidence and error mapping | Real data or no evidence | Unknown integration failure |
+| Purchases/voided ATS foundation review | Tax/SRI reviewer | Synthetic purchase and voided records mapped to ATS sections | Open | Approval of support/document type mapping | Incomplete purchase/voided mapping | Invalid ATS purchases/anulados section |
 | Operational runbook approval | Operations | Runbook, support model, rollback and monitoring | Open | Runbook approved by operations | No support/rollback path | Operational outage |
 | Production deployment approval | Business/release owner | All previous gates closed | Open | Explicit production go/no-go | Any prior gate open | Premature production activation |

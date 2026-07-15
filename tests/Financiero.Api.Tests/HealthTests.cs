@@ -83,6 +83,15 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-legal-review/ride-gaps")]
     [InlineData("GET", "/api/financial/tax-legal-review/ats-gaps?period=2026-01")]
     [InlineData("GET", "/api/financial/tax-legal-review/approval-checklist?scope=all")]
+    [InlineData("POST", "/api/financial/purchases")]
+    [InlineData("POST", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/lines")]
+    [InlineData("POST", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/taxes")]
+    [InlineData("POST", "/api/financial/purchases/00000000-0000-0000-0000-000000000001/validate")]
+    [InlineData("GET", "/api/financial/purchases?period=2026-01")]
+    [InlineData("GET", "/api/financial/purchases/00000000-0000-0000-0000-000000000001")]
+    [InlineData("POST", "/api/financial/voided-documents")]
+    [InlineData("GET", "/api/financial/voided-documents?period=2026-01")]
+    [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary")]
     public async Task Electronic_document_sensitive_actions_reject_without_permission(string method, string url)
@@ -133,6 +142,10 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-legal-review/ride-gaps", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-legal-review/ats-gaps?period=invalid", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-legal-review/approval-checklist?scope=invalid", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/purchases?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("POST", "/api/financial/purchases", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/voided-documents?period=invalid", "financial.electronicdocuments.read")]
+    [InlineData("POST", "/api/financial/voided-documents", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/tax-reporting/action-queue", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/monthly-summary", "financial.electronicdocuments.read")]
     public async Task Development_header_allows_endpoint_specific_permissions(string method, string url, string permission)
@@ -189,6 +202,17 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("/api/financial/purchases?period=invalid")]
+    [InlineData("/api/financial/voided-documents?period=invalid")]
+    public async Task Purchase_and_voided_invalid_period_returns_bad_request_without_500(string url)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     [Fact]
     public async Task Development_wildcard_permission_is_allowed_by_design()
     {
@@ -219,5 +243,24 @@ public sealed class MigrationInventoryTests
         Assert.Contains("IF OBJECT_ID('financial.electronic_document_debit_note_reasons'", sql);
         Assert.Contains("IF OBJECT_ID('financial.electronic_document_withholding_taxes'", sql);
         Assert.Contains("IF NOT EXISTS", sql);
+    }
+
+    [Fact]
+    public void Migration_012_purchases_voided_foundation_is_idempotent()
+    {
+        var path = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory,
+            "..", "..", "..", "..", "..",
+            "database",
+            "migrations",
+            "financial",
+            "012_purchases_voided_documents_foundation.sql"));
+
+        var sql = File.ReadAllText(path);
+
+        Assert.Contains("IF OBJECT_ID('financial.purchase_tax_documents'", sql);
+        Assert.Contains("IF OBJECT_ID('financial.voided_tax_documents'", sql);
+        Assert.Contains("IF NOT EXISTS", sql);
+        Assert.DoesNotContain("xml", sql, StringComparison.OrdinalIgnoreCase);
     }
 }
