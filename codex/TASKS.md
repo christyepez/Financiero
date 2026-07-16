@@ -140,6 +140,9 @@
 - [x] Agregar providers standalone y portal-integrated placeholder.
 - [x] Conectar auth/menu/notificaciones/configuración/correlation al contexto Portal.
 - [x] Documentar ADR-021 y contrato `window.__PORTAL_SHELL_CONTEXT__`.
+- [x] P4 agregar comandos UI foundation controlados para compras/anulados.
+- [x] Proteger comandos con feature flags y permiso `financial.electronicdocuments.manage`.
+- [x] Mantener comandos apagados por defecto y documentar ADR-022.
 - [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
 - [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
 

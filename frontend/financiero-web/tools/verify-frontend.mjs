@@ -14,9 +14,14 @@ const required = [
   'src/app/core/adapters/portal-configuration.adapter.ts',
   'src/app/core/adapters/portal-feature-flag.adapter.ts',
   'src/app/core/adapters/portal-telemetry.adapter.ts',
+  'src/app/core/services/command-guard.service.ts',
   'src/app/shared/components/loading-state.component.ts',
   'src/app/shared/components/period-selector.component.ts',
   'src/app/shared/components/shell-mode-banner.component.ts',
+  'src/app/shared/components/command-disabled-banner.component.ts',
+  'src/app/shared/components/foundation-command-disclaimer.component.ts',
+  'src/app/features/purchases/purchase-create-form.component.ts',
+  'src/app/features/voided-documents/voided-document-create-form.component.ts',
   'src/app/features/sri-readiness/sri-readiness.component.ts',
   'src/app/features/ats-readiness/ats-readiness.component.ts',
   'src/app/features/external-approvals/external-approvals.component.ts',
@@ -73,6 +78,15 @@ for (const token of ['PortalShellContext', 'PortalFeatureFlags', 'PORTAL_SHELL_C
 const portalDefaults = readFileSync(join(root, 'src/app/core/portal-shell/portal-shell.defaults.ts'), 'utf8');
 for (const safeFlag of ['allowXmlPreviewUi: false', 'allowMutations: false', 'allowDevHeaders: false']) {
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Safe feature flag default missing: ${safeFlag}.`);
+}
+
+for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentCommands: false', 'allowAtsOfficialActions: false', 'allowSriSubmission: false']) {
+  if (!portalDefaults.includes(safeFlag)) throw new Error(`Command safety flag default missing: ${safeFlag}.`);
+}
+
+const commandGuard = readFileSync(join(root, 'src/app/core/services/command-guard.service.ts'), 'utf8');
+for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'financial.electronicdocuments.manage']) {
+  if (!commandGuard.includes(token)) throw new Error(`Command guard missing ${token}.`);
 }
 
 const externalApproval = readFileSync(join(root, 'src/app/core/services/external-approval-api.service.ts'), 'utf8');

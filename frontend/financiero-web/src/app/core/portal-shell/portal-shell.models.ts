@@ -25,6 +25,10 @@ export interface PortalFeatureFlags {
   showPurchases: boolean;
   showVoidedDocuments: boolean;
   allowDevHeaders: boolean;
+  allowPurchaseCommands: boolean;
+  allowVoidedDocumentCommands: boolean;
+  allowAtsOfficialActions: boolean;
+  allowSriSubmission: boolean;
   allowXmlPreviewUi: boolean;
   allowMutations: boolean;
 }

@@ -23,7 +23,11 @@ export function sanitizePortalShellContext(input: Partial<PortalShellContext> | 
     ...defaultFeatureFlags,
     ...(input.featureFlags ?? {}),
     allowDevHeaders: !environment.production && Boolean(input.featureFlags?.allowDevHeaders),
-    allowMutations: false,
+    allowMutations: !environment.production && Boolean(input.featureFlags?.allowMutations),
+    allowPurchaseCommands: !environment.production && Boolean(input.featureFlags?.allowPurchaseCommands),
+    allowVoidedDocumentCommands: !environment.production && Boolean(input.featureFlags?.allowVoidedDocumentCommands),
+    allowAtsOfficialActions: false,
+    allowSriSubmission: false,
     allowXmlPreviewUi: false
   };
 

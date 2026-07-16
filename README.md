@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 6 P3 formaliza el contrato frontend con Portal Shell. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular read-only quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 6 P4 agrega comandos UI foundation controlados para compras y anulados, deshabilitados por defecto. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -67,11 +67,13 @@ Documentos principales:
 - `docs/coordination/financial-sprint-06-p1-angular-shell-foundation.md`
 - `docs/coordination/financial-sprint-06-p2-angular-real-data-wiring.md`
 - `docs/coordination/financial-sprint-06-p3-portal-shell-contract.md`
+- `docs/coordination/financial-sprint-06-p4-controlled-ui-commands.md`
 - `docs/frontend/financial-angular-shell.md`
 - `docs/frontend/portal-shell-contract.md`
 - `docs/architecture/decisions/adr-019-angular-shell-portal-integration.md`
 - `docs/architecture/decisions/adr-020-angular-real-data-wiring.md`
 - `docs/architecture/decisions/adr-021-portal-shell-contract-integration.md`
+- `docs/architecture/decisions/adr-022-controlled-ui-command-foundation.md`
 - `docs/releases/financial-sprint-05-closure.md`
 - `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
@@ -138,5 +140,7 @@ Sprint 6 P1 agrega `frontend/financiero-web` como Angular standalone read-only, 
 Sprint 6 P2 conecta las pantallas Angular a endpoints reales existentes del backend local, desempaqueta `ApiResponse<T>`, agrega estados loading/error/empty y mantiene máscaras defensivas para identificaciones/access keys.
 
 Sprint 6 P3 agrega contrato reemplazable de Portal Shell mediante `PortalShellContext`, providers standalone/portal-integrated, feature flags seguros e indicadores UX. No agrega login propio ni token storage.
+
+Sprint 6 P4 agrega comandos foundation para crear/validar compras y registrar anulados, protegidos por permisos y feature flags apagados por defecto. No envía SRI, no genera ATS oficial y no muestra XML.
 
 Próximo paso recomendado: integrar el Angular Shell real del Portal cuando sus contratos de Security/Menu/Configuration estén congelados y avanzar hacia UX operativa gated sin habilitar producción SRI.
