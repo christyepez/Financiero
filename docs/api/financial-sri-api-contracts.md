@@ -223,3 +223,18 @@ Sprint 3 P2 agrega hardening funcional:
 - retenciones requieren periodo fiscal `MM/YYYY` o `YYYY-MM`;
 - taxCode/withholdingCode deben existir en catálogo foundation;
 - valor retenido debe coincidir con `base * porcentaje / 100` dentro de tolerancia documentada.
+# External approval requests foundation
+
+Base: `/api/financial/external-approval-requests`
+
+- `GET /` requiere `financial.electronicdocuments.read`.
+- `GET /{id}` requiere `financial.electronicdocuments.read`.
+- `GET /readiness?scope=all` requiere `financial.electronicdocuments.read`.
+- `POST /` requiere `financial.electronicdocuments.manage`.
+- `POST /{id}/submit` requiere `financial.electronicdocuments.manage`.
+- `POST /{id}/start-review` requiere `financial.electronicdocuments.manage`.
+- `POST /{id}/evidence-references` requiere `financial.electronicdocuments.manage`.
+- `POST /{id}/decision` requiere `financial.electronicdocuments.manage`.
+- `POST /{id}/cancel` requiere `financial.electronicdocuments.manage`.
+
+Solo acepta metadata foundation. No acepta XML, base64, certificados, archivos ni URLs con tokens/querystring sensible. `ApprovedFoundation` no habilita producción.

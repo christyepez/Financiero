@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 7 P1 endurece el contrato real de Portal Shell. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 7 P2 agrega persistencia foundation para workflow de aprobaciones externas. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -70,6 +70,7 @@ Documentos principales:
 - `docs/coordination/financial-sprint-06-p4-controlled-ui-commands.md`
 - `docs/coordination/financial-sprint-06-p5-closure-ux-portal-readiness.md`
 - `docs/coordination/financial-sprint-07-p1-real-portal-shell-contract.md`
+- `docs/coordination/financial-sprint-07-p2-external-approval-persistence.md`
 - `docs/frontend/financial-angular-shell.md`
 - `docs/frontend/portal-shell-contract.md`
 - `docs/frontend/portal-shell-readiness-matrix.md`
@@ -82,6 +83,7 @@ Documentos principales:
 - `docs/architecture/decisions/adr-021-portal-shell-contract-integration.md`
 - `docs/architecture/decisions/adr-022-controlled-ui-command-foundation.md`
 - `docs/architecture/decisions/adr-023-real-portal-shell-contract-hardening.md`
+- `docs/architecture/decisions/adr-024-external-approval-workflow-persistence.md`
 - `docs/releases/financial-sprint-05-closure.md`
 - `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
@@ -155,4 +157,6 @@ Sprint 6 P5 cierra el sprint con evidencia QA, release notes, architecture snaps
 
 Sprint 7 P1 agrega `contractVersion=1.0`, `source`, capabilities, warnings, validación de contexto, menú allow-listed, delegated auth en memoria y bloqueo seguro en producción cuando falta Portal Shell real.
 
-Próximo paso recomendado: conectar con el Shell real de PortalCorporativo y validar contrato end-to-end antes de habilitar cualquier UX operativa adicional.
+Sprint 7 P2 agrega requests persistidos de aprobaciones externas foundation. Guarda metadata/referencias sanitizadas y decisiones foundation; no guarda evidencia real, archivos, XML, certificados ni habilita producción.
+
+Próximo paso recomendado: conectar con Portal Content/File y Notification reales cuando sus contratos estén congelados, manteniendo gates no productivos.

@@ -89,3 +89,4 @@ Sprint 5 P5 agrega external approval workflow foundation:
 - Es read-only/advisory y no habilita producción.
 
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
+- External approval requests foundation: `/api/financial/external-approval-requests`.

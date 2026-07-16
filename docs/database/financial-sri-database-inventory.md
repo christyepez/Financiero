@@ -99,3 +99,14 @@ No se crea migración `013`. El mapping de sustentos ATS y readiness por secció
 ## Sprint 5 P3 tax catalogs foundation
 
 No se crea migración `013`. Los catálogos foundation de compras/anulados se versionan en código/configuración de aplicación con versión `2026-07-sprint-5-p3-foundation`. No se crean tablas de catálogo administrable, seeds oficiales, XML, evidencias ni storage propio.
+# Sprint 7 P2 external approvals
+
+Migration `013_external_approval_workflow_foundation.sql` adds:
+
+- `financial.external_approval_requests`.
+- `financial.external_approval_requirements`.
+- `financial.external_approval_evidence_references`.
+- `financial.external_approval_decisions`.
+- `financial.external_approval_timeline`.
+
+These tables store approval metadata only. They do not store files, XML, certificates, SRI responses or evidence payloads.

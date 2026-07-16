@@ -99,6 +99,16 @@ El contrato Portal Shell se endurece para integración real:
 
 Financiero sigue sin login propio, roles propios, token storage, cookies auth propias ni duplicación de Security/Menu/Configuration/Notification del Portal.
 
+## Sprint 7 P2 external approval persistence
+
+La pantalla de aprobaciones externas consume `/api/financial/external-approval-requests` para listar requests persistidos foundation. Los comandos de crear, submit, review, referencia de evidencia, decisión y cancelación requieren:
+
+- `allowMutations=true`.
+- `allowExternalApprovalCommands=true`.
+- `financial.electronicdocuments.manage`.
+
+Referencia de evidencia es metadata únicamente; no hay upload, XML preview, certificados ni archivos.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.

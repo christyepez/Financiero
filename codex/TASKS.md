@@ -156,6 +156,10 @@
 - [x] Bloquear producción cuando falta contexto Portal real o versión soportada.
 - [x] Filtrar menú por allow-list, permisos y feature flags.
 - [x] Mantener delegated auth solo en memoria y sin token storage.
+- [x] P2 agregar persistencia foundation de workflow de aprobaciones externas.
+- [x] Crear migración `013_external_approval_workflow_foundation.sql`.
+- [x] Agregar endpoints `/api/financial/external-approval-requests`.
+- [x] Integrar UI Angular gated para requests y referencias metadata.
 - [ ] Validar contrato end-to-end con PortalCorporativo real.
 
 ## Dependencias Portal Sprint 2
