@@ -280,6 +280,11 @@ if (-not ($atsSectionReadiness.data.sections | Where-Object { $_.section -eq "Vo
 $supportMappings = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/support-document-mappings" -Headers $headers
 if (-not ($supportMappings.data | Where-Object { $_.atsSection -eq "Purchases" })) { throw "Support document mappings catalog is missing purchases." }
 if ((($atsSectionReadiness | ConvertTo-Json -Depth 20) + ($supportMappings | ConvertTo-Json -Depth 20)) -match "<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") { throw "ATS mapping readiness exposed sensitive payload." }
+$atsXmlReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-xml/readiness?period=2026-01" -Headers $headers
+if ($atsXmlReadiness.data.canGenerateFoundation -ne $false) { throw "ATS XML readiness should be blocked by default." }
+$atsXmlPreview = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/financial/tax-reporting/ats-xml/generate-preview" -Headers $headers -Body (@{ period = "2026-01"; includeXml = $true; acknowledgeFoundationOnly = $true; acknowledgeNoSriSubmission = $true; acknowledgeNoOfficialCompliance = $true } | ConvertTo-Json)
+if ($null -ne $atsXmlPreview.data.xmlContent) { throw "ATS XML preview returned XML while disabled by default." }
+if ((($atsXmlReadiness | ConvertTo-Json -Depth 20) + ($atsXmlPreview | ConvertTo-Json -Depth 20)) -match "<ats|<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") { throw "ATS XML foundation endpoints exposed XML or sensitive payload while disabled." }
 $atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
 if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
 if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }

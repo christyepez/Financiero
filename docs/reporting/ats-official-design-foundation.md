@@ -47,3 +47,7 @@ La salida sigue siendo no oficial: no se genera XML ATS, no se valida XSD oficia
 ## Sprint 5 P3
 
 ATS readiness y mapping declaran `catalogVersion=2026-07-sprint-5-p3-foundation`. Los catálogos foundation reducen ambigüedad para compras/anulados, pero los gaps oficiales se mantienen hasta revisión tributaria, XSD/layout oficial y aprobación externa.
+
+## Sprint 5 P4
+
+Se agrega preview XML ATS foundation gated. Este preview no convierte el diseño en oficial: mantiene gaps de schema oficial, catálogos finales, aprobación externa y no envío al SRI.
