@@ -44,6 +44,18 @@ Rutas consumidas:
 
 La UI no muestra XML completo, access keys completas, identificaciones completas ni secretos. `X-Dev-Permissions` solo puede activarse en development y permanece apagado por defecto.
 
+## Sprint 6 P3 Portal Shell contract
+
+Se agrega una capa reemplazable para integrar el shell financiero con PortalCorporativo:
+
+- `PortalShellContext` como contrato de usuario, tenant, permisos, menú, notificaciones, correlación, ambiente y feature flags.
+- `StandalonePortalContextProvider` para ejecución local segura.
+- `PortalIntegratedContextProvider` para contexto futuro desde Portal.
+- `PortalContextAdapter` como fachada para auth/menu/configuración/notificaciones.
+- Contrato temporal `window.__PORTAL_SHELL_CONTEXT__`, documentado en `docs/frontend/portal-shell-contract.md`.
+
+El frontend mantiene `standalone` como fallback local y `portal-integrated` como modo preparado. No implementa login propio, roles propios, token storage ni runtime real de Portal.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.

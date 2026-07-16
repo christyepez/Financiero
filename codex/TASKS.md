@@ -136,6 +136,10 @@
 - [x] Desempaquetar `ApiResponse<T>` centralmente en frontend.
 - [x] Agregar estados loading/error/empty y selector de período foundation.
 - [x] Documentar ADR-020 y coordinación Sprint 6 P2.
+- [x] P3 formalizar contrato Portal Shell foundation.
+- [x] Agregar providers standalone y portal-integrated placeholder.
+- [x] Conectar auth/menu/notificaciones/configuración/correlation al contexto Portal.
+- [x] Documentar ADR-021 y contrato `window.__PORTAL_SHELL_CONTEXT__`.
 - [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
 - [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
 

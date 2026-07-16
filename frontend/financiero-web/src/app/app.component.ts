@@ -2,13 +2,14 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PortalMenuAdapter } from './core/adapters/portal-menu.adapter';
 import { PortalNotificationAdapter } from './core/adapters/portal-notification.adapter';
+import { ShellModeBannerComponent } from './shared/components/shell-mode-banner.component';
 import { StatusBadgeComponent } from './shared/components/status-badge.component';
 import { environment } from '../environments/environment';
 
 @Component({
   selector: 'fin-root',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, StatusBadgeComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, ShellModeBannerComponent, StatusBadgeComponent],
   template: `
     <div class="shell">
       <aside class="sidebar">
@@ -31,9 +32,7 @@ import { environment } from '../environments/environment';
         </header>
 
         @if (showWarnings) {
-          <div class="warning">
-            Esta UI es una base de integración. Las funciones SRI/ATS/RIDE son readiness técnico y requieren aprobación externa antes de producción.
-          </div>
+          <fin-shell-mode-banner />
         }
 
         <router-outlet />
