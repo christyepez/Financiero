@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 5 P5 cerrado como foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated y workflow foundation de aprobaciones externas quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 6 P1 agrega Angular Shell foundation read-only. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular foundation quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -64,12 +64,15 @@ Documentos principales:
 - `docs/reporting/ats-xml-foundation-gated.md`
 - `docs/coordination/financial-sprint-05-p5-closure-approval-workflow.md`
 - `docs/architecture/decisions/adr-018-external-approval-workflow-foundation.md`
+- `docs/coordination/financial-sprint-06-p1-angular-shell-foundation.md`
+- `docs/frontend/financial-angular-shell.md`
+- `docs/architecture/decisions/adr-019-angular-shell-portal-integration.md`
 - `docs/releases/financial-sprint-05-closure.md`
 - `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
 - `docs/qa/financial-sprint-04-qa-evidence.md`
 
-No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. No contiene frontend, RIDE/PDF final, firma XAdES productiva ni envío real a SRI.
+No duplicar capacidades Portal ni acceder a sus bases. En local se reutiliza el único SQL Server de PortalCorporativo y Financiero mantiene su propia base lógica `FinancieroDb`. El frontend Angular foundation no contiene login propio, almacenamiento local de tokens, RIDE/PDF final, firma XAdES productiva ni envío real a SRI.
 
 Ejecución y variables: `docs/coordination/financial-local-development.md`.
 
@@ -80,6 +83,10 @@ dotnet restore Financiero.sln
 dotnet build Financiero.sln
 dotnet test Financiero.sln
 docker compose up -d --build financial-api
+cd frontend/financiero-web
+npm install
+npm run build
+npm test
 ```
 
 El puerto local de la API es configurable con `FINANCIAL_API_PORT`. El ambiente validado en P5/P6 usa `http://localhost:8083`.
@@ -121,4 +128,6 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: Sprint 6 para revisión externa, evidencias sanitizadas y eventual workflow persistido/controlado.
+Sprint 6 P1 agrega `frontend/financiero-web` como Angular standalone read-only, con adapters reemplazables para Portal Security/Menu/Notification, clientes API sanitizados e interceptores de correlation/autorización.
+
+Próximo paso recomendado: integrar el Angular Shell real del Portal cuando sus contratos de Security/Menu/Configuration estén congelados y avanzar hacia UX operativa gated sin habilitar producción SRI.

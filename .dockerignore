@@ -3,3 +3,6 @@
 .git
 .env
 TestResults
+frontend/**/node_modules
+frontend/**/dist
+frontend/**/.angular
