@@ -13,6 +13,11 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
   imports: [EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, StatusBadgeComponent],
   template: `
     <fin-foundation-disclaimer text="Catálogos foundation sujetos a revisión tributaria. No sustituyen catálogo oficial validado." />
+    <div class="panel">
+      <span class="badge warn">Catálogo foundation</span>
+      <span class="badge bad">Revisión tributaria pendiente</span>
+      <p class="muted">Los códigos se muestran como referencia técnica; no afirman vigencia oficial ni cobertura completa.</p>
+    </div>
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
     @if (summary()) {

@@ -14,6 +14,11 @@ import { ReadinessCardComponent } from '../../shared/components/readiness-card.c
   imports: [ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, ReadinessCardComponent],
   template: `
     <fin-foundation-disclaimer text="ATS XML permanece gated. P2 no muestra XML completo ni genera preview oficial." />
+    <div class="panel">
+      <span class="badge warn">ATS foundation</span>
+      <span class="badge bad">No oficial</span>
+      <p class="muted">Los resultados ayudan a preparar gaps; no son archivo ATS, no sustituyen validación SRI y no deben usarse para declaración.</p>
+    </div>
     <fin-period-selector [period]="period()" (periodChange)="load($event)" />
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />

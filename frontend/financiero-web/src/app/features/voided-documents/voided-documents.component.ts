@@ -18,6 +18,11 @@ import { VoidedDocumentCreateFormComponent } from './voided-document-create-form
   imports: [CommandDisabledBannerComponent, EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, StatusBadgeComponent, VoidedDocumentCreateFormComponent],
   template: `
     <fin-foundation-disclaimer text="Anulados foundation. No registra anulaciones oficiales ni envía información al SRI." />
+    <div class="panel">
+      <span class="badge warn">Registro foundation</span>
+      <span class="badge info">Sin anulación oficial</span>
+      <p class="muted">Los registros ayudan a cerrar gaps ATS. No cancelan comprobantes ante SRI ni reemplazan proceso legal.</p>
+    </div>
     @if (!canCommand()) {
       <fin-command-disabled-banner [reason]="guard.disabledReason('voided')" />
     }
@@ -45,7 +50,7 @@ import { VoidedDocumentCreateFormComponent } from './voided-document-create-form
         </table>
       </section>
     } @else if (!loading()) {
-      <fin-empty-state title="Sin anulados para el período" description="Vista read-only. No registra anulaciones desde Angular en P2." />
+      <fin-empty-state title="Sin anulados para el período" description="No hay documentos anulados foundation para el período seleccionado. La anulación oficial sigue bloqueada." />
     }
   `
 })

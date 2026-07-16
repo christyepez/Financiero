@@ -58,6 +58,15 @@ Angular también expone el `InjectionToken` `PORTAL_SHELL_CONTEXT`.
 Para P4, los comandos UI foundation solo se habilitan en development con `allowMutations=true` y el flag específico del comando. Producción permanece bloqueada.
 - Emails, texto y metadata se sanitizan antes de usarse.
 
+## Readiness P5
+
+La matriz operativa está en `docs/frontend/portal-shell-readiness-matrix.md`. Hasta que PortalCorporativo congele el contrato real:
+
+- Financiero consume contexto de usuario/tenant/permisos como contrato delegado.
+- El modo standalone es solo desarrollo seguro.
+- En producción, la ausencia de contexto Portal debe bloquear capacidades sensibles.
+- Menú, notificaciones, telemetría y auth delegada siguen bajo ownership de PortalCorporativo.
+
 ## Menú
 
 Cada item define:
