@@ -714,6 +714,7 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<AtsSupportMappingService>();
         services.AddScoped<IAtsXmlReadinessValidator, AtsXmlReadinessValidator>();
         services.AddScoped<IAtsXmlFoundationGenerator, AtsXmlFoundationGenerator>();
+        services.AddScoped<IExternalApprovalReadinessService, ExternalApprovalReadinessService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<IRideLegalGapAnalysisService, RideLegalGapAnalysisService>();

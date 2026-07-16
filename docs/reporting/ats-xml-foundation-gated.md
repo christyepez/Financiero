@@ -23,3 +23,7 @@ El XML no se persiste, no se audita y no se loguea. Audit registra solo metadata
 - Catálogos oficiales finales.
 - Revisión tributaria/legal.
 - Aprobación operacional antes de cualquier envío.
+
+## Sprint 5 P5
+
+El uso oficial queda condicionado por external approval gates: ATS official XML, security production gate, operational runbook y revisión tributaria/legal. El workflow expone estado foundation y no habilita envío.
