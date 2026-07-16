@@ -1,6 +1,9 @@
 import { InjectionToken } from '@angular/core';
 
 export type PortalShellMode = 'standalone' | 'portal-integrated';
+export type PortalShellSource = 'standalone' | 'portal';
+
+export const SUPPORTED_PORTAL_SHELL_CONTRACT_VERSION = '1.0';
 
 export interface PortalUserContext {
   userId: string;
@@ -64,6 +67,12 @@ export interface PortalEnvironmentContext {
 }
 
 export interface PortalShellContext {
+  contractVersion: string;
+  source: PortalShellSource;
+  issuedAt?: string;
+  expiresAt?: string;
+  capabilities: string[];
+  warnings: string[];
   user: PortalUserContext;
   tenant: PortalTenantContext;
   permissions: PortalPermissionContext;

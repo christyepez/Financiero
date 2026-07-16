@@ -17,7 +17,9 @@ export class PortalMenuAdapter {
   private readonly context = inject(PortalContextAdapter);
   private readonly flags = inject(PortalFeatureFlagAdapter);
   readonly items = computed<PortalMenuItem[]>(() => this.context.getContext().menu.items
+    .filter(item => this.hasPermission(item.permission))
     .filter(item => !item.featureFlag || this.flags.enabled(item.featureFlag))
+    .filter(item => item.route.startsWith('/') && !item.route.startsWith('//'))
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
     .map(item => ({
       label: item.title,
@@ -31,5 +33,10 @@ export class PortalMenuAdapter {
 
   currentTitle(): string {
     return this.context.isPortalIntegrated() ? 'Financiero · Portal Shell' : 'Financiero · Standalone Shell';
+  }
+
+  private hasPermission(permission: string): boolean {
+    const permissions = this.context.getContext().permissions.permissions;
+    return permissions.includes(permission);
   }
 }

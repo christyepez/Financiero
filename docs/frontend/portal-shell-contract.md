@@ -8,6 +8,12 @@ Portal puede inyectar contexto mediante:
 
 ```ts
 window.__PORTAL_SHELL_CONTEXT__ = {
+  contractVersion: '1.0',
+  source: 'portal',
+  issuedAt: '2026-07-16T00:00:00.000Z',
+  expiresAt: '2026-07-16T01:00:00.000Z',
+  capabilities: ['financial.shell.foundation'],
+  warnings: [],
   user: {
     userId: 'portal-user-id',
     displayName: 'Usuario Portal',
@@ -48,6 +54,8 @@ Angular también expone el `InjectionToken` `PORTAL_SHELL_CONTEXT`.
 - `standalone`: modo local seguro, usuario/tenant sintéticos, sin token real.
 - `portal-integrated`: contexto delegado por Portal.
 
+`standalone` solo es aceptable para desarrollo. En producción, si Portal no inyecta contexto real o la versión del contrato no está soportada, Financiero bloquea navegación sensible y muestra un mensaje seguro sin volcar el objeto de contexto.
+
 ## Seguridad
 
 - No se guarda token en browser storage.
@@ -57,6 +65,9 @@ Angular también expone el `InjectionToken` `PORTAL_SHELL_CONTEXT`.
 
 Para P4, los comandos UI foundation solo se habilitan en development con `allowMutations=true` y el flag específico del comando. Producción permanece bloqueada.
 - Emails, texto y metadata se sanitizan antes de usarse.
+- `delegatedAuthToken` es opcional, se usa solo en memoria y no se acepta desde querystring, storage ni cookies propias.
+- `contractVersion` soportado: `1.0`.
+- Rutas de menú se filtran por allow-list financiera, permisos y feature flags.
 
 ## Readiness P5
 

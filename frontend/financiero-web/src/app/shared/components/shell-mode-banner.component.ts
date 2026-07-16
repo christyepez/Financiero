@@ -2,16 +2,18 @@ import { Component, inject } from '@angular/core';
 import { PortalContextAdapter } from '../../core/portal-shell/portal-context.adapter';
 import { FeatureFlagBadgeComponent } from './feature-flag-badge.component';
 import { PermissionHintComponent } from './permission-hint.component';
+import { ShellContractVersionBadgeComponent } from './shell-contract-version-badge.component';
 
 @Component({
   selector: 'fin-shell-mode-banner',
   standalone: true,
-  imports: [FeatureFlagBadgeComponent, PermissionHintComponent],
+  imports: [FeatureFlagBadgeComponent, PermissionHintComponent, ShellContractVersionBadgeComponent],
   template: `
     <div class="warning">
       <strong>{{ modeLabel }}</strong>
       · tenant {{ tenant }}
       · {{ productionLabel }}
+      <fin-shell-contract-version-badge />
       <fin-permission-hint [permissions]="permissions" />
       <fin-feature-flag-badge />
       @if (missingPortalContext) {

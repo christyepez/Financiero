@@ -1,5 +1,5 @@
 import { environment } from '../../../environments/environment';
-import { PortalFeatureFlags, PortalMenuItemContract, PortalShellContext } from './portal-shell.models';
+import { PortalFeatureFlags, PortalMenuItemContract, PortalShellContext, SUPPORTED_PORTAL_SHELL_CONTRACT_VERSION } from './portal-shell.models';
 
 export const defaultFeatureFlags: PortalFeatureFlags = {
   showAtsXmlReadiness: true,
@@ -25,13 +25,27 @@ export const financialMenuItems: PortalMenuItemContract[] = [
   { route: '/voided-documents', title: 'Anulados', permission: 'financial.electronicdocuments.read', featureFlag: 'showVoidedDocuments', icon: 'voided', order: 70, foundationOnly: true, readOnly: true }
 ];
 
+export const allowedFinancialRoutes = financialMenuItems.map(item => item.route);
+
+export const defaultPortalCapabilities = [
+  'financial.shell.foundation',
+  'financial.readiness.read',
+  'financial.commands.gated'
+];
+
 export function standalonePortalShellContext(): PortalShellContext {
   const allowDevHeaders = !environment.production && environment.enableDevHeaders;
-  const permissions = allowDevHeaders
-    ? environment.devPermissionsHeader.split(',').map(x => x.trim()).filter(Boolean)
-    : [];
+  const permissions = ['financial.electronicdocuments.read'];
+  if (allowDevHeaders) {
+    permissions.push(...environment.devPermissionsHeader.split(',').map(x => x.trim()).filter(Boolean));
+  }
 
   return {
+    contractVersion: SUPPORTED_PORTAL_SHELL_CONTRACT_VERSION,
+    source: 'standalone',
+    issuedAt: new Date().toISOString(),
+    capabilities: defaultPortalCapabilities,
+    warnings: environment.production ? ['Standalone shell is not allowed in production.'] : ['Standalone development fallback.'],
     user: { userId: 'standalone-dev-user', displayName: 'Standalone foundation user', emailMasked: 's********e@example.local', roles: [] },
     tenant: { tenantId: 'default', tenantName: 'Standalone tenant' },
     permissions: { permissions, roles: [] },

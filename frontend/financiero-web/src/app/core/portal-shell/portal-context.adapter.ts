@@ -43,4 +43,13 @@ export class PortalContextAdapter {
     const context = this.getContext();
     return environment.production && context.environment.shellMode === 'portal-integrated' && context.user.userId === 'missing-portal-context';
   }
+
+  hasUnsupportedContract(): boolean {
+    const context = this.getContext();
+    return context.contractVersion !== '1.0';
+  }
+
+  contextWarnings(): string[] {
+    return this.getContext().warnings;
+  }
 }
