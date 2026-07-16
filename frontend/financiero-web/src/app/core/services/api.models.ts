@@ -76,6 +76,55 @@ export interface TaxDocumentSummary {
   [key: string]: unknown;
 }
 
+export interface CreatePurchaseTaxDocumentRequest {
+  supplierIdentificationType: string;
+  supplierIdentification: string;
+  supplierName: string;
+  establishment: string;
+  emissionPoint: string;
+  sequential: string;
+  documentType: string;
+  issueDate: string;
+  registrationDate: string;
+  fiscalPeriod: string;
+  supportDocumentType: string;
+  subtotal: number;
+  taxTotal: number;
+  total: number;
+  currency: string;
+  authorizationNumber?: string;
+  accessKey?: string;
+}
+
+export interface AddPurchaseLineRequest {
+  productCode: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+}
+
+export interface AddPurchaseTaxRequest {
+  taxCode: string;
+  taxPercentageCode: string;
+  taxBase: number;
+  taxRate: number;
+  taxAmount: number;
+}
+
+export interface RegisterVoidedTaxDocumentRequest {
+  documentType: string;
+  establishment: string;
+  emissionPoint: string;
+  sequential: string;
+  issueDate: string;
+  voidDate: string;
+  fiscalPeriod: string;
+  reason: string;
+  authorizationNumber?: string;
+  accessKey?: string;
+}
+
 export interface AtsSectionReadiness {
   section?: string;
   mappedCount?: number;

@@ -7,6 +7,10 @@ export const defaultFeatureFlags: PortalFeatureFlags = {
   showPurchases: true,
   showVoidedDocuments: true,
   allowDevHeaders: false,
+  allowPurchaseCommands: false,
+  allowVoidedDocumentCommands: false,
+  allowAtsOfficialActions: false,
+  allowSriSubmission: false,
   allowXmlPreviewUi: false,
   allowMutations: false
 };

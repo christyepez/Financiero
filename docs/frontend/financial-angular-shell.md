@@ -56,6 +56,22 @@ Se agrega una capa reemplazable para integrar el shell financiero con PortalCorp
 
 El frontend mantiene `standalone` como fallback local y `portal-integrated` como modo preparado. No implementa login propio, roles propios, token storage ni runtime real de Portal.
 
+## Sprint 6 P4 controlled UI commands
+
+Se agregan comandos foundation controlados para compras y documentos anulados:
+
+- Crear compra foundation.
+- Validar compra foundation.
+- Registrar documento anulado foundation.
+
+Los comandos requieren `financial.electronicdocuments.manage` y flags explícitos:
+
+- `allowMutations=true`.
+- `allowPurchaseCommands=true` para compras.
+- `allowVoidedDocumentCommands=true` para anulados.
+
+Por defecto todos permanecen apagados. `allowAtsOfficialActions`, `allowSriSubmission` y `allowXmlPreviewUi` permanecen `false`.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.

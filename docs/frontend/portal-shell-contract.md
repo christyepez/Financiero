@@ -31,6 +31,10 @@ window.__PORTAL_SHELL_CONTEXT__ = {
     showPurchases: true,
     showVoidedDocuments: true,
     allowDevHeaders: false,
+    allowPurchaseCommands: false,
+    allowVoidedDocumentCommands: false,
+    allowAtsOfficialActions: false,
+    allowSriSubmission: false,
     allowXmlPreviewUi: false,
     allowMutations: false
   }
@@ -50,6 +54,8 @@ Angular también expone el `InjectionToken` `PORTAL_SHELL_CONTEXT`.
 - `delegatedAuthToken` solo se usa en memoria durante la llamada HTTP.
 - En production no se agregan `X-Dev-Permissions`.
 - `allowMutations` y `allowXmlPreviewUi` se fuerzan a `false`.
+
+Para P4, los comandos UI foundation solo se habilitan en development con `allowMutations=true` y el flag específico del comando. Producción permanece bloqueada.
 - Emails, texto y metadata se sanitizan antes de usarse.
 
 ## Menú

@@ -1,28 +1,37 @@
 import { Component, inject, signal } from '@angular/core';
+import { CommandGuardService } from '../../core/services/command-guard.service';
 import { PurchaseTaxDocumentApiService } from '../../core/services/purchase-tax-document-api.service';
 import { SanitizationService } from '../../core/services/sanitization.service';
 import { TaxDocumentSummary } from '../../core/services/api.models';
+import { CommandDisabledBannerComponent } from '../../shared/components/command-disabled-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message.component';
 import { FoundationDisclaimerComponent } from '../../shared/components/foundation-disclaimer.component';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { PeriodSelectorComponent } from '../../shared/components/period-selector.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
+import { PurchaseCreateFormComponent } from './purchase-create-form.component';
+import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
 
 @Component({
   standalone: true,
   selector: 'fin-purchases',
-  imports: [EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, StatusBadgeComponent],
+  imports: [CommandDisabledBannerComponent, EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, PurchaseCreateFormComponent, PurchaseTaxSummaryComponent, StatusBadgeComponent],
   template: `
-    <fin-foundation-disclaimer text="Compras es read-only en P2. No crea, edita ni contabiliza documentos." />
+    <fin-foundation-disclaimer text="Compras foundation. Los comandos son internos, no oficiales y no envían datos al SRI." />
+    @if (!canCommand()) {
+      <fin-command-disabled-banner [reason]="guard.disabledReason('purchase')" />
+    }
+    <fin-purchase-create-form [enabled]="canCommand()" [period]="period()" (created)="afterCommand($event)" />
     <fin-period-selector [period]="period()" (periodChange)="load($event)" />
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
+    <fin-purchase-tax-summary [items]="items()" />
     @if (items().length) {
       <section class="panel">
-        <h2>Compras tributarias read-only</h2>
+        <h2>Compras tributarias foundation</h2>
         <table class="table">
-          <thead><tr><th>Tipo</th><th>Proveedor</th><th>Período</th><th>Total</th><th>Estado</th></tr></thead>
+          <thead><tr><th>Tipo</th><th>Proveedor</th><th>Período</th><th>Total</th><th>Estado</th><th>Acción</th></tr></thead>
           <tbody>
             @for (item of items(); track item.id) {
               <tr>
@@ -31,6 +40,9 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
                 <td>{{ item.fiscalPeriod || item.period || period() }}</td>
                 <td>{{ item.total ?? '-' }}</td>
                 <td><fin-status-badge [value]="item.status || 'Foundation'" /></td>
+                <td>
+                  <button type="button" [disabled]="!canCommand()" (click)="validate(item)">Validar foundation</button>
+                </td>
               </tr>
             }
           </tbody>
@@ -43,6 +55,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 })
 export class PurchasesComponent {
   private readonly api = inject(PurchaseTaxDocumentApiService);
+  protected readonly guard = inject(CommandGuardService);
   private readonly sanitizer = inject(SanitizationService);
   protected readonly period = signal(currentPeriod());
   protected readonly items = signal<TaxDocumentSummary[]>([]);
@@ -61,6 +74,25 @@ export class PurchasesComponent {
       next: value => this.items.set(value),
       error: error => this.error.set(error.message),
       complete: () => this.loading.set(false)
+    });
+  }
+
+  canCommand(): boolean {
+    return this.guard.canRunPurchaseCommands();
+  }
+
+  afterCommand(_: TaxDocumentSummary): void {
+    this.load(this.period());
+  }
+
+  validate(item: TaxDocumentSummary): void {
+    if (!item.id || !this.canCommand()) return;
+    if (!confirm('Validar compra foundation. No certifica cumplimiento tributario oficial. ¿Continuar?')) return;
+    this.api.validatePurchase(item.id).subscribe({
+      next: value => {
+        this.items.update(items => items.map(current => current.id === value.id ? value : current));
+      },
+      error: error => this.error.set(error.message)
     });
   }
 

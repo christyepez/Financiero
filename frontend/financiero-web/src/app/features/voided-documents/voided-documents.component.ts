@@ -1,20 +1,27 @@
 import { Component, inject, signal } from '@angular/core';
+import { CommandGuardService } from '../../core/services/command-guard.service';
 import { VoidedTaxDocumentApiService } from '../../core/services/voided-tax-document-api.service';
 import { SanitizationService } from '../../core/services/sanitization.service';
 import { TaxDocumentSummary } from '../../core/services/api.models';
+import { CommandDisabledBannerComponent } from '../../shared/components/command-disabled-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message.component';
 import { FoundationDisclaimerComponent } from '../../shared/components/foundation-disclaimer.component';
 import { LoadingStateComponent } from '../../shared/components/loading-state.component';
 import { PeriodSelectorComponent } from '../../shared/components/period-selector.component';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
+import { VoidedDocumentCreateFormComponent } from './voided-document-create-form.component';
 
 @Component({
   standalone: true,
   selector: 'fin-voided-documents',
-  imports: [EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, StatusBadgeComponent],
+  imports: [CommandDisabledBannerComponent, EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, StatusBadgeComponent, VoidedDocumentCreateFormComponent],
   template: `
-    <fin-foundation-disclaimer text="Anulados es read-only en P2. No registra anulaciones ni envía información al SRI." />
+    <fin-foundation-disclaimer text="Anulados foundation. No registra anulaciones oficiales ni envía información al SRI." />
+    @if (!canCommand()) {
+      <fin-command-disabled-banner [reason]="guard.disabledReason('voided')" />
+    }
+    <fin-voided-document-create-form [enabled]="canCommand()" [period]="period()" (registered)="afterCommand($event)" />
     <fin-period-selector [period]="period()" (periodChange)="load($event)" />
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
@@ -44,6 +51,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
 })
 export class VoidedDocumentsComponent {
   private readonly api = inject(VoidedTaxDocumentApiService);
+  protected readonly guard = inject(CommandGuardService);
   private readonly sanitizer = inject(SanitizationService);
   protected readonly period = signal(currentPeriod());
   protected readonly items = signal<TaxDocumentSummary[]>([]);
@@ -63,6 +71,14 @@ export class VoidedDocumentsComponent {
       error: error => this.error.set(error.message),
       complete: () => this.loading.set(false)
     });
+  }
+
+  canCommand(): boolean {
+    return this.guard.canRunVoidedDocumentCommands();
+  }
+
+  afterCommand(_: TaxDocumentSummary): void {
+    this.load(this.period());
   }
 
   accessKey(item: TaxDocumentSummary): string {
