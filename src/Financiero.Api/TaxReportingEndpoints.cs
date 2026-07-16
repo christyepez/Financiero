@@ -60,6 +60,16 @@ public static class TaxReportingEndpoints
         }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/support-document-mappings", async (AtsSupportMappingService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetMappingsAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapGet("/ats-xml/readiness", async (string period, IAtsXmlReadinessValidator service, IWebHostEnvironment env, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            !PurchaseTaxDocumentValidator.IsFiscalPeriod(period) ? BadRequestJson("ats.xml.period.invalid", "ATS XML period must use YYYY-MM.", http) : await ExecuteAsync(() => service.CheckAsync(period, env.EnvironmentName, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        group.MapPost("/ats-xml/generate-preview", async (AtsXmlGenerationRequest request, IAtsXmlFoundationGenerator service, IWebHostEnvironment env, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+        {
+            if (!PurchaseTaxDocumentValidator.IsFiscalPeriod(request.Period))
+                return BadRequestJson("ats.xml.period.invalid", "ATS XML period must use YYYY-MM.", http);
+            if (!request.AcknowledgeFoundationOnly || !request.AcknowledgeNoSriSubmission || !request.AcknowledgeNoOfficialCompliance)
+                return BadRequestJson("ats.xml.acknowledgement.required", "Foundation-only, no SRI submission and no official compliance acknowledgements are required.", http);
+            return await ExecuteAsync(() => service.GeneratePreviewAsync(request, env.EnvironmentName, Context(http, options.Value), ct), http);
+        }).RequireAuthorization(FinancialPermissions.ElectronicDocumentsManage);
         group.MapGet("/action-queue", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetActionQueueAsync(request, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         group.MapGet("/monthly-summary", async ([AsParameters] TaxReportQuery request, ITaxExportService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>

@@ -69,6 +69,8 @@ Sprint 5 P2 agrega `AtsSupportMappingService` como capa application read-only pa
 
 Sprint 5 P3 agrega `FinancialTaxCatalogService` y `FoundationFinancialTaxCatalogProvider` para catálogos foundation versionados de compras/anulados. Los catálogos se consumen desde mapping/readiness, se exponen read-only y no requieren migración.
 
+Sprint 5 P4 agrega `AtsXmlReadinessValidator` y `AtsXmlFoundationGenerator`. El XML se genera únicamente en memoria, gated por configuración, con metadata/hash y sin persistencia ni envío SRI.
+
 ## Relación futura con contabilidad
 
 `ElectronicDocument.RelatedJournalEntryId` permite vincular contabilización futura sin acoplar el flujo SRI al posting contable en P1.

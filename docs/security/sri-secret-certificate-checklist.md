@@ -112,3 +112,7 @@ Mapping/readiness ATS es read-only y sanitizado. No debe exponer XML, access key
 ## Sprint 5 P3
 
 Catálogos foundation no contienen datos personales, XML, secretos, certificados, tokens ni URLs privadas. Las respuestas deben incluir disclaimer de no oficial final y no deben habilitar SRI producción, SRI Test real ni ATS oficial.
+
+## Sprint 5 P4
+
+ATS XML foundation preview está bloqueado por defecto. XML no se persiste, no se sube a Content/File, no se audita y no se loguea. El preview requiere permisos manage, acknowledgements explícitos y configuración local controlada.

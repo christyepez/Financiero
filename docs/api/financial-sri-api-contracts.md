@@ -85,6 +85,15 @@ Las respuestas enmascaran identificación de proveedor, clave de acceso y autori
 
 Versión: `2026-07-sprint-5-p3-foundation`. Todos los items son foundation-only, requieren revisión tributaria y no son catálogos oficiales finales.
 
+## ATS XML foundation gated
+
+| Método | Ruta | Permiso | Estado |
+|---|---|---|---|
+| GET | `/api/financial/tax-reporting/ats-xml/readiness?period=YYYY-MM` | `financial.electronicdocuments.read` | Implementado Sprint 5 P4; bloqueado por defecto |
+| POST | `/api/financial/tax-reporting/ats-xml/generate-preview` | `financial.electronicdocuments.manage` | Implementado Sprint 5 P4; requiere acknowledgements |
+
+El preview no se persiste, no se envía al SRI y solo puede devolver XML si `financial.sri.atsXmlFoundation.enabled=true` y `allowXmlPreview=true`.
+
 ## Sprint 4 endpoint summary
 
 - Content/File readiness: `GET /api/financial/electronic-documents/content-file/readiness`, permiso `financial.electronicdocuments.manage`, no secretos/XML.

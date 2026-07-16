@@ -75,4 +75,10 @@ Sprint 5 P3 agrega catálogos foundation read-only:
 - `/purchase-document-types`, `/support-document-types`, `/voided-document-types`, `/purchase-tax-codes`, `/supplier-identification-types`.
 - Versión `2026-07-sprint-5-p3-foundation`; no oficiales finales y sujetos a revisión tributaria.
 
+Sprint 5 P4 agrega ATS XML foundation gated:
+
+- `/api/financial/tax-reporting/ats-xml/readiness`.
+- `/api/financial/tax-reporting/ats-xml/generate-preview`.
+- Bloqueado por defecto, sin persistencia, sin envío SRI y sin afirmación de cumplimiento oficial.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.

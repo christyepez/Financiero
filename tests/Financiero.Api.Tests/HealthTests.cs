@@ -96,6 +96,8 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001/ats-mapping")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-section-readiness?period=2026-01")]
     [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-xml/readiness?period=2026-01")]
+    [InlineData("POST", "/api/financial/tax-reporting/ats-xml/generate-preview")]
     [InlineData("GET", "/api/financial/tax-catalogs")]
     [InlineData("GET", "/api/financial/tax-catalogs/purchase-document-types")]
     [InlineData("GET", "/api/financial/tax-catalogs/support-document-types")]
@@ -160,6 +162,8 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/voided-documents/00000000-0000-0000-0000-000000000001/ats-mapping", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-section-readiness?period=2026-01", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/tax-reporting/ats-xml/readiness?period=2026-01", "financial.electronicdocuments.read")]
+    [InlineData("POST", "/api/financial/tax-reporting/ats-xml/generate-preview", "financial.electronicdocuments.manage")]
     [InlineData("GET", "/api/financial/tax-catalogs", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-catalogs/purchase-document-types", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-catalogs/support-document-types", "financial.electronicdocuments.read")]
@@ -226,6 +230,7 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("/api/financial/purchases?period=invalid")]
     [InlineData("/api/financial/voided-documents?period=invalid")]
     [InlineData("/api/financial/tax-reporting/ats-section-readiness?period=invalid")]
+    [InlineData("/api/financial/tax-reporting/ats-xml/readiness?period=invalid")]
     public async Task Purchase_and_voided_invalid_period_returns_bad_request_without_500(string url)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);

@@ -712,6 +712,8 @@ public static class FinancialInfrastructureExtensions
         services.AddSingleton<IFinancialTaxCatalogProvider, FoundationFinancialTaxCatalogProvider>();
         services.AddScoped<FinancialTaxCatalogService>();
         services.AddScoped<AtsSupportMappingService>();
+        services.AddScoped<IAtsXmlReadinessValidator, AtsXmlReadinessValidator>();
+        services.AddScoped<IAtsXmlFoundationGenerator, AtsXmlFoundationGenerator>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<IRideLegalGapAnalysisService, RideLegalGapAnalysisService>();
