@@ -14,3 +14,17 @@ All gates start as `Open`. None of these gates approve production by themselves;
 | Purchases/voided ATS foundation review | Tax/SRI reviewer | Synthetic purchase and voided records mapped to ATS sections | Open | Approval of support/document type mapping | Incomplete purchase/voided mapping | Invalid ATS purchases/anulados section |
 | Operational runbook approval | Operations | Runbook, support model, rollback and monitoring | Open | Runbook approved by operations | No support/rollback path | Operational outage |
 | Production deployment approval | Business/release owner | All previous gates closed | Open | Explicit production go/no-go | Any prior gate open | Premature production activation |
+# Sprint 5 external approval gates
+
+External approval readiness is exposed as foundation/read-only metadata. It does not enable production.
+
+Required gates:
+
+- ATS official XML.
+- RIDE legal final.
+- XAdES signature and certificate custody.
+- SRI Test submission.
+- SRI Production submission.
+- Portal Content/File production payload contract.
+- Security production gate.
+- Operational runbook.

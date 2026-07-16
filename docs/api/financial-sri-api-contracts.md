@@ -94,6 +94,16 @@ Versión: `2026-07-sprint-5-p3-foundation`. Todos los items son foundation-only,
 
 El preview no se persiste, no se envía al SRI y solo puede devolver XML si `financial.sri.atsXmlFoundation.enabled=true` y `allowXmlPreview=true`.
 
+## External approval workflow foundation
+
+| Método | Ruta | Permiso | Estado |
+|---|---|---|---|
+| GET | `/api/financial/external-approvals` | `financial.electronicdocuments.read` | Implementado Sprint 5 P5; read-only |
+| GET | `/api/financial/external-approvals/{scope}` | `financial.electronicdocuments.read` | Implementado Sprint 5 P5 |
+| GET | `/api/financial/external-approvals/readiness?scope=all` | `financial.electronicdocuments.read` | Implementado Sprint 5 P5 |
+
+El workflow es advisory/foundation. No habilita producción, no persiste evidencia y no cambia configuración.
+
 ## Sprint 4 endpoint summary
 
 - Content/File readiness: `GET /api/financial/electronic-documents/content-file/readiness`, permiso `financial.electronicdocuments.manage`, no secretos/XML.

@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 5 P4 en foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados de compras/anulados, preview ATS XML foundation gated, reglas tributarias, reporting avanzado, exports JSON/CSV foundation, ATS readiness interno, ATS official design foundation, gestión de gaps tributarios/legales y cierre externo quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 5 P5 cerrado como foundation fiscal/SRI. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated y workflow foundation de aprobaciones externas quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -62,6 +62,10 @@ Documentos principales:
 - `docs/coordination/financial-sprint-05-p4-ats-xml-foundation-gated.md`
 - `docs/architecture/decisions/adr-017-ats-xml-foundation-gated.md`
 - `docs/reporting/ats-xml-foundation-gated.md`
+- `docs/coordination/financial-sprint-05-p5-closure-approval-workflow.md`
+- `docs/architecture/decisions/adr-018-external-approval-workflow-foundation.md`
+- `docs/releases/financial-sprint-05-closure.md`
+- `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
 - `docs/qa/financial-sprint-04-qa-evidence.md`
 
@@ -103,6 +107,8 @@ Sprint 5 P3 agrega catálogos foundation versionados para compras/anulados, expu
 
 Sprint 5 P4 agrega preview ATS XML foundation gated. Está bloqueado por defecto, no persiste XML, no envía al SRI y no afirma cumplimiento oficial.
 
+Sprint 5 P5 cierra Sprint 5 y agrega workflow foundation de aprobaciones externas. Es read-only/advisory y no habilita producción.
+
 APIs principales:
 
 - `/api/financial/accounts`
@@ -115,4 +121,4 @@ APIs principales:
 - `/api/financial/electronic-documents/withholdings`
 - `/health`, `/health/live`, `/health/ready`, `/health/sri`
 
-Próximo paso recomendado: cierre/release Sprint 5 P4 y decidir Sprint 5 P5: revisión externa ATS/RIDE, hardening UI Angular Shell o workflow de aprobación.
+Próximo paso recomendado: Sprint 6 para revisión externa, evidencias sanitizadas y eventual workflow persistido/controlado.

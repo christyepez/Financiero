@@ -285,6 +285,14 @@ if ($atsXmlReadiness.data.canGenerateFoundation -ne $false) { throw "ATS XML rea
 $atsXmlPreview = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/financial/tax-reporting/ats-xml/generate-preview" -Headers $headers -Body (@{ period = "2026-01"; includeXml = $true; acknowledgeFoundationOnly = $true; acknowledgeNoSriSubmission = $true; acknowledgeNoOfficialCompliance = $true } | ConvertTo-Json)
 if ($null -ne $atsXmlPreview.data.xmlContent) { throw "ATS XML preview returned XML while disabled by default." }
 if ((($atsXmlReadiness | ConvertTo-Json -Depth 20) + ($atsXmlPreview | ConvertTo-Json -Depth 20)) -match "<ats|<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey") { throw "ATS XML foundation endpoints exposed XML or sensitive payload while disabled." }
+$externalApprovals = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/external-approvals" -Headers $headers
+$atsApproval = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/external-approvals/ats" -Headers $headers
+$rideApproval = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/external-approvals/ride" -Headers $headers
+$approvalReadiness = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/external-approvals/readiness?scope=all" -Headers $headers
+if ($externalApprovals.data.Count -lt 8) { throw "External approval gates missing expected scopes." }
+if ($atsApproval.data.doesNotEnableProduction -ne $true -or $rideApproval.data.doesNotEnableProduction -ne $true) { throw "External approval gates must not enable production." }
+if ($approvalReadiness.data.disclaimer -notmatch "does not enable production") { throw "External approval readiness disclaimer missing." }
+if ((($externalApprovals | ConvertTo-Json -Depth 20) + ($atsApproval | ConvertTo-Json -Depth 20) + ($rideApproval | ConvertTo-Json -Depth 20) + ($approvalReadiness | ConvertTo-Json -Depth 20)) -match "<factura|PRIVATE KEY|BEGIN CERTIFICATE|$accessKey|0999999999001") { throw "External approval endpoints exposed sensitive payload." }
 $atsOfficialDesign = Invoke-RestMethod -Method Get -Uri "$BaseUrl/api/financial/tax-reporting/ats-official-design?period=2026-01" -Headers $headers
 if (-not $atsOfficialDesign.data.disclaimer -or $atsOfficialDesign.data.disclaimer -notmatch "not an official ATS") { throw "ATS official design disclaimer is missing." }
 if (-not ($atsOfficialDesign.data.sections | Where-Object { $_.code -eq "purchases" })) { throw "ATS official design purchases section is missing." }

@@ -98,6 +98,9 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-xml/readiness?period=2026-01")]
     [InlineData("POST", "/api/financial/tax-reporting/ats-xml/generate-preview")]
+    [InlineData("GET", "/api/financial/external-approvals")]
+    [InlineData("GET", "/api/financial/external-approvals/ats")]
+    [InlineData("GET", "/api/financial/external-approvals/readiness?scope=all")]
     [InlineData("GET", "/api/financial/tax-catalogs")]
     [InlineData("GET", "/api/financial/tax-catalogs/purchase-document-types")]
     [InlineData("GET", "/api/financial/tax-catalogs/support-document-types")]
@@ -164,6 +167,9 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     [InlineData("GET", "/api/financial/tax-reporting/support-document-mappings", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-reporting/ats-xml/readiness?period=2026-01", "financial.electronicdocuments.read")]
     [InlineData("POST", "/api/financial/tax-reporting/ats-xml/generate-preview", "financial.electronicdocuments.manage")]
+    [InlineData("GET", "/api/financial/external-approvals", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/external-approvals/ats", "financial.electronicdocuments.read")]
+    [InlineData("GET", "/api/financial/external-approvals/readiness?scope=all", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-catalogs", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-catalogs/purchase-document-types", "financial.electronicdocuments.read")]
     [InlineData("GET", "/api/financial/tax-catalogs/support-document-types", "financial.electronicdocuments.read")]
@@ -234,6 +240,15 @@ public sealed class RuntimeSecurityTests : IClassFixture<FinancialApiFactory>
     public async Task Purchase_and_voided_invalid_period_returns_bad_request_without_500(string url)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
+        var response = await _factory.CreateClient().SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task External_approval_invalid_scope_returns_bad_request_without_500()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/financial/external-approvals/readiness?scope=invalid");
         request.Headers.Add("X-Dev-Permissions", "financial.electronicdocuments.read");
         var response = await _factory.CreateClient().SendAsync(request);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

@@ -116,3 +116,7 @@ Catálogos foundation no contienen datos personales, XML, secretos, certificados
 ## Sprint 5 P4
 
 ATS XML foundation preview está bloqueado por defecto. XML no se persiste, no se sube a Content/File, no se audita y no se loguea. El preview requiere permisos manage, acknowledgements explícitos y configuración local controlada.
+
+## Sprint 5 P5
+
+External approval workflow es read-only/advisory. No almacena evidencias reales, certificados, XML, tokens ni datos personales. No activa configuración productiva ni envíos SRI.

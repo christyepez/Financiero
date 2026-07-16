@@ -81,4 +81,11 @@ Sprint 5 P4 agrega ATS XML foundation gated:
 - `/api/financial/tax-reporting/ats-xml/generate-preview`.
 - Bloqueado por defecto, sin persistencia, sin envío SRI y sin afirmación de cumplimiento oficial.
 
+Sprint 5 P5 agrega external approval workflow foundation:
+
+- `/api/financial/external-approvals`.
+- `/api/financial/external-approvals/{scope}`.
+- `/api/financial/external-approvals/readiness?scope=all`.
+- Es read-only/advisory y no habilita producción.
+
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
