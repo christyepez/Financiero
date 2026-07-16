@@ -4,20 +4,21 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ApiEnvelope } from './api.models';
+import { PortalConfigurationAdapter } from '../adapters/portal-configuration.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+  private readonly configuration = inject(PortalConfigurationAdapter);
 
   get<T>(path: string, params?: Record<string, string | number | boolean>): Observable<T> {
-    return this.http.get<ApiEnvelope<T> | T>(`${this.baseUrl}${path}`, {
+    return this.http.get<ApiEnvelope<T> | T>(`${this.baseUrl()}${path}`, {
       params: this.params(params)
     }).pipe(map(response => this.unwrap(response)));
   }
 
   post<T>(path: string, body: unknown, params?: Record<string, string | number | boolean>): Observable<T> {
-    return this.http.post<ApiEnvelope<T> | T>(`${this.baseUrl}${path}`, body, {
+    return this.http.post<ApiEnvelope<T> | T>(`${this.baseUrl()}${path}`, body, {
       params: this.params(params)
     }).pipe(map(response => this.unwrap(response)));
   }
@@ -40,5 +41,9 @@ export class ApiService {
     }
 
     return response as T;
+  }
+
+  private baseUrl(): string {
+    return (this.configuration.apiBaseUrl() || environment.apiBaseUrl).replace(/\/$/, '');
   }
 }

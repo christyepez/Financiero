@@ -16,6 +16,14 @@ export class SanitizationService {
     return `${'*'.repeat(Math.max(0, compact.length - 8))}${compact.slice(-8)}`;
   }
 
+  maskEmail(value: string | null | undefined): string {
+    if (!value) return '';
+    const [name, domain] = value.split('@');
+    if (!domain) return this.maskIdentifier(value);
+    const first = name.slice(0, 1);
+    return `${first}${'*'.repeat(Math.max(3, name.length - 1))}@${domain}`;
+  }
+
   safeText(value: unknown): string {
     const text = String(value ?? '');
     return text
