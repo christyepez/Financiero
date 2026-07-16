@@ -132,6 +132,10 @@
 - [x] Interceptores frontend para correlation id, autorización delegada y sanitización de errores.
 - [x] Clientes API read-only para SRI readiness, Content/File readiness, ATS, aprobaciones externas, catálogos, compras y anulados.
 - [x] Documentar ADR-019 y guía frontend.
+- [x] P2 cablear Angular Shell a datos reales sanitizados del backend local.
+- [x] Desempaquetar `ApiResponse<T>` centralmente en frontend.
+- [x] Agregar estados loading/error/empty y selector de período foundation.
+- [x] Documentar ADR-020 y coordinación Sprint 6 P2.
 - [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
 - [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
 

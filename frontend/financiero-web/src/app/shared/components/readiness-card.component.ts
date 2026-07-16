@@ -11,6 +11,8 @@ import { RiskListComponent } from './risk-list.component';
     <section class="card">
       <h3>{{ title }}</h3>
       <fin-status-badge [value]="status" />
+      @if (data?.catalogVersion) { <p><strong>Catalog version:</strong> {{ data?.catalogVersion }}</p> }
+      @if (data?.period) { <p><strong>Período:</strong> {{ data?.period }}</p> }
       <p class="muted">{{ data?.disclaimer || fallback }}</p>
       <fin-risk-list [items]="issues" />
     </section>
@@ -27,6 +29,6 @@ export class ReadinessCardComponent {
   }
 
   get issues() {
-    return [...(this.data?.issues ?? []), ...(this.data?.warnings ?? [])];
+    return [...(this.data?.issues ?? []), ...(this.data?.warnings ?? []), ...(this.data?.blockedReasons ?? [])];
   }
 }
