@@ -125,6 +125,16 @@
 - [ ] Opción E gated: ATS official XML foundation con schema/catálogos oficiales revisados.
 - [ ] Integración con Angular Shell, Menu, Configuration y Security.
 
+## Sprint 6 — Angular Shell
+
+- [x] P1 Angular Shell foundation standalone en `frontend/financiero-web`.
+- [x] Adapters placeholder para Portal Security, Menu y Notification sin login propio.
+- [x] Interceptores frontend para correlation id, autorización delegada y sanitización de errores.
+- [x] Clientes API read-only para SRI readiness, Content/File readiness, ATS, aprobaciones externas, catálogos, compras y anulados.
+- [x] Documentar ADR-019 y guía frontend.
+- [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
+- [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
+
 ## Dependencias Portal Sprint 2
 
 Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OIDC, proveedor productivo de Notification y secret/certificate management. No suplir estas brechas duplicando plataforma.
