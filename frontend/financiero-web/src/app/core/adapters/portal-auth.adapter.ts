@@ -8,6 +8,6 @@ export class PortalAuthAdapter {
   }
 
   getDevelopmentPermissions(): string | null {
-    return environment.enableDevHeaders ? environment.devPermissionsHeader : null;
+    return !environment.production && environment.enableDevHeaders ? environment.devPermissionsHeader : null;
   }
 }

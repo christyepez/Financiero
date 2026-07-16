@@ -10,7 +10,7 @@ import { ReadinessIssue } from '../../core/services/api.models';
         @for (item of items; track $index) {
           <li>
             <strong>{{ item.code || item.severity || 'issue' }}</strong>
-            <div class="muted">{{ item.message || item.field || 'Sin detalle público.' }}</div>
+            <div class="muted">{{ item.message || item.notes || item.field || 'Sin detalle público.' }}</div>
           </li>
         }
       </ul>

@@ -25,6 +25,25 @@
 - Purchases read-only.
 - Voided documents read-only.
 
+## Sprint 6 P2 real data wiring
+
+Las vistas consumen endpoints reales existentes y desempaquetan `ApiResponse<T>` desde `ApiService`. Los componentes muestran loading/error/empty, usan selector de período donde aplica y mantienen los datos en modo read-only.
+
+Rutas consumidas:
+
+- `/api/financial/electronic-documents/sri/readiness`.
+- `/api/financial/electronic-documents/content-file/readiness`.
+- `/api/financial/tax-reporting/ats-readiness`.
+- `/api/financial/tax-reporting/ats-section-readiness`.
+- `/api/financial/tax-reporting/ats-xml/readiness`.
+- `/api/financial/external-approvals`.
+- `/api/financial/external-approvals/readiness?scope=all`.
+- `/api/financial/tax-catalogs`.
+- `/api/financial/purchases?period=YYYY-MM`.
+- `/api/financial/voided-documents?period=YYYY-MM`.
+
+La UI no muestra XML completo, access keys completas, identificaciones completas ni secretos. `X-Dev-Permissions` solo puede activarse en development y permanece apagado por defecto.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.

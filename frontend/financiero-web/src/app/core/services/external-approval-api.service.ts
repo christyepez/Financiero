@@ -12,6 +12,6 @@ export class ExternalApprovalApiService {
   }
 
   getReadiness(scope: string): Observable<ReadinessResponse> {
-    return this.api.get<ReadinessResponse>(`/api/financial/external-approvals/${scope}/readiness`);
+    return this.api.get<ReadinessResponse>('/api/financial/external-approvals/readiness', { scope });
   }
 }

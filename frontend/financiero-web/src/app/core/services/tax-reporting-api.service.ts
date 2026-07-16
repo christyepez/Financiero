@@ -10,4 +10,8 @@ export class TaxReportingApiService {
   getAtsReadiness(period: string): Observable<ReadinessResponse> {
     return this.api.get<ReadinessResponse>('/api/financial/tax-reporting/ats-section-readiness', { period });
   }
+
+  getAtsSummary(period: string): Observable<ReadinessResponse> {
+    return this.api.get<ReadinessResponse>('/api/financial/tax-reporting/ats-readiness', { period });
+  }
 }
