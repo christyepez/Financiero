@@ -14,6 +14,11 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
   imports: [EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, ReadinessCardComponent, StatusBadgeComponent],
   template: `
     <fin-foundation-disclaimer text="Aprobaciones externas son advisory/read-only. P2 no aprueba, no persiste evidencia y no habilita producción." />
+    <div class="panel">
+      <span class="badge info">Read-only advisory</span>
+      <span class="badge warn">Evidencia fuera del repo</span>
+      <p class="muted">Use esta vista como checklist de preparación. La aprobación real requiere revisión externa y contrato Portal definido.</p>
+    </div>
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
     <section class="stack">

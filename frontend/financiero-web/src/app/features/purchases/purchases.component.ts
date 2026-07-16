@@ -19,6 +19,11 @@ import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
   imports: [CommandDisabledBannerComponent, EmptyStateComponent, ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, PeriodSelectorComponent, PurchaseCreateFormComponent, PurchaseTaxSummaryComponent, StatusBadgeComponent],
   template: `
     <fin-foundation-disclaimer text="Compras foundation. Los comandos son internos, no oficiales y no envían datos al SRI." />
+    <div class="panel">
+      <span class="badge warn">Comando foundation</span>
+      <span class="badge info">Requiere permiso Portal</span>
+      <p class="muted">Crear/validar compras aquí solo prepara datos sintéticos o locales. No genera ATS oficial ni contabilización automática.</p>
+    </div>
     @if (!canCommand()) {
       <fin-command-disabled-banner [reason]="guard.disabledReason('purchase')" />
     }
@@ -49,7 +54,7 @@ import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
         </table>
       </section>
     } @else if (!loading()) {
-      <fin-empty-state title="Sin compras para el período" description="Vista read-only. No crea ni edita compras desde Angular en P2." />
+      <fin-empty-state title="Sin compras para el período" description="No hay compras foundation para el período seleccionado. Los comandos permanecen apagados salvo flags y permisos explícitos." />
     }
   `
 })

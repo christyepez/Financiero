@@ -13,6 +13,11 @@ import { ReadinessCardComponent } from '../../shared/components/readiness-card.c
   imports: [ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, ReadinessCardComponent],
   template: `
     <fin-foundation-disclaimer text="SRI readiness es informativo. No envía comprobantes, no usa certificados reales y producción permanece bloqueada." />
+    <div class="panel">
+      <span class="badge warn">Mock/Test readiness</span>
+      <span class="badge bad">Producción bloqueada</span>
+      <p class="muted">Esta pantalla solo verifica preparación técnica y configuración sanitizada; no ejecuta recepción/autorización real.</p>
+    </div>
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
     <section class="grid">

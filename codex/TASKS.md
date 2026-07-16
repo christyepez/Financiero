@@ -143,6 +143,9 @@
 - [x] P4 agregar comandos UI foundation controlados para compras/anulados.
 - [x] Proteger comandos con feature flags y permiso `financial.electronicdocuments.manage`.
 - [x] Mantener comandos apagados por defecto y documentar ADR-022.
+- [x] P5 cerrar Sprint 6 con release notes, QA evidence, architecture snapshot y matriz Portal readiness.
+- [x] Endurecer UX foundation para disclaimers, badges, errores, empty states y comandos deshabilitados.
+- [x] Fortalecer `verify-frontend` contra token storage, artifacts, certificados, URLs productivas y docs faltantes.
 - [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
 - [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
 

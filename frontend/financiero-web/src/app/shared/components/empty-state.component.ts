@@ -7,6 +7,7 @@ import { Component, Input } from '@angular/core';
     <div class="panel">
       <h2>{{ title }}</h2>
       <p class="muted">{{ description }}</p>
+      <p class="muted">Si esperabas datos, valida el período, los permisos delegados del Portal y que la API local esté disponible.</p>
     </div>
   `
 })

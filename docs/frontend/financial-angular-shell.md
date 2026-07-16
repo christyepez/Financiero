@@ -72,6 +72,18 @@ Los comandos requieren `financial.electronicdocuments.manage` y flags explícito
 
 Por defecto todos permanecen apagados. `allowAtsOfficialActions`, `allowSriSubmission` y `allowXmlPreviewUi` permanecen `false`.
 
+## Sprint 6 P5 closure and UX hardening
+
+P5 cierra Sprint 6 como foundation de UX/Portal readiness. Las pantallas refuerzan:
+
+- Disclaimers visibles `Foundation / No productivo`.
+- Badges para estados read-only, gated, no oficial y producción bloqueada.
+- Mensajes de error sanitizados.
+- Empty states con guía para validar período, API local y permisos Portal.
+- Comandos apagados por defecto y dependientes de contexto Portal.
+
+No se agregan mutaciones nuevas, login propio, token storage, SRI Test real, producción SRI, ATS oficial ni preview XML completo.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.

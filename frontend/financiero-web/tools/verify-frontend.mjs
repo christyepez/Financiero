@@ -1,8 +1,9 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url));
 const required = [
   'src/app/core/adapters/portal-auth.adapter.ts',
   'src/app/core/adapters/portal-menu.adapter.ts',
@@ -25,7 +26,9 @@ const required = [
   'src/app/features/sri-readiness/sri-readiness.component.ts',
   'src/app/features/ats-readiness/ats-readiness.component.ts',
   'src/app/features/external-approvals/external-approvals.component.ts',
-  'src/environments/environment.ts'
+  'src/environments/environment.ts',
+  'src/environments/environment.development.ts',
+  'src/environments/environment.example.ts'
 ];
 
 for (const file of required) {
@@ -35,11 +38,16 @@ for (const file of required) {
 const forbidden = [
   'localStorage',
   'sessionStorage',
+  'document.cookie',
   'console.log',
   'financial-login',
   'BEGIN PRIVATE KEY',
+  'BEGIN CERTIFICATE',
   '.p12',
   '.pfx',
+  '.pem',
+  '.key',
+  'sri.gob.ec',
   '<factura'
 ];
 
@@ -47,6 +55,9 @@ function walk(directory) {
   return readdirSync(directory).flatMap(name => {
     const full = join(directory, name);
     const stat = statSync(full);
+    if (stat.isDirectory() && ['node_modules', 'dist', '.angular', 'coverage'].includes(basename(full))) {
+      return [];
+    }
     return stat.isDirectory() ? walk(full) : [full];
   });
 }
@@ -57,6 +68,15 @@ for (const file of walk(join(root, 'src'))) {
     if (text.includes(pattern)) {
       throw new Error(`Forbidden frontend pattern "${pattern}" found in ${file}`);
     }
+  }
+}
+
+for (const file of walk(root)) {
+  if (file.endsWith('.env') || file.endsWith('.env.local')) {
+    throw new Error(`Environment secret file must not be committed: ${file}`);
+  }
+  if (/\.(p12|pfx|pem|key|cer|crt)$/i.test(file)) {
+    throw new Error(`Certificate or key file must not be committed: ${file}`);
   }
 }
 
@@ -84,6 +104,14 @@ for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentComm
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Command safety flag default missing: ${safeFlag}.`);
 }
 
+const prodEnvironment = readFileSync(join(root, 'src/environments/environment.ts'), 'utf8');
+for (const token of ['production: true', 'enableDevHeaders: false', 'allowXmlPreview: false']) {
+  if (!prodEnvironment.includes(token)) throw new Error(`Production environment must keep ${token}.`);
+}
+if (prodEnvironment.includes('financial.electronicdocuments.manage')) {
+  throw new Error('Production environment must not include development permissions.');
+}
+
 const commandGuard = readFileSync(join(root, 'src/app/core/services/command-guard.service.ts'), 'utf8');
 for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'financial.electronicdocuments.manage']) {
   if (!commandGuard.includes(token)) throw new Error(`Command guard missing ${token}.`);
@@ -92,6 +120,23 @@ for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocu
 const externalApproval = readFileSync(join(root, 'src/app/core/services/external-approval-api.service.ts'), 'utf8');
 if (!externalApproval.includes('/api/financial/external-approvals/readiness')) {
   throw new Error('External approval readiness must use the real backend route.');
+}
+
+for (const doc of [
+  'docs/releases/financial-sprint-06-closure.md',
+  'docs/releases/financial-sprint-06-release-notes.md',
+  'docs/qa/financial-sprint-06-qa-evidence.md',
+  'docs/architecture/financial-sprint-06-architecture-snapshot.md',
+  'docs/coordination/financial-sprint-06-p5-closure-ux-portal-readiness.md',
+  'docs/frontend/portal-shell-readiness-matrix.md',
+  'docs/frontend/portal-shell-contract.md'
+]) {
+  statSync(join(repoRoot, doc));
+}
+
+const foundationDisclaimer = readFileSync(join(root, 'src/app/shared/components/foundation-disclaimer.component.ts'), 'utf8');
+if (!foundationDisclaimer.includes('Foundation / No productivo')) {
+  throw new Error('Foundation disclaimer must remain explicit.');
 }
 
 console.log('Frontend foundation checks passed.');

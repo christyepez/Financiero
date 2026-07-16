@@ -18,6 +18,13 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
   imports: [ErrorMessageComponent, FoundationDisclaimerComponent, LoadingStateComponent, StatusBadgeComponent],
   template: `
     <fin-foundation-disclaimer />
+    <section class="panel">
+      <h2>Resumen Sprint 6</h2>
+      <p class="muted">Shell Angular listo para pruebas locales, consumo read-only y comandos foundation controlados. No certifica cumplimiento tributario ni habilita flujos productivos.</p>
+      <span class="badge info">Portal-ready foundation</span>
+      <span class="badge warn">Comandos off por defecto</span>
+      <span class="badge bad">Sin SRI producción</span>
+    </section>
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
     <section class="grid">
@@ -74,7 +81,7 @@ export class DashboardComponent {
           { title: 'Catálogos tributarios', status: 'Foundation', text: `Versión ${value.catalogs.version ?? 'foundation'}.` },
           { title: 'Compras', status: 'Read-only', text: `${value.purchases.length} registros foundation para ${this.period}.` },
           { title: 'Anulados', status: 'Read-only', text: `${value.voided.length} registros foundation para ${this.period}.` },
-          { title: 'Estado', status: 'Foundation / No productivo', text: 'Sin SRI producción, sin XML completo y sin mutaciones desde UI.' }
+          { title: 'Estado', status: 'Foundation / No productivo', text: 'Sin SRI producción, sin XML completo y con comandos gated por Portal/flags.' }
         ];
         this.updatedAt.set(new Date().toLocaleString());
         this.loading.set(false);
