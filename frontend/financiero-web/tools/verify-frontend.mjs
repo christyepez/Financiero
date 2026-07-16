@@ -19,6 +19,9 @@ const required = [
   'src/app/shared/components/loading-state.component.ts',
   'src/app/shared/components/period-selector.component.ts',
   'src/app/shared/components/shell-mode-banner.component.ts',
+  'src/app/shared/components/portal-context-required.component.ts',
+  'src/app/shared/components/portal-context-error.component.ts',
+  'src/app/shared/components/shell-contract-version-badge.component.ts',
   'src/app/shared/components/command-disabled-banner.component.ts',
   'src/app/shared/components/foundation-command-disclaimer.component.ts',
   'src/app/features/purchases/purchase-create-form.component.ts',
@@ -89,10 +92,16 @@ const authAdapter = readFileSync(join(root, 'src/app/core/adapters/portal-auth.a
 if (!authAdapter.includes("environment.production || context.environment.shellMode === 'portal-integrated'")) {
   throw new Error('Development permissions must be disabled in production.');
 }
+if (!authAdapter.includes("context.environment.shellMode !== 'portal-integrated'") || !authAdapter.includes('context.expiresAt')) {
+  throw new Error('Delegated auth must be portal-integrated only and expiry-aware.');
+}
 
 const portalModels = readFileSync(join(root, 'src/app/core/portal-shell/portal-shell.models.ts'), 'utf8');
 for (const token of ['PortalShellContext', 'PortalFeatureFlags', 'PORTAL_SHELL_CONTEXT', '__PORTAL_SHELL_CONTEXT__']) {
   if (!portalModels.includes(token)) throw new Error(`Portal shell contract is missing ${token}.`);
+}
+for (const token of ['SUPPORTED_PORTAL_SHELL_CONTRACT_VERSION', 'contractVersion', 'source', 'issuedAt', 'expiresAt', 'capabilities', 'warnings']) {
+  if (!portalModels.includes(token)) throw new Error(`Portal shell contract hardening missing ${token}.`);
 }
 
 const portalDefaults = readFileSync(join(root, 'src/app/core/portal-shell/portal-shell.defaults.ts'), 'utf8');
@@ -122,12 +131,29 @@ if (!externalApproval.includes('/api/financial/external-approvals/readiness')) {
   throw new Error('External approval readiness must use the real backend route.');
 }
 
+const validation = readFileSync(join(root, 'src/app/core/portal-shell/portal-shell-validation.ts'), 'utf8');
+for (const token of ['sanitizeContractVersion', 'sanitizeMenuItems', 'sanitizeDelegatedToken', 'Portal menu route rejected', 'Portal integrated context missing required user']) {
+  if (!validation.includes(token)) throw new Error(`Portal context validation hardening missing ${token}.`);
+}
+
+const appComponent = readFileSync(join(root, 'src/app/app.component.ts'), 'utf8');
+for (const token of ['missingRequiredPortalContext()', 'hasUnsupportedContract()', 'fin-portal-context-required']) {
+  if (!appComponent.includes(token)) throw new Error(`Production Portal context block missing ${token}.`);
+}
+
+const menuAdapter = readFileSync(join(root, 'src/app/core/adapters/portal-menu.adapter.ts'), 'utf8');
+for (const token of ['hasPermission', "item.route.startsWith('/')", "!item.route.startsWith('//')"]) {
+  if (!menuAdapter.includes(token)) throw new Error(`Portal menu hardening missing ${token}.`);
+}
+
 for (const doc of [
   'docs/releases/financial-sprint-06-closure.md',
   'docs/releases/financial-sprint-06-release-notes.md',
   'docs/qa/financial-sprint-06-qa-evidence.md',
   'docs/architecture/financial-sprint-06-architecture-snapshot.md',
   'docs/coordination/financial-sprint-06-p5-closure-ux-portal-readiness.md',
+  'docs/coordination/financial-sprint-07-p1-real-portal-shell-contract.md',
+  'docs/architecture/decisions/adr-023-real-portal-shell-contract-hardening.md',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {

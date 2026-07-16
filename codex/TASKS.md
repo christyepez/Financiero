@@ -149,6 +149,15 @@
 - [ ] Reemplazar adapters placeholder por contrato real del Angular Shell de Portal.
 - [ ] Publicar metadata de menú/permisos en Portal cuando el contrato esté congelado.
 
+## Sprint 7 — Portal Shell integration
+
+- [x] P1 endurecer contrato real Portal Shell `1.0`.
+- [x] Agregar `contractVersion`, `source`, capabilities, warnings y validación de contexto.
+- [x] Bloquear producción cuando falta contexto Portal real o versión soportada.
+- [x] Filtrar menú por allow-list, permisos y feature flags.
+- [x] Mantener delegated auth solo en memoria y sin token storage.
+- [ ] Validar contrato end-to-end con PortalCorporativo real.
+
 ## Dependencias Portal Sprint 2
 
 Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OIDC, proveedor productivo de Notification y secret/certificate management. No suplir estas brechas duplicando plataforma.

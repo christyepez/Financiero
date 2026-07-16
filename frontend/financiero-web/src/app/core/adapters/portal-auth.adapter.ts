@@ -7,7 +7,10 @@ export class PortalAuthAdapter {
   private readonly context = inject(PortalContextAdapter);
 
   getAccessToken(): string | null {
-    return this.context.getContext().delegatedAuthToken ?? null;
+    const context = this.context.getContext();
+    if (context.environment.shellMode !== 'portal-integrated') return null;
+    if (context.expiresAt && new Date(context.expiresAt).getTime() <= Date.now()) return null;
+    return context.delegatedAuthToken ?? null;
   }
 
   getDevelopmentPermissions(): string | null {

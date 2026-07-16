@@ -5,11 +5,14 @@ import { PortalNotificationAdapter } from './core/adapters/portal-notification.a
 import { ShellModeBannerComponent } from './shared/components/shell-mode-banner.component';
 import { StatusBadgeComponent } from './shared/components/status-badge.component';
 import { environment } from '../environments/environment';
+import { PortalContextAdapter } from './core/portal-shell/portal-context.adapter';
+import { PortalContextErrorComponent } from './shared/components/portal-context-error.component';
+import { PortalContextRequiredComponent } from './shared/components/portal-context-required.component';
 
 @Component({
   selector: 'fin-root',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, ShellModeBannerComponent, StatusBadgeComponent],
+  imports: [PortalContextErrorComponent, PortalContextRequiredComponent, RouterLink, RouterLinkActive, RouterOutlet, ShellModeBannerComponent, StatusBadgeComponent],
   template: `
     <div class="shell">
       <aside class="sidebar">
@@ -33,9 +36,14 @@ import { environment } from '../environments/environment';
 
         @if (showWarnings) {
           <fin-shell-mode-banner />
+          <fin-portal-context-error [warnings]="portal.contextWarnings()" />
         }
 
-        <router-outlet />
+        @if (portal.missingRequiredPortalContext() || portal.hasUnsupportedContract()) {
+          <fin-portal-context-required />
+        } @else {
+          <router-outlet />
+        }
       </main>
     </div>
   `
@@ -43,5 +51,6 @@ import { environment } from '../environments/environment';
 export class AppComponent {
   protected readonly menu = inject(PortalMenuAdapter);
   protected readonly notifications = inject(PortalNotificationAdapter);
+  protected readonly portal = inject(PortalContextAdapter);
   protected readonly showWarnings = environment.showFoundationWarnings;
 }

@@ -84,6 +84,21 @@ P5 cierra Sprint 6 como foundation de UX/Portal readiness. Las pantallas refuerz
 
 No se agregan mutaciones nuevas, login propio, token storage, SRI Test real, producción SRI, ATS oficial ni preview XML completo.
 
+## Sprint 7 P1 real Portal Shell contract hardening
+
+El contrato Portal Shell se endurece para integración real:
+
+- `contractVersion` soportado: `1.0`.
+- `source`: `portal` o `standalone`.
+- `capabilities` y `warnings` sanitizados.
+- Validación de contexto requerido en `portal-integrated`.
+- Bloqueo seguro en producción si falta Portal context o versión soportada.
+- Menú filtrado por rutas permitidas, permisos y feature flags.
+- Delegated auth solo en memoria y solo desde contexto Portal.
+- Telemetría/correlation preparada sin export externo real.
+
+Financiero sigue sin login propio, roles propios, token storage, cookies auth propias ni duplicación de Security/Menu/Configuration/Notification del Portal.
+
 ## Configuración
 
 Copiar `src/environments/environment.example.ts` como referencia. Los valores por defecto apuntan a `http://localhost:8083` y mantienen los headers dev apagados.
