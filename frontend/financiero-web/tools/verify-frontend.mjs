@@ -147,7 +147,7 @@ for (const token of ['/api/financial/external-approval-requests', 'integration-r
 }
 
 const externalApprovalComponent = readFileSync(join(root, 'src/app/features/external-approvals/external-approvals.component.ts'), 'utf8');
-for (const token of ['Portal integration readiness', 'reference only / Portal-owned evidence', 'No upload', 'Sin envío de notificaciones']) {
+for (const token of ['Portal integration readiness', 'reference only / Portal-owned evidence', 'No upload', 'Sin envío de notificaciones', 'ApprovedFoundation no habilita producción', 'Evidence reference is Portal-owned metadata only', 'Notification intent is prepared only; no send', 'External approval does not replace legal/tax approval', 'Production requires Portal + legal/tax/security approval', 'No file stored in Financiero']) {
   if (!externalApprovalComponent.includes(token)) throw new Error(`External approval UI boundary missing ${token}.`);
 }
 
@@ -214,6 +214,7 @@ for (const doc of [
   'docs/runbooks/financial-qa-env-template.md',
   'docs/runbooks/financial-health-troubleshooting.md',
   'docs/qa/financial-sprint-08-p3-qa-infra-stabilization-evidence.md',
+  'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
   'tools/validate-portal-financiero-e2e.ps1',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'

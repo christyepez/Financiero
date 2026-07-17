@@ -185,11 +185,16 @@
 - [x] P3 documentar plantilla de ambiente QA sin secretos.
 - [x] P3 documentar troubleshooting health y diferencias dependency unavailable vs app failure.
 - [x] P3 clasificar readiness Portal como BlockedDependency/FoundationOnly/ProductionBlocked.
+- [x] P4 endurecer UX de aprobaciones externas con estados, blockers y próximos pasos seguros.
+- [x] P4 mostrar ApprovedFoundation como no productivo y no sustituto de aprobación legal/tributaria.
+- [x] P4 mostrar evidencia como Portal-owned metadata-only sin upload/download.
+- [x] P4 mostrar notification intents foundation/no-send sin envío real.
+- [x] P4 agregar evidencia QA textual de UX y fortalecer verificadores frontend.
 - [ ] Ejecutar validación PASS con PortalShellContext real de PortalCorporativo.
 - [ ] Validar Security/Menu/Configuration reales con Portal activo.
 - [ ] Validar Gateway routing y SQL común local estable.
-- [ ] Mantener bloqueados SRI Production, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.
-- [ ] Decidir siguiente paquete entre approval UX, Content/File real contract o QA infra.
+- [ ] Mantener bloqueados SRI Production, SRI Test real, ATS oficial, RIDE legal final, XAdES productivo, upload/download de evidencia y notification send.
+- [ ] Decidir siguiente paquete entre Content/File real contract, Portal Notification contract o validación PASS con Portal real.
 
 ## Dependencias Portal Sprint 2
 

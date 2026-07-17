@@ -195,7 +195,7 @@ export interface ExternalApprovalRequestSummary {
   updatedAtUtc: string;
   doesNotEnableProduction: boolean;
   requirements?: { description: string; requiresEvidence: boolean; requiresHumanReview: boolean }[];
-  evidenceReferences?: { id: string; provider: string; referenceId: string; displayName: string; hash?: string; contentType?: string; createdAtUtc: string; createdByDisplayName?: string }[];
+  evidenceReferences?: { id: string; provider: string; referenceId: string; displayName: string; hash?: string; contentType?: string; sizeBytes?: number; purpose?: string; createdAtUtc: string; createdByDisplayName?: string }[];
   decisions?: { id: string; decisionKind: string; reason: string; decidedByDisplayName: string; decidedAtUtc: string; doesNotEnableProduction: boolean }[];
   disclaimer?: string;
 }

@@ -48,6 +48,12 @@ The first executable validation produced partial validation: Financiero compose 
 
 Sprint 8 P3 adds QA preflight stabilization. The next execution should treat exit code `2` as blocked dependency and reserve `1` for repository/script/application failures.
 
+## Sprint 8 P4 update
+
+External Approval UX is hardened for functional QA. The screen now explains that `ApprovedFoundation` does not enable production, evidence references are Portal-owned metadata-only, notification intents are foundation/no-send, and production requires Portal plus legal/tax/security approval.
+
+This closes the approval workflow readiness from a UX perspective, but it does not activate SRI Test real send, SRI Production, official ATS, legal-final RIDE, productive XAdES, evidence upload/download, Content/File storage or Notification send.
+
 ## Explicit exclusions
 
 - No SRI Production.

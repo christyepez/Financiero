@@ -242,6 +242,14 @@ Solo acepta metadata foundation. No acepta XML, base64, certificados, archivos, 
 
 Sprint 7 P3 agrega boundary con Portal Content/File y Portal Notification: evidencia como metadata/reference-only y notification intents foundation sin envío real desde Financiero.
 
+Sprint 8 P4 mantiene los mismos endpoints y endurece la interpretación UX:
+
+- Estados mínimos visibles: `Draft`, `Submitted`, `InReview`, `ApprovedFoundation`, `RejectedFoundation`, `Blocked`, `Superseded`, `Cancelled`.
+- `ApprovedFoundation` debe presentarse como no productivo y no sustituye aprobación legal/tributaria.
+- Evidence references deben mostrarse como `Portal-owned metadata only`, con ids/hashes parciales y sin payload, descarga ni preview.
+- Notification intents deben mostrarse como foundation/no-send y propiedad de Portal Notification.
+- Acciones de producción, upload/download de evidencia, SRI real, ATS oficial, RIDE legal final y XAdES productivo permanecen bloqueadas.
+
 # Controlled productization readiness
 
 - `GET /api/financial/purchases/productization-readiness` requiere `financial.electronicdocuments.read`.
