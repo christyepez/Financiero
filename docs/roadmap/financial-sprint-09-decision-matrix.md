@@ -35,6 +35,12 @@ Option A remains active. P2 adds actionable diagnostics and a startup runbook, b
 ## Sprint 9 P3 execution note
 
 PASS was attempted again. Final status remains `BLOCKED_DEPENDENCY`: SQL port `21433` is closed and Portal Gateway `/health` returns `HTTP 404`. Continue Option A with Portal/Infra owner handoff before choosing productization work.
+# Sprint 9 P5 final decision
+
+Sprint 9 final status is `BLOCKED_DEPENDENCY`. Recommended Sprint 10 path is Option A: External Infra Remediation Sprint, paired with Portal contract alignment. Productization remains blocked until shared SQL, Portal Gateway and Portal Shell produce real PASS evidence.
+
+Control tokens: Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Sprint 9 P4 note
 
 P4 adds external intervention packages for shared SQL and Portal Gateway/Shell owners. The expected status remains `BLOCKED_DEPENDENCY` until `host.docker.internal:21433`, Portal Gateway health and Portal Shell evidence are returned. Health routes are configurable through preflight parameters and must be owner-confirmed before PASS.

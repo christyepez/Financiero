@@ -1,5 +1,7 @@
 # Financial E2E Dependency Owner Handoff
 
+Sprint 9 P5 closes with `BLOCKED_DEPENDENCY`. This handoff is now the required Sprint 10 entry artifact for Infra/Portal owners.
+
 ## Purpose
 
 Hand off the external blockers needed to achieve Financiero E2E PASS without changing ownership boundaries.

@@ -1,5 +1,16 @@
 # Roadmap Financiero
 
+## Sprint 9 P5 — Sprint Closure and External Infrastructure Decision
+
+- [x] Crear cierre ejecutivo Sprint 9.
+- [x] Crear evidencia final de infraestructura.
+- [x] Crear matriz de decisión Sprint 10.
+- [x] Crear backlog de dependencias externas.
+- [x] Actualizar matriz de riesgos.
+- [x] Crear release notes Sprint 9.
+- [x] Fortalecer verificadores para cierre P5.
+- [x] Mantener estado final `BLOCKED_DEPENDENCY` y no producción.
+
 ## Sprint 9 P4 — External Infrastructure Intervention
 
 - [x] Crear paquete de intervención SQL común.

@@ -1,5 +1,17 @@
 # Financiero
 
+## Sprint 9 P5 closure
+
+Sprint 9 closes as `BLOCKED_DEPENDENCY`. The recommended Sprint 10 decision is External Infra Remediation plus Portal contract alignment before productization.
+
+- Closure: `docs/coordination/financial-sprint-09-closure.md`.
+- Final evidence: `docs/qa/financial-sprint-09-final-infra-evidence.md`.
+- Sprint 10 decision: `docs/roadmap/financial-sprint-10-decision-matrix.md`.
+- External backlog: `docs/roadmap/financial-external-dependency-backlog.md`.
+- Release notes: `docs/releases/financial-sprint-09-release-notes.md`.
+
+Financiero remains not production-ready: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 9 P4 external infrastructure intervention
 
 Current local E2E status remains `BLOCKED_DEPENDENCY`, not PASS. Sprint 9 P4 adds an external intervention package for shared SQL and Portal runtime owners, plus configurable health route validation in `tools/validate-portal-financiero-e2e.ps1`.

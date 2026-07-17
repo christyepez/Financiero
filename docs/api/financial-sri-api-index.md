@@ -116,6 +116,10 @@ Sprint 9 P1 no agrega endpoints. Reejecuta E2E real y mantiene `BLOCKED_DEPENDEN
 Sprint 9 P2 no agrega endpoints. Solo mejora diagnóstico/runbooks del preflight E2E y mantiene contratos API read-only/foundation.
 
 Sprint 9 P3 no agrega endpoints. Captura evidencia final `BLOCKED_DEPENDENCY` y handoff operativo; los contratos siguen not production-ready.
+# Sprint 9 P5 closure note
+
+No API endpoint changes were introduced for Sprint 9 closure. The final infrastructure status is `BLOCKED_DEPENDENCY` and production tax flows remain blocked.
+
 # Sprint 9 P4 note
 
 No API endpoint is added in P4. The change is operational: configurable health route validation and external SQL/Portal intervention evidence. No SRI Production, no official ATS, no legal-final RIDE and no productive XAdES are enabled.

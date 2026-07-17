@@ -1,5 +1,7 @@
 # Infra SQL Common Intervention Package
 
+Sprint 9 P5 closure keeps this intervention as a Sprint 10 prerequisite. PASS requires owner evidence for shared SQL before Financiero runtime evidence can be accepted.
+
 Sprint 9 P4 prepares the external SQL intervention needed to move Financiero from `BLOCKED_DEPENDENCY` to real E2E `PASS`.
 
 This SQL package is required together with the Portal Gateway and Portal Shell intervention package; shared SQL alone is not enough for PASS.

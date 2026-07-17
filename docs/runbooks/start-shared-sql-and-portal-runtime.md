@@ -113,6 +113,12 @@ No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
 Financiero remains not production-ready until real E2E PASS evidence exists.
 
 Never commit passwords, tokens, full connection strings, certificates, real XML, SRI responses, personal data, screenshots with secrets or generated artifacts.
+# Sprint 9 P5 closure
+
+Use this runbook as part of Sprint 10 External Infra Remediation. Sprint 9 final status is `BLOCKED_DEPENDENCY`; do not mark PASS until SQL/Gateway/Shell evidence is returned.
+
+Control tokens: Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Sprint 9 P4 external intervention
 
 Use `docs/runbooks/infra-sql-common-intervention-package.md` and `docs/runbooks/portal-runtime-intervention-package.md` before attempting PASS. Confirm shared SQL port `21433`, Portal Gateway health route and Portal Shell route. Run preflight with explicit `-PortalGatewayHealthPath`, `-PortalShellHealthPath` and `-FinancialApiHealthPath`.

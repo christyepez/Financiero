@@ -1,5 +1,7 @@
 # Portal Runtime Intervention Package
 
+Sprint 9 P5 closure keeps this intervention as a Sprint 10 prerequisite. Portal Gateway and Portal Shell evidence are required before E2E PASS.
+
 Sprint 9 P4 prepares the Portal Gateway and Portal Shell intervention needed before Financiero can claim real E2E `PASS`.
 
 ## Observed problem
