@@ -189,10 +189,29 @@ for (const doc of [
   'docs/coordination/financial-sprint-07-p4-controlled-productization-readiness.md',
   'docs/architecture/decisions/adr-026-controlled-productization-readiness.md',
   'docs/releases/financial-sprint-07-readiness-notes.md',
+  'docs/coordination/financial-sprint-07-closure.md',
+  'docs/qa/financial-sprint-07-qa-evidence.md',
+  'docs/architecture/financial-sprint-07-capability-matrix.md',
+  'docs/security/financial-sprint-07-security-checklist.md',
+  'docs/roadmap/financial-sprint-08-roadmap.md',
+  'docs/releases/financial-sprint-07-release-notes.md',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {
   statSync(join(repoRoot, doc));
+}
+
+for (const doc of [
+  'docs/coordination/financial-sprint-07-closure.md',
+  'docs/qa/financial-sprint-07-qa-evidence.md',
+  'docs/security/financial-sprint-07-security-checklist.md',
+  'docs/roadmap/financial-sprint-08-roadmap.md',
+  'docs/releases/financial-sprint-07-release-notes.md'
+]) {
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['No SRI Production', 'No official ATS', 'No legal-final RIDE', 'No productive XAdES']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing no-production token ${token}.`);
+  }
 }
 
 const foundationDisclaimer = readFileSync(join(root, 'src/app/shared/components/foundation-disclaimer.component.ts'), 'utf8');
