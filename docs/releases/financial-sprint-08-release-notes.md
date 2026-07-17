@@ -43,3 +43,5 @@ Select infrastructure E2E stabilization first. Capture PASS with shared SQL, Por
 No SRI Production, SRI Test real send, official ATS, legal-final RIDE, productive XAdES, real certificates, taxpayer XML, upload/download evidence, notification send or production activation is enabled.
 
 Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
+Post-closure Sprint 9 P1 note: the recommended Option A was started and still reports `BLOCKED_DEPENDENCY` because shared SQL and Portal Gateway/Shell are not available locally.

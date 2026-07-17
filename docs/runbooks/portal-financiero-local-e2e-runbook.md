@@ -26,6 +26,8 @@ If SQL is blocked, stop and follow `docs/runbooks/shared-sql-runtime-validation.
 - Start Portal API/Gateway/Shell from its own repository.
 - Confirm Portal owns Security/Auth, Menu, Configuration, Audit, Outbox, Content/File and Notification.
 - Confirm Gateway URL is available locally.
+- Confirm Portal Shell emits `PortalShellContext` with `contractVersion=1.0`, `source=portal`, permissions, menu, feature flags and correlation id.
+- Confirm Gateway health returns HTTP 2xx before starting E2E evidence capture.
 
 ## 3. Start Financiero API
 
@@ -102,12 +104,26 @@ Do not include tokens, passwords, real emails, real taxpayer data, XML or certif
 - Confirm routes outside the allow-list are not rendered.
 - Confirm missing permission hides or blocks routes.
 - Confirm `financial.electronicdocuments.read` is enough for readiness screens.
+- Confirm `financial.electronicdocuments.manage` is only used for explicitly gated foundation commands.
+- Confirm no permissions are invented or persisted by Financiero.
 
 ## 7. Validate correlation
 
 - Send a synthetic correlation id from Portal/Gateway.
 - Confirm Financiero responses include correlation id.
 - Confirm logs include correlation id without sensitive payloads.
+
+## 7.1 PASS/BLOCKED_DEPENDENCY evidence
+
+PASS requires:
+
+- Shared SQL TCP PASS.
+- Portal Gateway health PASS.
+- Portal Shell context PASS.
+- Financiero health/live/ready PASS.
+- `/api/financial/portal-integration/readiness` reachable and sanitized.
+
+BLOCKED_DEPENDENCY applies when SQL, Gateway, Shell or API runtime is unavailable. Do not mark PASS from static build alone.
 
 ## 8. Validate non-production posture
 

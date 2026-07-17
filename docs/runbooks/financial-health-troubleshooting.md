@@ -35,6 +35,8 @@ Test-NetConnection host.docker.internal -Port 21433
 
 If blocked, fix shared SQL before diagnosing Financiero code.
 
+Sprint 9 P1 note: if SQL TCP is blocked, do not start adding fallback databases or a Financiero SQL container. Record `BLOCKED_DEPENDENCY` and start the shared SQL runtime.
+
 ### `host.docker.internal` does not resolve
 
 Validate DNS resolution and Docker Desktop networking. Record only host/port status, no credentials.
@@ -48,6 +50,8 @@ tools/validate-portal-financiero-e2e.ps1 -SkipApiHealthChecks -OutputMarkdown
 ```
 
 If Portal checks are blocked, start PortalCorporativo Gateway/Shell.
+
+Expected PASS evidence includes HTTP 2xx from Portal Gateway health and a Portal Shell context source of `portal`. Expected BLOCKED_DEPENDENCY evidence includes connection refused or timeout for Gateway/Shell URLs.
 
 ### Missing permissions
 

@@ -276,3 +276,5 @@ Sprint 8 P2 agrega a la respuesta servicios esperados, requisitos de SQL común 
 Sprint 8 P3 agrega `readinessClassification`. Valores esperados: `Ready`, `BlockedDependency`, `NotConfigured`, `FoundationOnly`, `ProductionBlocked`.
 
 Sprint 8 P5 no agrega contratos nuevos. La evidencia final debe reportar `BlockedDependency` cuando SQL común o Portal runtime no estén disponibles. No se agregan mutaciones, migraciones, upload/download, notification send ni activación productiva.
+
+Sprint 9 P1 no agrega contratos nuevos. El resultado real permanece `BlockedDependency` porque shared SQL y Portal runtime no están disponibles. Los endpoints existentes no deben reinterpretarse como production-ready.

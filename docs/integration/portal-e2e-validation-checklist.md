@@ -52,6 +52,14 @@ Required fields:
 - correlationId.
 - issuedAt/expiresAt.
 
+Runtime validation:
+
+- `source` must be `portal` for real E2E PASS.
+- menu routes must remain inside Financiero allow-list.
+- feature flags must keep production actions disabled.
+- delegated auth must stay in memory; no local/session storage.
+- correlation id must be present and sanitized.
+
 ## Minimum permissions
 
 - `financial.electronicdocuments.read`.
@@ -98,6 +106,9 @@ Must remain false by default:
 Pass:
 
 - Portal context is accepted.
+- Portal Gateway health returns PASS.
+- Portal Shell runtime context returns PASS.
+- Shared SQL and Financiero API readiness return PASS.
 - Standalone is blocked in production.
 - Menu and permissions are filtered.
 - Readiness endpoint returns blockers and no secrets.
@@ -113,6 +124,13 @@ Fail:
 - Productive flags are true.
 - Financiero creates Security/Menu/Configuration/Notification/Content/File substitutes.
 - External approval UX renders upload/download, notification send, productive approval or legal-final tax copy.
+
+Blocked dependency:
+
+- Shared SQL TCP is unavailable.
+- Portal Gateway/Shell is unavailable.
+- Financiero API is unavailable only because its shared dependencies are down.
+- PortalShellContext live evidence cannot be captured.
 
 ## Troubleshooting
 
