@@ -172,7 +172,12 @@
 
 ## Sprint 8 — Portal E2E and QA stabilization
 
-- [ ] Validar PortalShellContext real con PortalCorporativo.
+- [x] P1 agregar checklist de validación E2E PortalCorporativo ↔ Financiero.
+- [x] P1 agregar runbook local Portal + Financiero + SQL común.
+- [x] P1 agregar endpoint read-only `/api/financial/portal-integration/readiness`.
+- [x] P1 agregar verificador `verify-portal-e2e-contract.mjs`.
+- [x] P1 agregar template de evidencia QA E2E.
+- [ ] Ejecutar validación con PortalShellContext real de PortalCorporativo.
 - [ ] Validar Security/Menu/Configuration reales.
 - [ ] Validar Gateway routing y SQL común local estable.
 - [ ] Mantener bloqueados SRI Production, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.

@@ -44,6 +44,7 @@ app.MapTaxLegalReview();
 app.MapPurchaseTaxDocuments();
 app.MapFinancialTaxCatalogs();
 app.MapExternalApprovals();
+app.MapPortalIntegration();
 app.Run();
 
 public partial class Program;

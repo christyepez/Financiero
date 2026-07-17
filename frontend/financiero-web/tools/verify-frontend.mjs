@@ -16,6 +16,7 @@ const required = [
   'src/app/core/adapters/portal-feature-flag.adapter.ts',
   'src/app/core/adapters/portal-telemetry.adapter.ts',
   'src/app/core/services/command-guard.service.ts',
+  'src/app/core/services/portal-integration-readiness-api.service.ts',
   'src/app/shared/components/loading-state.component.ts',
   'src/app/shared/components/period-selector.component.ts',
   'src/app/shared/components/shell-mode-banner.component.ts',
@@ -132,6 +133,11 @@ for (const text of [purchaseApi, voidedApi]) {
   if (!text.includes('productization-readiness')) throw new Error('Productization readiness route missing from tax document API service.');
 }
 
+const portalE2eApi = readFileSync(join(root, 'src/app/core/services/portal-integration-readiness-api.service.ts'), 'utf8');
+if (!portalE2eApi.includes('/api/financial/portal-integration/readiness')) {
+  throw new Error('Portal E2E readiness API route missing.');
+}
+
 const externalApproval = readFileSync(join(root, 'src/app/core/services/external-approval-api.service.ts'), 'utf8');
 if (!externalApproval.includes('/api/financial/external-approvals/readiness')) {
   throw new Error('External approval readiness must use the real backend route.');
@@ -168,6 +174,11 @@ for (const token of ['missingRequiredPortalContext()', 'hasUnsupportedContract()
   if (!appComponent.includes(token)) throw new Error(`Production Portal context block missing ${token}.`);
 }
 
+const dashboard = readFileSync(join(root, 'src/app/features/dashboard/dashboard.component.ts'), 'utf8');
+for (const token of ['Portal E2E readiness', 'development standalone only', 'production requires Portal context']) {
+  if (!dashboard.includes(token)) throw new Error(`Dashboard missing Portal E2E readiness token ${token}.`);
+}
+
 const menuAdapter = readFileSync(join(root, 'src/app/core/adapters/portal-menu.adapter.ts'), 'utf8');
 for (const token of ['hasPermission', "item.route.startsWith('/')", "!item.route.startsWith('//')"]) {
   if (!menuAdapter.includes(token)) throw new Error(`Portal menu hardening missing ${token}.`);
@@ -195,6 +206,9 @@ for (const doc of [
   'docs/security/financial-sprint-07-security-checklist.md',
   'docs/roadmap/financial-sprint-08-roadmap.md',
   'docs/releases/financial-sprint-07-release-notes.md',
+  'docs/integration/portal-e2e-validation-checklist.md',
+  'docs/runbooks/portal-financiero-local-e2e-runbook.md',
+  'docs/qa/financial-sprint-08-p1-e2e-evidence-template.md',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {

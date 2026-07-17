@@ -95,3 +95,5 @@ Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, docum
 - Voided document productization readiness: `/api/financial/voided-documents/productization-readiness`.
 
 Sprint 7 P5 does not add mutating API capabilities. It closes the sprint with QA evidence, capability matrix and roadmap. All Sprint 7 endpoints remain foundation/readiness only and must not be interpreted as SRI Production, official ATS, legal-final RIDE, productive XAdES, upload or notification-send enablement.
+
+Sprint 8 P1 agrega `GET /api/financial/portal-integration/readiness`, protegido con `financial.electronicdocuments.read`. Es read-only, no expone secretos/tokens/claims completas, reporta capacidades Portal esperadas, blockers productivos y evidencia faltante para E2E.
