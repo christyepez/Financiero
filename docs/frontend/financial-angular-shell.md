@@ -103,6 +103,10 @@ Financiero sigue sin login propio, roles propios, token storage, cookies auth pr
 
 La pantalla de aprobaciones externas consume `/api/financial/external-approval-requests` para listar requests persistidos foundation. Los comandos de crear, submit, review, referencia de evidencia, decisión y cancelación requieren:
 
+## Sprint 7 P3 Portal Content/File and Notification boundary
+
+La pantalla muestra `/api/financial/external-approval-requests/integration-readiness`, marca evidencias como `reference only / Portal-owned evidence`, y mantiene disclaimers de `no upload` y `no notification send`. No existe input de archivo, descarga de evidencia ni control de envío de notificaciones desde Financiero.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.

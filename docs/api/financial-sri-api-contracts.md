@@ -230,6 +230,7 @@ Base: `/api/financial/external-approval-requests`
 - `GET /` requiere `financial.electronicdocuments.read`.
 - `GET /{id}` requiere `financial.electronicdocuments.read`.
 - `GET /readiness?scope=all` requiere `financial.electronicdocuments.read`.
+- `GET /integration-readiness` requiere `financial.electronicdocuments.read`.
 - `POST /` requiere `financial.electronicdocuments.manage`.
 - `POST /{id}/submit` requiere `financial.electronicdocuments.manage`.
 - `POST /{id}/start-review` requiere `financial.electronicdocuments.manage`.
@@ -237,4 +238,6 @@ Base: `/api/financial/external-approval-requests`
 - `POST /{id}/decision` requiere `financial.electronicdocuments.manage`.
 - `POST /{id}/cancel` requiere `financial.electronicdocuments.manage`.
 
-Solo acepta metadata foundation. No acepta XML, base64, certificados, archivos ni URLs con tokens/querystring sensible. `ApprovedFoundation` no habilita producción.
+Solo acepta metadata foundation. No acepta XML, base64, certificados, archivos, rutas locales ni URLs con tokens/querystring sensible. `ApprovedFoundation` no habilita producción.
+
+Sprint 7 P3 agrega boundary con Portal Content/File y Portal Notification: evidencia como metadata/reference-only y notification intents foundation sin envío real desde Financiero.

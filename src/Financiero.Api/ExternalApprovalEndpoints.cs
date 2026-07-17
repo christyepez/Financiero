@@ -22,6 +22,8 @@ public static class ExternalApprovalEndpoints
             await ExecuteAsync(() => service.ListRequestsAsync(scope, status, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         requests.MapGet("/readiness", async (string? scope, ExternalApprovalWorkflowQueryService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetReadinessWithPersistedRequestsAsync(scope ?? "all", Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
+        requests.MapGet("/integration-readiness", async (ExternalApprovalWorkflowQueryService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
+            await ExecuteAsync(() => service.GetIntegrationReadinessAsync(Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         requests.MapGet("/{id:guid}", async (Guid id, ExternalApprovalWorkflowQueryService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>
             await ExecuteAsync(() => service.GetRequestAsync(id, Context(http, options.Value), ct), http)).RequireAuthorization(FinancialPermissions.ElectronicDocumentsRead);
         requests.MapPost("/", async (CreateExternalApprovalRequest request, ExternalApprovalWorkflowCommandService service, HttpContext http, IOptions<FinancialPlatformOptions> options, CancellationToken ct) =>

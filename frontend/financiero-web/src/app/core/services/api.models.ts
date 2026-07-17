@@ -182,6 +182,20 @@ export interface AddExternalApprovalEvidenceReferenceRequest {
   hash?: string;
   contentType?: string;
   createdByDisplayName?: string;
+  sizeBytes?: number;
+  purpose?: string;
+  retentionHint?: string;
+}
+
+export interface ExternalApprovalIntegrationReadiness {
+  contentFile?: { status?: string; isPortalOwned?: boolean; allowsUpload?: boolean; allowsDownload?: boolean; allowsSensitiveLinks?: boolean; missingPortalDependencies?: string[]; blockers?: string[]; disclaimer?: string };
+  notification?: { status?: string; isPortalOwned?: boolean; allowsSend?: boolean; missingPortalDependencies?: string[]; blockers?: string[]; disclaimer?: string };
+  auditOutboxStatus?: string;
+  featureFlags?: string[];
+  missingPortalDependencies?: string[];
+  blockers?: string[];
+  recommendedNextAction?: string;
+  disclaimer?: string;
 }
 
 export interface RecordExternalApprovalDecisionRequest {
