@@ -109,7 +109,7 @@ for (const safeFlag of ['allowXmlPreviewUi: false', 'allowMutations: false', 'al
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Safe feature flag default missing: ${safeFlag}.`);
 }
 
-for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentCommands: false', 'allowExternalApprovalCommands: false', 'allowEvidenceReferenceMetadata: false', 'allowApprovalDecisionFoundation: false', 'allowPortalContentFileEvidenceReferences: false', 'allowPortalNotificationIntents: false', 'allowNotificationSend: false', 'allowEvidenceUpload: false', 'allowAtsOfficialActions: false', 'allowSriSubmission: false']) {
+for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentCommands: false', 'allowExternalApprovalCommands: false', 'allowEvidenceReferenceMetadata: false', 'allowApprovalDecisionFoundation: false', 'allowPortalContentFileEvidenceReferences: false', 'allowPortalNotificationIntents: false', 'allowNotificationSend: false', 'allowEvidenceUpload: false', 'allowProductizationReadiness: true', 'allowProductiveActivation: false', 'allowOfficialTaxFlows: false', 'allowAtsOfficialActions: false', 'allowSriSubmission: false']) {
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Command safety flag default missing: ${safeFlag}.`);
 }
 
@@ -122,8 +122,14 @@ if (prodEnvironment.includes('financial.electronicdocuments.manage')) {
 }
 
 const commandGuard = readFileSync(join(root, 'src/app/core/services/command-guard.service.ts'), 'utf8');
-for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'allowExternalApprovalCommands', 'allowEvidenceReferenceMetadata', 'allowApprovalDecisionFoundation', 'allowPortalContentFileEvidenceReferences', 'allowPortalNotificationIntents', 'allowNotificationSend', 'allowEvidenceUpload', 'financial.electronicdocuments.manage']) {
+for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'allowExternalApprovalCommands', 'allowEvidenceReferenceMetadata', 'allowApprovalDecisionFoundation', 'allowPortalContentFileEvidenceReferences', 'allowPortalNotificationIntents', 'allowNotificationSend', 'allowEvidenceUpload', 'allowProductiveActivation', 'allowOfficialTaxFlows', 'financial.electronicdocuments.manage']) {
   if (!commandGuard.includes(token)) throw new Error(`Command guard missing ${token}.`);
+}
+
+const purchaseApi = readFileSync(join(root, 'src/app/core/services/purchase-tax-document-api.service.ts'), 'utf8');
+const voidedApi = readFileSync(join(root, 'src/app/core/services/voided-tax-document-api.service.ts'), 'utf8');
+for (const text of [purchaseApi, voidedApi]) {
+  if (!text.includes('productization-readiness')) throw new Error('Productization readiness route missing from tax document API service.');
 }
 
 const externalApproval = readFileSync(join(root, 'src/app/core/services/external-approval-api.service.ts'), 'utf8');
@@ -137,6 +143,16 @@ for (const token of ['/api/financial/external-approval-requests', 'integration-r
 const externalApprovalComponent = readFileSync(join(root, 'src/app/features/external-approvals/external-approvals.component.ts'), 'utf8');
 for (const token of ['Portal integration readiness', 'reference only / Portal-owned evidence', 'No upload', 'Sin envío de notificaciones']) {
   if (!externalApprovalComponent.includes(token)) throw new Error(`External approval UI boundary missing ${token}.`);
+}
+
+for (const screen of ['src/app/features/purchases/purchases.component.ts', 'src/app/features/voided-documents/voided-documents.component.ts']) {
+  const text = readFileSync(join(root, screen), 'utf8');
+  for (const token of ['Productization readiness', 'Producción bloqueada', 'Sin upload', 'Sin notification send']) {
+    if (!text.includes(token)) throw new Error(`${screen} missing productization readiness token ${token}.`);
+  }
+  for (const forbiddenControl of ['type="file"', '<button type="button">Producción', '<button type="button">Enviar SRI', '<button type="button">ATS oficial', 'sendNotification', 'downloadEvidence']) {
+    if (text.includes(forbiddenControl)) throw new Error(`${screen} must not expose productive control ${forbiddenControl}.`);
+  }
 }
 for (const forbiddenControl of ['type="file"', 'Upload disabled', 'Notify disabled', 'sendNotification', 'downloadEvidence']) {
   if (externalApprovalComponent.includes(forbiddenControl)) throw new Error(`External approval UI must not expose ${forbiddenControl}.`);
@@ -170,6 +186,9 @@ for (const doc of [
   'docs/coordination/financial-sprint-07-p3-contentfile-notification-boundary.md',
   'docs/architecture/decisions/adr-025-portal-contentfile-notification-boundary.md',
   'docs/integration/portal-contentfile-notification-boundary.md',
+  'docs/coordination/financial-sprint-07-p4-controlled-productization-readiness.md',
+  'docs/architecture/decisions/adr-026-controlled-productization-readiness.md',
+  'docs/releases/financial-sprint-07-readiness-notes.md',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {

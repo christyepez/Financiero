@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { RegisterVoidedTaxDocumentRequest, TaxDocumentSummary } from './api.models';
+import { ProductizationReadinessResult, RegisterVoidedTaxDocumentRequest, TaxDocumentSummary } from './api.models';
 
 @Injectable({ providedIn: 'root' })
 export class VoidedTaxDocumentApiService {
@@ -9,6 +9,12 @@ export class VoidedTaxDocumentApiService {
 
   getByPeriod(period: string): Observable<TaxDocumentSummary[]> {
     return this.api.get<TaxDocumentSummary[]>('/api/financial/voided-documents', { period });
+  }
+
+  getProductizationReadiness(id?: string): Observable<ProductizationReadinessResult> {
+    return id
+      ? this.api.get<ProductizationReadinessResult>(`/api/financial/voided-documents/${id}/productization-readiness`)
+      : this.api.get<ProductizationReadinessResult>('/api/financial/voided-documents/productization-readiness');
   }
 
   registerVoidedDocument(request: RegisterVoidedTaxDocumentRequest): Observable<TaxDocumentSummary> {

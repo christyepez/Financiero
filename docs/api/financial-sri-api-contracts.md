@@ -241,3 +241,12 @@ Base: `/api/financial/external-approval-requests`
 Solo acepta metadata foundation. No acepta XML, base64, certificados, archivos, rutas locales ni URLs con tokens/querystring sensible. `ApprovedFoundation` no habilita producción.
 
 Sprint 7 P3 agrega boundary con Portal Content/File y Portal Notification: evidencia como metadata/reference-only y notification intents foundation sin envío real desde Financiero.
+
+# Controlled productization readiness
+
+- `GET /api/financial/purchases/productization-readiness` requiere `financial.electronicdocuments.read`.
+- `GET /api/financial/purchases/{id}/productization-readiness` requiere `financial.electronicdocuments.read`.
+- `GET /api/financial/voided-documents/productization-readiness` requiere `financial.electronicdocuments.read`.
+- `GET /api/financial/voided-documents/{id}/productization-readiness` requiere `financial.electronicdocuments.read`.
+
+Los endpoints son read-only. No mutan estado, no generan XML, no envían SRI, no suben evidencia, no envían notificaciones y no activan producción.

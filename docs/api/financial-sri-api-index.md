@@ -91,3 +91,5 @@ Sprint 5 P5 agrega external approval workflow foundation:
 Sprint 3 P2 endurece validaciones de catálogo foundation, periodo fiscal, documento relacionado, totales y retenciones antes de generar XML.
 - External approval requests foundation: `/api/financial/external-approval-requests`.
 - External approval Portal integration readiness: `/api/financial/external-approval-requests/integration-readiness`.
+- Purchase productization readiness: `/api/financial/purchases/productization-readiness`.
+- Voided document productization readiness: `/api/financial/voided-documents/productization-readiness`.

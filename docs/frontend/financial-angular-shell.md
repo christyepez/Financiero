@@ -107,6 +107,10 @@ La pantalla de aprobaciones externas consume `/api/financial/external-approval-r
 
 La pantalla muestra `/api/financial/external-approval-requests/integration-readiness`, marca evidencias como `reference only / Portal-owned evidence`, y mantiene disclaimers de `no upload` y `no notification send`. No existe input de archivo, descarga de evidencia ni control de envío de notificaciones desde Financiero.
 
+## Sprint 7 P4 controlled productization readiness
+
+Las pantallas de compras y anulados muestran blockers de productización, dependencias de approval foundation, Content/File y Notification, y mantienen visibles los límites `foundation only`. No renderizan botones de producción, envío SRI, ATS oficial, upload real ni notification send.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.

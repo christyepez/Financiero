@@ -163,6 +163,9 @@
 - [x] P3 agregar boundary Portal Content/File y Notification sin upload ni envío real.
 - [x] Agregar endpoint `/api/financial/external-approval-requests/integration-readiness`.
 - [x] Validar evidencia como metadata segura y notification intents foundation.
+- [x] P4 agregar productization readiness read-only para compras y anulados.
+- [x] Agregar endpoints `/api/financial/purchases/productization-readiness` y `/api/financial/voided-documents/productization-readiness`.
+- [x] Mantener producción, SRI, ATS oficial, upload y notification send bloqueados.
 - [ ] Validar contrato end-to-end con PortalCorporativo real.
 
 ## Dependencias Portal Sprint 2

@@ -34,3 +34,7 @@ Foundation intents are prepared for:
 - `ExternalApprovalRequestCancelled`
 
 They are not sent and contain no sensitive payload.
+
+## Productization readiness consumers
+
+Purchase and voided document readiness consume this boundary as a blocker source. Until Portal Content/File and Portal Notification production contracts are available, readiness remains foundation-only and blocked for productive activation.

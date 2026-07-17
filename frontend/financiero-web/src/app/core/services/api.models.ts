@@ -76,6 +76,20 @@ export interface TaxDocumentSummary {
   [key: string]: unknown;
 }
 
+export interface ProductizationReadinessResult {
+  scope?: string;
+  documentId?: string;
+  status?: string;
+  isReadyForProduction?: boolean;
+  doesNotEnableProduction?: boolean;
+  gates?: { code?: string; status?: string; description?: string; required?: boolean; isFoundationOnly?: boolean }[];
+  blockers?: { code?: string; message?: string; severity?: string }[];
+  recommendations?: { code?: string; message?: string }[];
+  portalBoundaries?: unknown;
+  dangerousFeatureFlagsBlocked?: string[];
+  disclaimer?: string;
+}
+
 export interface CreatePurchaseTaxDocumentRequest {
   supplierIdentificationType: string;
   supplierIdentification: string;
