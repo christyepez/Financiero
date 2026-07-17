@@ -40,6 +40,10 @@ export function sanitizePortalShellContext(input: Partial<PortalShellContext> | 
     allowExternalApprovalCommands: !environment.production && Boolean(input.featureFlags?.allowExternalApprovalCommands),
     allowEvidenceReferenceMetadata: !environment.production && Boolean(input.featureFlags?.allowEvidenceReferenceMetadata),
     allowApprovalDecisionFoundation: !environment.production && Boolean(input.featureFlags?.allowApprovalDecisionFoundation),
+    allowPortalContentFileEvidenceReferences: !environment.production && Boolean(input.featureFlags?.allowPortalContentFileEvidenceReferences),
+    allowPortalNotificationIntents: !environment.production && Boolean(input.featureFlags?.allowPortalNotificationIntents),
+    allowNotificationSend: false,
+    allowEvidenceUpload: false,
     allowAtsOfficialActions: false,
     allowSriSubmission: false,
     allowXmlPreviewUi: false

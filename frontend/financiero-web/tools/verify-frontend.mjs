@@ -109,7 +109,7 @@ for (const safeFlag of ['allowXmlPreviewUi: false', 'allowMutations: false', 'al
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Safe feature flag default missing: ${safeFlag}.`);
 }
 
-for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentCommands: false', 'allowExternalApprovalCommands: false', 'allowEvidenceReferenceMetadata: false', 'allowApprovalDecisionFoundation: false', 'allowAtsOfficialActions: false', 'allowSriSubmission: false']) {
+for (const safeFlag of ['allowPurchaseCommands: false', 'allowVoidedDocumentCommands: false', 'allowExternalApprovalCommands: false', 'allowEvidenceReferenceMetadata: false', 'allowApprovalDecisionFoundation: false', 'allowPortalContentFileEvidenceReferences: false', 'allowPortalNotificationIntents: false', 'allowNotificationSend: false', 'allowEvidenceUpload: false', 'allowAtsOfficialActions: false', 'allowSriSubmission: false']) {
   if (!portalDefaults.includes(safeFlag)) throw new Error(`Command safety flag default missing: ${safeFlag}.`);
 }
 
@@ -122,7 +122,7 @@ if (prodEnvironment.includes('financial.electronicdocuments.manage')) {
 }
 
 const commandGuard = readFileSync(join(root, 'src/app/core/services/command-guard.service.ts'), 'utf8');
-for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'allowExternalApprovalCommands', 'allowEvidenceReferenceMetadata', 'allowApprovalDecisionFoundation', 'financial.electronicdocuments.manage']) {
+for (const token of ['allowMutations', 'allowPurchaseCommands', 'allowVoidedDocumentCommands', 'allowExternalApprovalCommands', 'allowEvidenceReferenceMetadata', 'allowApprovalDecisionFoundation', 'allowPortalContentFileEvidenceReferences', 'allowPortalNotificationIntents', 'allowNotificationSend', 'allowEvidenceUpload', 'financial.electronicdocuments.manage']) {
   if (!commandGuard.includes(token)) throw new Error(`Command guard missing ${token}.`);
 }
 
@@ -130,8 +130,16 @@ const externalApproval = readFileSync(join(root, 'src/app/core/services/external
 if (!externalApproval.includes('/api/financial/external-approvals/readiness')) {
   throw new Error('External approval readiness must use the real backend route.');
 }
-for (const token of ['/api/financial/external-approval-requests', 'evidence-references', 'decision']) {
+for (const token of ['/api/financial/external-approval-requests', 'integration-readiness', 'evidence-references', 'decision']) {
   if (!externalApproval.includes(token)) throw new Error(`External approval persisted workflow API missing ${token}.`);
+}
+
+const externalApprovalComponent = readFileSync(join(root, 'src/app/features/external-approvals/external-approvals.component.ts'), 'utf8');
+for (const token of ['Portal integration readiness', 'reference only / Portal-owned evidence', 'No upload', 'Sin envío de notificaciones']) {
+  if (!externalApprovalComponent.includes(token)) throw new Error(`External approval UI boundary missing ${token}.`);
+}
+for (const forbiddenControl of ['type="file"', 'Upload disabled', 'Notify disabled', 'sendNotification', 'downloadEvidence']) {
+  if (externalApprovalComponent.includes(forbiddenControl)) throw new Error(`External approval UI must not expose ${forbiddenControl}.`);
 }
 
 const validation = readFileSync(join(root, 'src/app/core/portal-shell/portal-shell-validation.ts'), 'utf8');
@@ -159,6 +167,9 @@ for (const doc of [
   'docs/architecture/decisions/adr-023-real-portal-shell-contract-hardening.md',
   'docs/coordination/financial-sprint-07-p2-external-approval-persistence.md',
   'docs/architecture/decisions/adr-024-external-approval-workflow-persistence.md',
+  'docs/coordination/financial-sprint-07-p3-contentfile-notification-boundary.md',
+  'docs/architecture/decisions/adr-025-portal-contentfile-notification-boundary.md',
+  'docs/integration/portal-contentfile-notification-boundary.md',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {

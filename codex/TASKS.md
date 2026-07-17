@@ -160,6 +160,9 @@
 - [x] Crear migración `013_external_approval_workflow_foundation.sql`.
 - [x] Agregar endpoints `/api/financial/external-approval-requests`.
 - [x] Integrar UI Angular gated para requests y referencias metadata.
+- [x] P3 agregar boundary Portal Content/File y Notification sin upload ni envío real.
+- [x] Agregar endpoint `/api/financial/external-approval-requests/integration-readiness`.
+- [x] Validar evidencia como metadata segura y notification intents foundation.
 - [ ] Validar contrato end-to-end con PortalCorporativo real.
 
 ## Dependencias Portal Sprint 2

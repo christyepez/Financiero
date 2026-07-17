@@ -85,7 +85,7 @@ public sealed class ExternalApprovalReadinessService(IPortalAuditClient audit) :
 }
 
 public sealed record CreateExternalApprovalRequest(string Scope, string Title, string? FiscalPeriod, string CreatedByDisplayName, IReadOnlyCollection<ExternalApprovalRequirementDto>? Requirements);
-public sealed record AddExternalApprovalEvidenceReferenceRequest(string Provider, string ReferenceId, string DisplayName, string? Hash, string? ContentType, string? CreatedByDisplayName);
+public sealed record AddExternalApprovalEvidenceReferenceRequest(string Provider, string ReferenceId, string DisplayName, string? Hash, string? ContentType, string? CreatedByDisplayName, long? SizeBytes = null, string? Purpose = null, string? RetentionHint = null);
 public sealed record RecordExternalApprovalDecisionRequest(string Decision, string Reason, string DecidedByDisplayName);
 public sealed record CancelExternalApprovalRequest(string Reason, string ActorDisplayName);
 public sealed record ExternalApprovalRequirementDto(string Description, bool RequiresEvidence, bool RequiresHumanReview);
@@ -104,6 +104,8 @@ public interface IExternalApprovalRequestRepository
 
 public sealed class ExternalApprovalWorkflowCommandService(IExternalApprovalRequestRepository requests, IPortalAuditClient audit, IPortalOutboxClient outbox)
 {
+    private static readonly PortalContentFileReferenceValidator ContentFileValidator = new();
+
     public async Task<ExternalApprovalRequestDto> CreateRequestAsync(CreateExternalApprovalRequest request, PortalCallContext context, CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
@@ -125,10 +127,22 @@ public sealed class ExternalApprovalWorkflowCommandService(IExternalApprovalRequ
     public async Task<ExternalApprovalRequestDto> AddEvidenceReferenceAsync(Guid id, AddExternalApprovalEvidenceReferenceRequest request, PortalCallContext context, CancellationToken ct)
     {
         var entity = await GetRequiredAsync(id, context, ct);
+        var portalReference = ContentFileValidator.Validate(new(
+            Sanitize(request.Provider),
+            Sanitize(request.ReferenceId),
+            Sanitize(request.DisplayName),
+            Clean(request.ContentType),
+            Clean(request.Hash),
+            request.SizeBytes,
+            DateTimeOffset.UtcNow,
+            Clean(request.CreatedByDisplayName),
+            Clean(request.Purpose) ?? ExternalApprovalContentFilePurpose.ExternalApprovalEvidence.ToString(),
+            Clean(request.RetentionHint),
+            PortalContentFileLinkPolicy.ReferenceOnly));
         entity.AddEvidenceReference(Sanitize(request.Provider), Sanitize(request.ReferenceId), Sanitize(request.DisplayName), Clean(request.Hash), Clean(request.ContentType), Clean(request.CreatedByDisplayName), DateTimeOffset.UtcNow);
         await requests.SaveChangesAsync(ct);
         await AuditAsync("ExternalApprovalEvidenceReferenceAdded", entity, context, ct);
-        await OutboxAsync("ExternalApprovalEvidenceReferenceAdded", entity, context, ct);
+        await OutboxAsync("ExternalApprovalEvidenceReferenceAdded", entity, context, ct, new { portalReference.Purpose, portalReference.LinkPolicy, portalReference.SizeBytes, ReferenceOnly = true });
         return ToDto(entity);
     }
 
@@ -139,6 +153,7 @@ public sealed class ExternalApprovalWorkflowCommandService(IExternalApprovalRequ
         await requests.SaveChangesAsync(ct);
         await AuditAsync("ExternalApprovalDecisionRecorded", entity, context, ct);
         await OutboxAsync("ExternalApprovalDecisionRecorded", entity, context, ct);
+        await NotificationIntentAsync(PortalNotificationPurpose.ExternalApprovalDecisionRecorded, entity, context, ct);
         return ToDto(entity);
     }
 
@@ -149,6 +164,7 @@ public sealed class ExternalApprovalWorkflowCommandService(IExternalApprovalRequ
         await requests.SaveChangesAsync(ct);
         await AuditAsync("ExternalApprovalRequestCancelled", entity, context, ct);
         await OutboxAsync("ExternalApprovalRequestCancelled", entity, context, ct);
+        await NotificationIntentAsync(PortalNotificationPurpose.ExternalApprovalCancelled, entity, context, ct);
         return ToDto(entity);
     }
 
@@ -159,13 +175,20 @@ public sealed class ExternalApprovalWorkflowCommandService(IExternalApprovalRequ
         await requests.SaveChangesAsync(ct);
         await AuditAsync(eventName, entity, context, ct);
         await OutboxAsync(eventName, entity, context, ct);
+        if (eventName == "ExternalApprovalRequestSubmitted") await NotificationIntentAsync(PortalNotificationPurpose.ExternalApprovalSubmitted, entity, context, ct);
+        if (eventName == "ExternalApprovalReviewStarted") await NotificationIntentAsync(PortalNotificationPurpose.ExternalApprovalReviewStarted, entity, context, ct);
         return ToDto(entity);
     }
 
     private async Task<ExternalApprovalRequest> GetRequiredAsync(Guid id, PortalCallContext context, CancellationToken ct) =>
         await requests.GetByIdAsync(id, context.TenantId, ct) ?? throw new FinancialApplicationException("external_approval.not_found", "External approval request was not found.");
     private Task AuditAsync(string eventName, ExternalApprovalRequest entity, PortalCallContext context, CancellationToken ct) => audit.RecordAsync(new(eventName, "financial.external-approval-request", context.TenantId, new { entity.Id, Scope = entity.Scope.ToString(), Status = entity.Status.ToString(), entity.DoesNotEnableProduction }), context, ct);
-    private Task OutboxAsync(string eventName, ExternalApprovalRequest entity, PortalCallContext context, CancellationToken ct) => outbox.EnqueueAsync(new(Guid.NewGuid(), eventName, 1, DateTimeOffset.UtcNow, context.CorrelationId, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, Scope = entity.Scope.ToString(), Status = entity.Status.ToString(), entity.DoesNotEnableProduction })), context, ct);
+    private Task OutboxAsync(string eventName, ExternalApprovalRequest entity, PortalCallContext context, CancellationToken ct, object? extra = null) => outbox.EnqueueAsync(new(Guid.NewGuid(), eventName, 1, DateTimeOffset.UtcNow, context.CorrelationId, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, Scope = entity.Scope.ToString(), Status = entity.Status.ToString(), entity.DoesNotEnableProduction, Extra = extra })), context, ct);
+    private Task NotificationIntentAsync(PortalNotificationPurpose purpose, ExternalApprovalRequest entity, PortalCallContext context, CancellationToken ct)
+    {
+        var intent = ExternalApprovalPortalIntegrationBoundary.BuildNotificationIntent(purpose, entity);
+        return outbox.EnqueueAsync(new(Guid.NewGuid(), "ExternalApprovalNotificationIntentPrepared", 1, DateTimeOffset.UtcNow, context.CorrelationId, System.Text.Json.JsonSerializer.Serialize(new { entity.Id, Scope = entity.Scope.ToString(), Status = entity.Status.ToString(), intent.Purpose, intent.TemplateKey, intent.SendDisabled, intent.IsFoundationOnly })), context, ct);
+    }
     private static string Sanitize(string value) { ExternalApprovalRequest.GuardNoUnsafePayload(value); return string.IsNullOrWhiteSpace(value) ? throw new FinancialApplicationException("external_approval.input.required", "External approval input is required.") : value.Trim(); }
     private static string? Clean(string? value) { if (string.IsNullOrWhiteSpace(value)) return null; ExternalApprovalRequest.GuardNoUnsafePayload(value); return value.Trim(); }
     private static string? CleanPeriod(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
@@ -202,5 +225,12 @@ public sealed class ExternalApprovalWorkflowQueryService(IExternalApprovalReques
         var readinessResult = await readiness.CheckAsync(scope, context, ct);
         var persisted = await ListRequestsAsync(scope.Equals("all", StringComparison.OrdinalIgnoreCase) ? null : scope, null, context, ct);
         return new { readiness = readinessResult, persistedRequests = persisted, disclaimer = "Persisted approval requests are foundation metadata only and do not enable production." };
+    }
+
+    public async Task<ExternalApprovalIntegrationReadiness> GetIntegrationReadinessAsync(PortalCallContext context, CancellationToken ct)
+    {
+        var result = ExternalApprovalPortalIntegrationBoundary.Readiness();
+        await audit.RecordAsync(new("ExternalApprovalIntegrationReadinessQueried", "financial.external-approval-request", context.TenantId, new { result.ContentFile.Status, NotificationStatus = result.Notification.Status, FoundationOnly = true }), context, ct);
+        return result;
     }
 }

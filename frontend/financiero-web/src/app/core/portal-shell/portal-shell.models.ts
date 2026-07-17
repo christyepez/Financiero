@@ -33,6 +33,10 @@ export interface PortalFeatureFlags {
   allowExternalApprovalCommands: boolean;
   allowEvidenceReferenceMetadata: boolean;
   allowApprovalDecisionFoundation: boolean;
+  allowPortalContentFileEvidenceReferences: boolean;
+  allowPortalNotificationIntents: boolean;
+  allowNotificationSend: boolean;
+  allowEvidenceUpload: boolean;
   allowAtsOfficialActions: boolean;
   allowSriSubmission: boolean;
   allowXmlPreviewUi: boolean;

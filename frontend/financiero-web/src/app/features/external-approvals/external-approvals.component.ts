@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommandGuardService } from '../../core/services/command-guard.service';
 import { ExternalApprovalApiService } from '../../core/services/external-approval-api.service';
-import { ExternalApprovalGate, ExternalApprovalRequestSummary, ReadinessResponse } from '../../core/services/api.models';
+import { ExternalApprovalGate, ExternalApprovalIntegrationReadiness, ExternalApprovalRequestSummary, ReadinessResponse } from '../../core/services/api.models';
 import { CommandDisabledBannerComponent } from '../../shared/components/command-disabled-banner.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -20,8 +20,10 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
     <div class="panel">
       <span class="badge info">Metadata persistida</span>
       <span class="badge warn">Sin upload</span>
+      <span class="badge warn">Sin envío de notificaciones</span>
+      <span class="badge info">Portal-owned evidence</span>
       <span class="badge bad">No habilita SRI/ATS/RIDE/XAdES</span>
-      <p class="muted">Use esta vista como checklist foundation. La aprobación legal/tributaria real requiere revisión externa fuera del repositorio.</p>
+      <p class="muted">Use esta vista como checklist foundation. La aprobación legal/tributaria real requiere revisión externa fuera del repositorio. Financiero no almacena evidencia real, no descarga archivos y no envía emails/Teams.</p>
     </div>
     @if (!canCommand()) {
       <fin-command-disabled-banner [reason]="guard.disabledReason('approval')" />
@@ -52,6 +54,18 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
     <fin-error-message [message]="error()" />
     <section class="stack">
       <fin-readiness-card title="Approval workflow readiness" [data]="readiness()" />
+      @if (integrationReadiness(); as integration) {
+      <div class="panel">
+        <h2>Portal integration readiness</h2>
+        <p><strong>Content/File:</strong> {{ integration.contentFile?.status || 'FoundationContractOnly' }} · Portal-owned: {{ integration.contentFile?.isPortalOwned ? 'sí' : 'pendiente' }}</p>
+        <p><strong>Notification:</strong> {{ integration.notification?.status || 'FoundationIntentOnly' }} · envío real: {{ integration.notification?.allowsSend ? 'habilitado' : 'deshabilitado' }}</p>
+        <p><strong>Audit/Outbox:</strong> {{ integration.auditOutboxStatus || 'Eventos foundation sin payload sensible.' }}</p>
+        <p class="muted">{{ integration.disclaimer || 'Boundary foundation: reference only / no upload / no notification send.' }}</p>
+        <ul>
+          @for (blocker of integration.blockers || []; track blocker) { <li>{{ blocker }}</li> }
+        </ul>
+      </div>
+      }
       @if (requests().length) {
       <div class="panel">
         <h2>Requests persistidos foundation</h2>
@@ -63,12 +77,18 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
                 <td>{{ item.scope }}</td>
                 <td><fin-status-badge [value]="item.status" /></td>
                 <td>{{ item.title }}</td>
-                <td>{{ item.evidenceReferences?.length || 0 }} referencias metadata</td>
+                <td>
+                  {{ item.evidenceReferences?.length || 0 }} referencias metadata
+                  @for (ref of item.evidenceReferences || []; track ref.id) {
+                    <div class="muted">{{ ref.provider }} · {{ ref.displayName }} · reference only / Portal-owned evidence</div>
+                  }
+                </td>
                 <td>{{ item.decisions?.[0]?.decisionKind || 'Sin decisión' }}</td>
                 <td>
                   <button type="button" [disabled]="!canCommand()" (click)="submit(item)">Submit</button>
                   <button type="button" [disabled]="!canCommand()" (click)="startReview(item)">Review</button>
                   <button type="button" [disabled]="!canEvidence()" (click)="addEvidence(item)">Add ref</button>
+                  <span class="muted">No upload · no notification send</span>
                   <button type="button" [disabled]="!canDecision()" (click)="approve(item)">Approve foundation</button>
                   <button type="button" [disabled]="!canDecision()" (click)="reject(item)">Reject foundation</button>
                   <button type="button" [disabled]="!canCommand()" (click)="cancel(item)">Cancel</button>
@@ -111,6 +131,7 @@ export class ExternalApprovalsComponent {
   protected readonly approvals = signal<ExternalApprovalGate[]>([]);
   protected readonly requests = signal<ExternalApprovalRequestSummary[]>([]);
   protected readonly readiness = signal<ReadinessResponse | null>(null);
+  protected readonly integrationReadiness = signal<ExternalApprovalIntegrationReadiness | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(true);
   protected form = { scope: 'ATS', title: 'Solicitud foundation sintética', requirement: 'Evidencia externa sanitizada requerida' };
@@ -118,6 +139,7 @@ export class ExternalApprovalsComponent {
   constructor() {
     this.loadRequests();
     this.api.getAll().subscribe({ next: value => this.approvals.set(value), error: error => this.error.set(error.message) });
+    this.api.getIntegrationReadiness().subscribe({ next: value => this.integrationReadiness.set(value), error: error => this.error.set(error.message) });
     this.api.getReadiness('all').subscribe({
       next: value => this.readiness.set(value),
       error: error => this.error.set(error.message),
@@ -144,7 +166,7 @@ export class ExternalApprovalsComponent {
   addEvidence(item: ExternalApprovalRequestSummary): void {
     const referenceId = prompt('Referencia metadata sintética sin URL/token/base64/XML/certificado', `portal-content-file-ref-${Date.now()}`) || '';
     if (!this.safe(referenceId)) return this.error.set('Referencia de evidencia insegura rechazada.');
-    this.api.addEvidenceReference(item.id, { provider: 'PortalContentFilePlaceholder', referenceId, displayName: 'Referencia metadata foundation', createdByDisplayName: 'Usuario Portal foundation' }).subscribe({ next: () => this.loadRequests(), error: error => this.error.set(error.message) });
+    this.api.addEvidenceReference(item.id, { provider: 'PortalContentFilePlaceholder', referenceId, displayName: 'Referencia metadata foundation', createdByDisplayName: 'Usuario Portal foundation', purpose: 'ExternalApprovalEvidence', retentionHint: 'Portal-owned-retention' }).subscribe({ next: () => this.loadRequests(), error: error => this.error.set(error.message) });
   }
   approve(item: ExternalApprovalRequestSummary): void { this.decision(item, 'ApprovedFoundation', 'Aprobación foundation; no habilita producción.'); }
   reject(item: ExternalApprovalRequestSummary): void { this.decision(item, 'RejectedFoundation', 'Rechazo foundation con razón sanitizada.'); }

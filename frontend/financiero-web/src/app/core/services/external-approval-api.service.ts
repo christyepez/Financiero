@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { AddExternalApprovalEvidenceReferenceRequest, CreateExternalApprovalRequest, ExternalApprovalGate, ExternalApprovalRequestSummary, ReadinessResponse, RecordExternalApprovalDecisionRequest } from './api.models';
+import { AddExternalApprovalEvidenceReferenceRequest, CreateExternalApprovalRequest, ExternalApprovalGate, ExternalApprovalIntegrationReadiness, ExternalApprovalRequestSummary, ReadinessResponse, RecordExternalApprovalDecisionRequest } from './api.models';
 
 @Injectable({ providedIn: 'root' })
 export class ExternalApprovalApiService {
@@ -17,6 +17,10 @@ export class ExternalApprovalApiService {
 
   listRequests(): Observable<ExternalApprovalRequestSummary[]> {
     return this.api.get<ExternalApprovalRequestSummary[]>('/api/financial/external-approval-requests');
+  }
+
+  getIntegrationReadiness(): Observable<ExternalApprovalIntegrationReadiness> {
+    return this.api.get<ExternalApprovalIntegrationReadiness>('/api/financial/external-approval-requests/integration-readiness');
   }
 
   createRequest(request: CreateExternalApprovalRequest): Observable<ExternalApprovalRequestSummary> {

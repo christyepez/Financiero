@@ -24,12 +24,25 @@ export class CommandGuardService {
 
   canRunEvidenceReferenceCommands(): boolean {
     const flags = this.configuration.featureFlags();
-    return this.canRunExternalApprovalCommands() && flags.allowEvidenceReferenceMetadata;
+    return this.canRunExternalApprovalCommands() && flags.allowEvidenceReferenceMetadata && flags.allowPortalContentFileEvidenceReferences && !flags.allowEvidenceUpload;
   }
 
   canRunApprovalDecisionCommands(): boolean {
     const flags = this.configuration.featureFlags();
     return this.canRunExternalApprovalCommands() && flags.allowApprovalDecisionFoundation;
+  }
+
+  canPrepareNotificationIntents(): boolean {
+    const flags = this.configuration.featureFlags();
+    return this.canRunExternalApprovalCommands() && flags.allowPortalNotificationIntents && !flags.allowNotificationSend;
+  }
+
+  canUploadEvidence(): boolean {
+    return false;
+  }
+
+  canSendNotifications(): boolean {
+    return false;
   }
 
   disabledReason(kind: 'purchase' | 'voided' | 'approval'): string {
