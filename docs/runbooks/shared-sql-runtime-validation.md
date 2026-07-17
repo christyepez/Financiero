@@ -29,6 +29,21 @@ Exit code `2` means `BLOCKED_DEPENDENCY`, not an application failure.
 
 Sprint 8 P5 closure keeps final E2E status as `BLOCKED_DEPENDENCY` while shared SQL is unavailable. Do not create a Financiero-owned SQL Server to turn this into PASS.
 
+Sprint 9 P1 expected PASS evidence:
+
+- DNS resolves `host.docker.internal`.
+- TCP succeeds on port `21433`.
+- `docker compose config` contains no SQL Server service in Financiero.
+- Financiero uses logical database `FinancieroDb`.
+- Portal/infra shared runtime owns the single SQL Server container.
+
+Sprint 9 P1 expected BLOCKED_DEPENDENCY evidence:
+
+- DNS resolves but TCP fails on `21433`.
+- SQL container is stopped or port mapping is missing.
+- Financiero API readiness fails because SQL is unavailable.
+- No SQL Server is added to Financiero to bypass the dependency.
+
 ## Validate from Financiero compose
 
 ```powershell
@@ -55,6 +70,16 @@ docker compose logs --tail 80 financial-api
 
 If logs show `Could not open a connection to SQL Server`, validate shared SQL first.
 
+Container-side validation after shared SQL is up:
+
+```powershell
+docker compose up -d --build financial-api
+docker compose ps
+docker compose logs --tail 80 financial-api
+```
+
+Record only health state and host/port. Do not copy credentials.
+
 ## Validate database
 
 Use an approved local SQL client outside the repo. Record only:
@@ -62,6 +87,8 @@ Use an approved local SQL client outside the repo. Record only:
 - server reachable: yes/no;
 - database `FinancieroDb` exists: yes/no;
 - migrations initialized: yes/no.
+
+Database validation PASS requires database name `FinancieroDb`, separate from `PortalCorporativoDb` and any `CrmDb`.
 
 Do not copy passwords, connection strings, dumps or customer data into evidence.
 

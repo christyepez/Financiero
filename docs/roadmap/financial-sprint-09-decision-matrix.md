@@ -23,3 +23,7 @@
 Sprint 9 should select Option A: stabilize real E2E infrastructure. Once PASS evidence exists, choose D or E to reduce Portal boundary risk, then B/C for broader operational UX and controlled synthetic QA.
 
 Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready until shared SQL and Portal Gateway/Shell have PASS evidence.
+
+## Sprint 9 P1 execution note
+
+Option A was started. The first real execution remains `BLOCKED_DEPENDENCY`: shared SQL TCP on `host.docker.internal:21433`, Portal Gateway `localhost:8082` and Portal Shell live evidence are unavailable. Continue Option A before selecting B, C, D or E.

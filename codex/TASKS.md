@@ -204,6 +204,16 @@
 
 Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OIDC, proveedor productivo de Notification y secret/certificate management. No suplir estas brechas duplicando plataforma.
 
+## Sprint 9 — Real E2E infrastructure activation
+
+- [x] P1 ejecutar preflight real contra SQL común y Portal Gateway/Shell.
+- [x] P1 documentar evidencia `BLOCKED_DEPENDENCY` sin falso PASS.
+- [x] P1 reforzar runbooks SQL/Portal con criterios PASS/BLOCKED_DEPENDENCY.
+- [x] P1 validar que no existe SQL Server propio ni duplicación de Portal.
+- [ ] Levantar SQL común en `host.docker.internal:21433`.
+- [ ] Levantar Portal Gateway/Shell y capturar PortalShellContext real.
+- [ ] Reejecutar preflight hasta PASS.
+
 ## Deuda técnica controlada P4
 
 - Implementar adapters HTTP productivos hacia Portal cuando se congelen contratos de Security/Menu/Configuration/Audit/Outbox.

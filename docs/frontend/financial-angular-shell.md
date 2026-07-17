@@ -137,6 +137,10 @@ Los verificadores frontend fallan si estos límites desaparecen de la UX.
 
 El frontend queda validado de forma estática/build, pero el cierre E2E completo sigue `BLOCKED_DEPENDENCY` hasta tener Portal Gateway/Shell real y SQL común. La UX no debe convertir dependency blockers en PASS visual ni ocultar que Financiero no está production-ready.
 
+## Sprint 9 P1 runtime posture
+
+La activación E2E real sigue bloqueada por infraestructura: no hay Portal Gateway/Shell live evidence. El shell Angular puede compilar y pasar verificadores, pero PASS runtime requiere `PortalShellContext` real con `source=portal`, menú/permisos/feature flags y correlation id.
+
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
 ## Sprint 8 P2 E2E execution hardening

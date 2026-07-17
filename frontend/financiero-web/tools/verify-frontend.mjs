@@ -217,6 +217,7 @@ for (const doc of [
   'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
   'docs/coordination/financial-sprint-08-closure.md',
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
+  'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md',
   'docs/architecture/financial-risk-register.md',
@@ -231,6 +232,7 @@ for (const doc of [
 for (const doc of [
   'docs/coordination/financial-sprint-08-closure.md',
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
+  'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md',
   'docs/releases/financial-sprint-08-release-notes.md'
