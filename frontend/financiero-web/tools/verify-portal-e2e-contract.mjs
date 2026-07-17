@@ -74,8 +74,25 @@ for (const doc of [
   'docs/runbooks/financial-health-troubleshooting.md',
   'docs/qa/financial-sprint-08-p3-qa-infra-stabilization-evidence.md',
   'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
+  'docs/coordination/financial-sprint-08-closure.md',
+  'docs/qa/financial-sprint-08-final-e2e-evidence.md',
+  'docs/roadmap/financial-sprint-09-decision-matrix.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/releases/financial-sprint-08-release-notes.md',
   'tools/validate-portal-financiero-e2e.ps1'
 ]) statSync(join(repoRoot, doc));
+
+for (const doc of [
+  'docs/qa/financial-sprint-08-final-e2e-evidence.md',
+  'docs/roadmap/financial-sprint-09-decision-matrix.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md'
+]) {
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Portal E2E closure token ${token}.`);
+  }
+}
 
 const forbiddenQueryTokens = ['access_token=', 'id_token=', 'refresh_token=', 'token='];
 for (const file of [models, validation, context, auth, api, dashboard]) {

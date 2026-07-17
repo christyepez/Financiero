@@ -133,6 +133,10 @@ La pantalla `ExternalApprovalsComponent` endurece la lectura funcional de aproba
 
 Los verificadores frontend fallan si estos límites desaparecen de la UX.
 
+## Sprint 8 P5 closure posture
+
+El frontend queda validado de forma estática/build, pero el cierre E2E completo sigue `BLOCKED_DEPENDENCY` hasta tener Portal Gateway/Shell real y SQL común. La UX no debe convertir dependency blockers en PASS visual ni ocultar que Financiero no está production-ready.
+
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
 ## Sprint 8 P2 E2E execution hardening

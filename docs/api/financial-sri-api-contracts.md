@@ -274,3 +274,5 @@ Devuelve capacidades Portal requeridas, permisos esperados, rutas de menú esper
 Sprint 8 P2 agrega a la respuesta servicios esperados, requisitos de SQL común y posibles indicadores de drift del contrato PortalShellContext. No cambia permisos ni agrega mutaciones.
 
 Sprint 8 P3 agrega `readinessClassification`. Valores esperados: `Ready`, `BlockedDependency`, `NotConfigured`, `FoundationOnly`, `ProductionBlocked`.
+
+Sprint 8 P5 no agrega contratos nuevos. La evidencia final debe reportar `BlockedDependency` cuando SQL común o Portal runtime no estén disponibles. No se agregan mutaciones, migraciones, upload/download, notification send ni activación productiva.

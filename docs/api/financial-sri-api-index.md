@@ -108,3 +108,5 @@ Sprint 8 P4 no agrega endpoints. Endurece la UX consumidora del workflow de apro
 - Las referencias de evidencia son Portal-owned metadata-only; Financiero no almacena archivos.
 - Los notification intents son foundation/no-send; Portal Notification mantiene ownership.
 - Producción requiere Portal runtime, aprobación legal/tributaria y aprobación security.
+
+Sprint 8 P5 no agrega endpoints. Cierra evidencia final como `BLOCKED_DEPENDENCY` mientras SQL común y Portal Gateway/Shell no estén disponibles. Los contratos API siguen read-only/foundation y not production-ready.

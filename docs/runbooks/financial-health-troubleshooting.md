@@ -12,6 +12,8 @@
 
 Do not convert dependency failures into false-positive health.
 
+Sprint 8 P5 final evidence uses `BLOCKED_DEPENDENCY` when shared SQL or Portal Gateway/Shell are unavailable. This is the correct closure state and must not be hidden as PASS.
+
 ## Endpoints
 
 - `/health`: overall health.

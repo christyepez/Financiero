@@ -54,6 +54,12 @@ External Approval UX is hardened for functional QA. The screen now explains that
 
 This closes the approval workflow readiness from a UX perspective, but it does not activate SRI Test real send, SRI Production, official ATS, legal-final RIDE, productive XAdES, evidence upload/download, Content/File storage or Notification send.
 
+## Sprint 8 P5 closure
+
+Sprint 8 closes with final result `BLOCKED_DEPENDENCY`. Repository validation, backend tests, frontend build/verifiers and compose config pass, but full E2E PASS is not claimed until shared SQL and Portal Gateway/Shell are live.
+
+Sprint 9 recommendation: Option A from `docs/roadmap/financial-sprint-09-decision-matrix.md` - stabilize real E2E infrastructure first. Controlled productization backlog is tracked in `docs/roadmap/financial-controlled-productization-backlog.md`.
+
 ## Explicit exclusions
 
 - No SRI Production.
