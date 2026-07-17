@@ -114,3 +114,5 @@ Sprint 8 P5 no agrega endpoints. Cierra evidencia final como `BLOCKED_DEPENDENCY
 Sprint 9 P1 no agrega endpoints. Reejecuta E2E real y mantiene `BLOCKED_DEPENDENCY` hasta que SQL común, Portal Gateway/Shell y Financiero API estén disponibles. No cambia permisos ni activa producción.
 
 Sprint 9 P2 no agrega endpoints. Solo mejora diagnóstico/runbooks del preflight E2E y mantiene contratos API read-only/foundation.
+
+Sprint 9 P3 no agrega endpoints. Captura evidencia final `BLOCKED_DEPENDENCY` y handoff operativo; los contratos siguen not production-ready.

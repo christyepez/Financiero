@@ -78,7 +78,10 @@ for (const doc of [
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
+  'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
+  'docs/runbooks/financial-e2e-pass-checklist.md',
+  'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md',
   'docs/architecture/financial-risk-register.md',
@@ -90,7 +93,10 @@ for (const doc of [
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
+  'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
+  'docs/runbooks/financial-e2e-pass-checklist.md',
+  'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md'
 ]) {

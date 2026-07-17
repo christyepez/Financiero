@@ -280,3 +280,5 @@ Sprint 8 P5 no agrega contratos nuevos. La evidencia final debe reportar `Blocke
 Sprint 9 P1 no agrega contratos nuevos. El resultado real permanece `BlockedDependency` porque shared SQL y Portal runtime no están disponibles. Los endpoints existentes no deben reinterpretarse como production-ready.
 
 Sprint 9 P2 no agrega contratos nuevos. Los códigos de diagnóstico del preflight no son contrato API productivo y no habilitan mutaciones.
+
+Sprint 9 P3 no agrega contratos nuevos. El checklist PASS y handoff de dependencias son operativos; no habilitan SRI real, ATS oficial, RIDE legal final ni XAdES productivo.

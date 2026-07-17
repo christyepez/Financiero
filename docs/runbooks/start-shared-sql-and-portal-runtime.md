@@ -88,6 +88,8 @@ Use script parameters, local environment variables or untracked `.env` files. Do
 - `/api/financial/portal-integration/readiness` is reachable and sanitized.
 - Preflight exits `0`.
 
+Sprint 9 P3 observed blocker: Portal Gateway base responded but `/health` returned `HTTP 404`. Confirm the correct Portal health path or gateway route before marking Portal PASS.
+
 ## BLOCKED_DEPENDENCY evidence
 
 - `HOST_NOT_RESOLVED`.
