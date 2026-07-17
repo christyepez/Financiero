@@ -44,6 +44,9 @@ export function sanitizePortalShellContext(input: Partial<PortalShellContext> | 
     allowPortalNotificationIntents: !environment.production && Boolean(input.featureFlags?.allowPortalNotificationIntents),
     allowNotificationSend: false,
     allowEvidenceUpload: false,
+    allowProductizationReadiness: Boolean(input.featureFlags?.allowProductizationReadiness ?? true),
+    allowProductiveActivation: false,
+    allowOfficialTaxFlows: false,
     allowAtsOfficialActions: false,
     allowSriSubmission: false,
     allowXmlPreviewUi: false

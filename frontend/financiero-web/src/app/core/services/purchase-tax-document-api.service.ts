@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { AddPurchaseLineRequest, AddPurchaseTaxRequest, CreatePurchaseTaxDocumentRequest, TaxDocumentSummary } from './api.models';
+import { AddPurchaseLineRequest, AddPurchaseTaxRequest, CreatePurchaseTaxDocumentRequest, ProductizationReadinessResult, TaxDocumentSummary } from './api.models';
 
 @Injectable({ providedIn: 'root' })
 export class PurchaseTaxDocumentApiService {
@@ -9,6 +9,12 @@ export class PurchaseTaxDocumentApiService {
 
   getByPeriod(period: string): Observable<TaxDocumentSummary[]> {
     return this.api.get<TaxDocumentSummary[]>('/api/financial/purchases', { period });
+  }
+
+  getProductizationReadiness(id?: string): Observable<ProductizationReadinessResult> {
+    return id
+      ? this.api.get<ProductizationReadinessResult>(`/api/financial/purchases/${id}/productization-readiness`)
+      : this.api.get<ProductizationReadinessResult>('/api/financial/purchases/productization-readiness');
   }
 
   createPurchase(request: CreatePurchaseTaxDocumentRequest): Observable<TaxDocumentSummary> {

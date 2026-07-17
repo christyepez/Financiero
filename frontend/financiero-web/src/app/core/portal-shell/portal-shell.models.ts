@@ -37,6 +37,9 @@ export interface PortalFeatureFlags {
   allowPortalNotificationIntents: boolean;
   allowNotificationSend: boolean;
   allowEvidenceUpload: boolean;
+  allowProductizationReadiness: boolean;
+  allowProductiveActivation: boolean;
+  allowOfficialTaxFlows: boolean;
   allowAtsOfficialActions: boolean;
   allowSriSubmission: boolean;
   allowXmlPreviewUi: boolean;

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommandGuardService } from '../../core/services/command-guard.service';
 import { PurchaseTaxDocumentApiService } from '../../core/services/purchase-tax-document-api.service';
 import { SanitizationService } from '../../core/services/sanitization.service';
-import { TaxDocumentSummary } from '../../core/services/api.models';
+import { ProductizationReadinessResult, TaxDocumentSummary } from '../../core/services/api.models';
 import { CommandDisabledBannerComponent } from '../../shared/components/command-disabled-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { ErrorMessageComponent } from '../../shared/components/error-message.component';
@@ -22,6 +22,7 @@ import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
     <div class="panel">
       <span class="badge warn">Comando foundation</span>
       <span class="badge info">Requiere permiso Portal</span>
+      <span class="badge bad">Producción bloqueada</span>
       <p class="muted">Crear/validar compras aquí solo prepara datos sintéticos o locales. No genera ATS oficial ni contabilización automática.</p>
     </div>
     @if (!canCommand()) {
@@ -31,6 +32,17 @@ import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
     <fin-period-selector [period]="period()" (periodChange)="load($event)" />
     <fin-loading-state [loading]="loading()" />
     <fin-error-message [message]="error()" />
+    @if (readiness(); as ready) {
+      <section class="panel">
+        <h2>Productization readiness</h2>
+        <p><strong>Estado:</strong> {{ ready.status || 'BlockedFoundation' }} · foundation only: {{ ready.doesNotEnableProduction ? 'sí' : 'sí' }}</p>
+        <p class="muted">{{ ready.disclaimer || 'No habilita producción, SRI, ATS oficial, RIDE legal final, upload ni notificaciones.' }}</p>
+        <ul>
+          @for (blocker of ready.blockers || []; track blocker.code) { <li>{{ blocker.message }}</li> }
+        </ul>
+        <p class="muted">Approval foundation, Content/File boundary y Notification boundary son dependencias Portal-owned.</p>
+      </section>
+    }
     <fin-purchase-tax-summary [items]="items()" />
     @if (items().length) {
       <section class="panel">
@@ -47,6 +59,7 @@ import { PurchaseTaxSummaryComponent } from './purchase-tax-summary.component';
                 <td><fin-status-badge [value]="item.status || 'Foundation'" /></td>
                 <td>
                   <button type="button" [disabled]="!canCommand()" (click)="validate(item)">Validar foundation</button>
+                  <span class="muted">Sin SRI · Sin ATS oficial · Sin upload · Sin notification send</span>
                 </td>
               </tr>
             }
@@ -64,6 +77,7 @@ export class PurchasesComponent {
   private readonly sanitizer = inject(SanitizationService);
   protected readonly period = signal(currentPeriod());
   protected readonly items = signal<TaxDocumentSummary[]>([]);
+  protected readonly readiness = signal<ProductizationReadinessResult | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly loading = signal(true);
 
@@ -79,6 +93,10 @@ export class PurchasesComponent {
       next: value => this.items.set(value),
       error: error => this.error.set(error.message),
       complete: () => this.loading.set(false)
+    });
+    this.api.getProductizationReadiness().subscribe({
+      next: value => this.readiness.set(value),
+      error: error => this.error.set(error.message)
     });
   }
 

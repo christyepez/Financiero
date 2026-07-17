@@ -45,6 +45,11 @@ export class CommandGuardService {
     return false;
   }
 
+  canActivateProduction(): boolean {
+    const flags = this.configuration.featureFlags();
+    return false && flags.allowProductiveActivation && flags.allowOfficialTaxFlows;
+  }
+
   disabledReason(kind: 'purchase' | 'voided' | 'approval'): string {
     const flags = this.configuration.featureFlags();
     if (!flags.allowMutations) return 'Comandos deshabilitados por feature flag allowMutations=false.';

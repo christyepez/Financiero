@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 7 P3 agrega boundary foundation con Portal Content/File y Portal Notification para workflow de aprobaciones externas. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 7 P4 agrega productization readiness controlada para compras y documentos anulados. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -72,6 +72,7 @@ Documentos principales:
 - `docs/coordination/financial-sprint-07-p1-real-portal-shell-contract.md`
 - `docs/coordination/financial-sprint-07-p2-external-approval-persistence.md`
 - `docs/coordination/financial-sprint-07-p3-contentfile-notification-boundary.md`
+- `docs/coordination/financial-sprint-07-p4-controlled-productization-readiness.md`
 - `docs/frontend/financial-angular-shell.md`
 - `docs/frontend/portal-shell-contract.md`
 - `docs/frontend/portal-shell-readiness-matrix.md`
@@ -86,6 +87,8 @@ Documentos principales:
 - `docs/architecture/decisions/adr-023-real-portal-shell-contract-hardening.md`
 - `docs/architecture/decisions/adr-024-external-approval-workflow-persistence.md`
 - `docs/architecture/decisions/adr-025-portal-contentfile-notification-boundary.md`
+- `docs/architecture/decisions/adr-026-controlled-productization-readiness.md`
+- `docs/releases/financial-sprint-07-readiness-notes.md`
 - `docs/releases/financial-sprint-05-closure.md`
 - `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
@@ -163,4 +166,6 @@ Sprint 7 P2 agrega requests persistidos de aprobaciones externas foundation. Gua
 
 Sprint 7 P3 agrega contratos y readiness para Portal Content/File y Notification. Financiero valida referencias seguras, prepara intents foundation sin envío real y mantiene Content/File y Notification como capacidades Portal-owned.
 
-Próximo paso recomendado: validar contratos reales con PortalCorporativo antes de habilitar upload, links seguros o delivery de notificaciones.
+Sprint 7 P4 agrega readiness read-only de productización para compras y documentos anulados. Expone gates y blockers sin mutar estado ni habilitar SRI, ATS oficial, RIDE legal final, upload o notificaciones.
+
+Próximo paso recomendado: validar contratos reales con PortalCorporativo y revisión legal/tributaria antes de cualquier activación productiva futura.
