@@ -44,6 +44,20 @@ Sprint 9 P1 expected BLOCKED_DEPENDENCY evidence:
 - Financiero API readiness fails because SQL is unavailable.
 - No SQL Server is added to Financiero to bypass the dependency.
 
+Sprint 9 P2 diagnostic codes:
+
+| Code | Meaning | Action |
+|---|---|---|
+| `HOST_NOT_RESOLVED` | SQL host alias cannot resolve. | Validate Docker Desktop networking or override `-SqlHost`. |
+| `HOST_RESOLVES_BUT_PORT_CLOSED` | Host resolves but TCP port is closed. | Start shared SQL, validate `-SqlPort`, port mapping and firewall. |
+| `PASS` | Check succeeded. | Continue to next dependency. |
+
+Use overrides when the shared SQL runtime intentionally uses different host/port:
+
+```powershell
+.\tools\validate-portal-financiero-e2e.ps1 -SqlHost <host> -SqlPort <port> -SkipPortalChecks -SkipApiHealthChecks -OutputMarkdown -VerboseDiagnostics -SuggestFixes
+```
+
 ## Validate from Financiero compose
 
 ```powershell

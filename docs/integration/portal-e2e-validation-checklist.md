@@ -132,6 +132,12 @@ Blocked dependency:
 - Financiero API is unavailable only because its shared dependencies are down.
 - PortalShellContext live evidence cannot be captured.
 
+Sprint 9 P2 actionable diagnostics:
+
+- `HTTP_ENDPOINT_UNREACHABLE` for Portal Gateway means start PortalCorporativo or override Gateway URL.
+- `HTTP_STATUS_UNEXPECTED` means the service responded but health/readiness is not healthy.
+- `SERVICE_SKIPPED` means evidence is scoped and not full E2E PASS.
+
 ## Troubleshooting
 
 - If health fails, verify shared SQL Server and `FinancieroDb`.

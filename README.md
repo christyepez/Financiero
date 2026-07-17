@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 9 P1 ejecuta la activación E2E real recomendada tras Sprint 8. El resultado observado sigue `BLOCKED_DEPENDENCY`: SQL común `host.docker.internal:21433`, Portal Gateway `localhost:8082` y Portal Shell live evidence no están disponibles; no se inventa PASS. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 9 P2 mejora el diagnóstico de dependencias E2E reales con salida accionable (`HOST_RESOLVES_BUT_PORT_CLOSED`, `HTTP_ENDPOINT_UNREACHABLE`, etc.) y runbook de arranque para SQL común + Portal Gateway/Shell. El resultado observado sigue `BLOCKED_DEPENDENCY`: SQL común `host.docker.internal:21433`, Portal Gateway `localhost:8082` y Portal Shell live evidence no están disponibles; no se inventa PASS. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -81,6 +81,8 @@ Documentos principales:
 - `docs/coordination/financial-sprint-08-closure.md`
 - `docs/qa/financial-sprint-08-final-e2e-evidence.md`
 - `docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md`
+- `docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md`
+- `docs/runbooks/start-shared-sql-and-portal-runtime.md`
 - `docs/roadmap/financial-sprint-09-decision-matrix.md`
 - `docs/roadmap/financial-controlled-productization-backlog.md`
 - `docs/architecture/financial-risk-register.md`
@@ -205,4 +207,6 @@ Sprint 8 P5 cierra el sprint como `BLOCKED_DEPENDENCY`: backend/frontend/verific
 
 Sprint 9 P1 ejecuta nuevamente el preflight real y mantiene `BLOCKED_DEPENDENCY`: DNS de `host.docker.internal` resuelve, compose es válido y no existe SQL Server propio, pero SQL TCP `21433`, Financiero API `8083` y Portal Gateway `8082` no están disponibles. El script no requiere hardening funcional adicional; el bloqueo es de infraestructura.
 
-Próximo paso recomendado: levantar SQL común y PortalCorporativo real, ejecutar `tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown`, capturar evidencia PASS y mantener bloqueados SRI producción, SRI Test real, ATS oficial, RIDE legal final, XAdES productivo, upload/download de evidencia y envío real de notificaciones.
+Sprint 9 P2 agrega `-VerboseDiagnostics` y `-SuggestFixes` al preflight, documenta causas/acciones y crea el runbook `docs/runbooks/start-shared-sql-and-portal-runtime.md`.
+
+Próximo paso recomendado: levantar SQL común y PortalCorporativo real, ejecutar `tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown -VerboseDiagnostics -SuggestFixes`, capturar evidencia PASS y mantener bloqueados SRI producción, SRI Test real, ATS oficial, RIDE legal final, XAdES productivo, upload/download de evidencia y envío real de notificaciones.

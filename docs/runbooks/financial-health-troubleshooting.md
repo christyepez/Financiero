@@ -53,6 +53,14 @@ If Portal checks are blocked, start PortalCorporativo Gateway/Shell.
 
 Expected PASS evidence includes HTTP 2xx from Portal Gateway health and a Portal Shell context source of `portal`. Expected BLOCKED_DEPENDENCY evidence includes connection refused or timeout for Gateway/Shell URLs.
 
+### Sprint 9 P2 diagnostic codes
+
+- `HOST_NOT_RESOLVED`: fix host alias or override host parameter.
+- `HOST_RESOLVES_BUT_PORT_CLOSED`: start service or fix port/firewall.
+- `HTTP_ENDPOINT_UNREACHABLE`: start the HTTP service or override URL.
+- `HTTP_STATUS_UNEXPECTED`: inspect service health path and dependencies.
+- `SERVICE_SKIPPED`: rerun without skip flags for full E2E evidence.
+
 ### Missing permissions
 
 For local development only, use `X-Dev-Permissions` with synthetic permissions. Production must receive delegated permissions from Portal.

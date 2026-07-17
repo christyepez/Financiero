@@ -38,6 +38,24 @@ REDIS_URL=
 | `SEQ_URL` | Optional log inspection endpoint. |
 | `REDIS_URL` | Optional Portal-owned dependency. |
 
+## Script override mapping
+
+Use local variables as a source for script parameters; do not commit the values.
+
+```powershell
+.\tools\validate-portal-financiero-e2e.ps1 `
+  -FinancialBaseUrl $env:FINANCIAL_API_BASE_URL `
+  -PortalBaseUrl $env:PORTAL_GATEWAY_BASE_URL `
+  -PortalShellBaseUrl $env:PORTAL_SHELL_BASE_URL `
+  -SqlHost $env:SHARED_SQL_HOST `
+  -SqlPort ([int]$env:SHARED_SQL_PORT) `
+  -OutputMarkdown `
+  -VerboseDiagnostics `
+  -SuggestFixes
+```
+
+If an environment uses different ports, update only local untracked values or pass parameters at runtime.
+
 ## Do not upload
 
 - Tokens.
