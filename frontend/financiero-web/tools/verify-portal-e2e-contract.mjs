@@ -31,6 +31,7 @@ const guard = read(files.guard);
 const api = read(files.api);
 const dashboard = read(files.dashboard);
 const app = read(files.app);
+const externalApproval = readFileSync(join(root, 'src/app/features/external-approvals/external-approvals.component.ts'), 'utf8');
 
 for (const token of ['SUPPORTED_PORTAL_SHELL_CONTRACT_VERSION', 'PortalShellSource', "'standalone' | 'portal'", 'issuedAt', 'expiresAt', 'permissions', 'menu', 'featureFlags', 'correlationId']) {
   if (!models.includes(token)) throw new Error(`PortalShellContext contract missing ${token}.`);
@@ -57,6 +58,9 @@ for (const token of ['/api/financial/portal-integration/readiness', 'Portal E2E 
   const combined = `${api}\n${dashboard}`;
   if (!combined.includes(token)) throw new Error(`Portal E2E UI/API missing ${token}.`);
 }
+for (const token of ['ApprovedFoundation no habilita producción', 'Evidence reference is Portal-owned metadata only', 'Notification intent is prepared only; no send', 'Portal Notification owner', 'No file stored in Financiero']) {
+  if (!externalApproval.includes(token)) throw new Error(`External approval Portal boundary missing ${token}.`);
+}
 for (const token of ['missingRequiredPortalContext()', 'hasUnsupportedContract()', 'fin-portal-context-required']) {
   if (!app.includes(token)) throw new Error(`Production standalone block missing ${token}.`);
 }
@@ -69,6 +73,7 @@ for (const doc of [
   'docs/runbooks/financial-qa-env-template.md',
   'docs/runbooks/financial-health-troubleshooting.md',
   'docs/qa/financial-sprint-08-p3-qa-infra-stabilization-evidence.md',
+  'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
   'tools/validate-portal-financiero-e2e.ps1'
 ]) statSync(join(repoRoot, doc));
 

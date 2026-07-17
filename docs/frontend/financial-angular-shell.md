@@ -119,6 +119,20 @@ Sprint 7 P5 mantiene la UI como readiness/foundation. El verificador frontend ex
 
 El dashboard muestra `Portal E2E readiness` consumiendo `/api/financial/portal-integration/readiness`. El panel muestra estado, modo `development standalone only`, recordatorio `production requires Portal context`, blockers y disclaimers sanitizados. No muestra token, claims completas, email completo, tenant raw sensible ni rutas fuera de allow-list.
 
+## Sprint 8 P4 external approval UX hardening
+
+La pantalla `ExternalApprovalsComponent` endurece la lectura funcional de aprobaciones externas:
+
+- Mapea estados `Draft`, `Submitted`, `InReview`, `ApprovedFoundation`, `RejectedFoundation`, `Blocked`, `Superseded` y `Cancelled`.
+- Muestra `ApprovedFoundation no habilita producción`.
+- Muestra `Evidence reference is Portal-owned metadata only` y `No file stored in Financiero`.
+- Muestra `Notification intent is prepared only; no send` y `Portal Notification owner`.
+- Explica que `External approval does not replace legal/tax approval`.
+- Explica que `Production requires Portal + legal/tax/security approval`.
+- Mantiene upload, download, notification send, SRI producción, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo bloqueados.
+
+Los verificadores frontend fallan si estos límites desaparecen de la UX.
+
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
 ## Sprint 8 P2 E2E execution hardening

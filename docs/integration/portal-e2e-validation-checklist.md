@@ -102,6 +102,9 @@ Pass:
 - Menu and permissions are filtered.
 - Readiness endpoint returns blockers and no secrets.
 - No production tax flow is enabled.
+- External approval UX states clearly that `ApprovedFoundation` does not enable production.
+- Evidence references are shown as Portal-owned metadata-only.
+- Notification intents are shown as foundation/no-send.
 
 Fail:
 
@@ -109,6 +112,7 @@ Fail:
 - Unknown menu route is rendered.
 - Productive flags are true.
 - Financiero creates Security/Menu/Configuration/Notification/Content/File substitutes.
+- External approval UX renders upload/download, notification send, productive approval or legal-final tax copy.
 
 ## Troubleshooting
 

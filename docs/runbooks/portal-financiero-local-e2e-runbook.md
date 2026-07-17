@@ -72,6 +72,15 @@ pnpm test
 node tools/verify-portal-e2e-contract.mjs
 ```
 
+Validate `/external-approvals` with synthetic data only:
+
+- `ApprovedFoundation no habilita producción` is visible.
+- Evidence is described as Portal-owned metadata-only.
+- Notification intent is described as prepared only/no-send.
+- No upload/download control appears.
+- No notification send/resend control appears.
+- No productive approval, SRI real, official ATS, legal-final RIDE or productive XAdES control appears.
+
 ## 5. Inject synthetic Portal context
 
 For development-only validation, provide a synthetic `window.__PORTAL_SHELL_CONTEXT__` with:
@@ -106,6 +115,7 @@ Do not include tokens, passwords, real emails, real taxpayer data, XML or certif
 - Legal-final RIDE remains blocked.
 - Productive XAdES remains blocked.
 - Upload and notification send remain blocked.
+- External approval does not replace legal/tax/security approval.
 
 ## 9. Shutdown
 

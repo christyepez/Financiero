@@ -16,14 +16,15 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
   selector: 'fin-external-approvals',
   imports: [CommandDisabledBannerComponent, EmptyStateComponent, ErrorMessageComponent, FormsModule, FoundationDisclaimerComponent, LoadingStateComponent, ReadinessCardComponent, StatusBadgeComponent],
   template: `
-    <fin-foundation-disclaimer text="Aprobaciones externas son foundation. Persisten metadata/referencias sanitizadas; no almacenan archivos ni habilitan producción." />
+    <fin-foundation-disclaimer text="Aprobaciones externas son foundation. ApprovedFoundation no habilita producción; solo registra una decisión controlada y no reemplaza aprobación legal/tributaria." />
     <div class="panel">
       <span class="badge info">Metadata persistida</span>
       <span class="badge warn">Sin upload</span>
       <span class="badge warn">Sin envío de notificaciones</span>
       <span class="badge info">Portal-owned evidence</span>
       <span class="badge bad">No habilita SRI/ATS/RIDE/XAdES</span>
-      <p class="muted">Use esta vista como checklist foundation. La aprobación legal/tributaria real requiere revisión externa fuera del repositorio. Financiero no almacena evidencia real, no descarga archivos y no envía emails/Teams.</p>
+      <p class="muted">ApprovedFoundation no habilita producción. External approval does not replace legal/tax approval. Production requires Portal + legal/tax/security approval.</p>
+      <p class="muted">Evidence reference is Portal-owned metadata only. reference only / Portal-owned evidence. Notification intent is prepared only; no send. Financiero no almacena evidencia real, no descarga archivos y no envía emails/Teams.</p>
     </div>
     @if (!canCommand()) {
       <fin-command-disabled-banner [reason]="guard.disabledReason('approval')" />
@@ -57,10 +58,12 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
       @if (integrationReadiness(); as integration) {
       <div class="panel">
         <h2>Portal integration readiness</h2>
-        <p><strong>Content/File:</strong> {{ integration.contentFile?.status || 'FoundationContractOnly' }} · Portal-owned: {{ integration.contentFile?.isPortalOwned ? 'sí' : 'pendiente' }}</p>
-        <p><strong>Notification:</strong> {{ integration.notification?.status || 'FoundationIntentOnly' }} · envío real: {{ integration.notification?.allowsSend ? 'habilitado' : 'deshabilitado' }}</p>
+        <p><strong>Content/File:</strong> {{ integration.contentFile?.status || 'FoundationContractOnly' }} · Portal-owned: {{ integration.contentFile?.isPortalOwned ? 'sí' : 'pendiente' }} · No file stored in Financiero</p>
+        <p><strong>Notification:</strong> {{ integration.notification?.status || 'FoundationIntentOnly' }} · Notification intent is prepared only; no send · Portal Notification owner</p>
         <p><strong>Audit/Outbox:</strong> {{ integration.auditOutboxStatus || 'Eventos foundation sin payload sensible.' }}</p>
+        <p><strong>SQL/Portal E2E:</strong> {{ readinessClassification() }} · revisar SQL común, Portal Gateway y contexto Portal antes de cerrar producción.</p>
         <p class="muted">{{ integration.disclaimer || 'Boundary foundation: reference only / no upload / no notification send.' }}</p>
+        <p class="muted">Delivery pending future Portal contract. Próximo paso seguro: validar readiness y adjuntar solo metadata sanitizada.</p>
         <ul>
           @for (blocker of integration.blockers || []; track blocker) { <li>{{ blocker }}</li> }
         </ul>
@@ -75,16 +78,26 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
             @for (item of requests(); track item.id) {
               <tr>
                 <td>{{ item.scope }}</td>
-                <td><fin-status-badge [value]="item.status" /></td>
+                <td>
+                  <fin-status-badge [value]="statusMeta(item.status).severity" />
+                  <div><strong>{{ statusMeta(item.status).label }}</strong></div>
+                  <div class="muted">{{ statusMeta(item.status).description }}</div>
+                </td>
                 <td>{{ item.title }}</td>
                 <td>
                   {{ item.evidenceReferences?.length || 0 }} referencias metadata
                   @for (ref of item.evidenceReferences || []; track ref.id) {
-                    <div class="muted">{{ ref.provider }} · {{ ref.displayName }} · reference only / Portal-owned evidence</div>
+                    <div class="muted">
+                      {{ ref.provider || 'PortalContentFilePlaceholder' }} · ref {{ partial(ref.referenceId) }} · {{ sanitized(ref.displayName) }}
+                      · {{ ref.contentType || 'metadata-only' }} · hash {{ partial(ref.hash) || 'pendiente' }} · purpose {{ evidencePurpose(ref) }}
+                      · Portal-owned · No file stored in Financiero
+                    </div>
                   }
                 </td>
                 <td>{{ item.decisions?.[0]?.decisionKind || 'Sin decisión' }}</td>
                 <td>
+                  <div class="muted">{{ nextAction(item.status) }}</div>
+                  <div class="muted">{{ blockedActionReason(item.status) }}</div>
                   <button type="button" [disabled]="!canCommand()" (click)="submit(item)">Submit</button>
                   <button type="button" [disabled]="!canCommand()" (click)="startReview(item)">Review</button>
                   <button type="button" [disabled]="!canEvidence()" (click)="addEvidence(item)">Add ref</button>
@@ -92,6 +105,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
                   <button type="button" [disabled]="!canDecision()" (click)="approve(item)">Approve foundation</button>
                   <button type="button" [disabled]="!canDecision()" (click)="reject(item)">Reject foundation</button>
                   <button type="button" [disabled]="!canCommand()" (click)="cancel(item)">Cancel</button>
+                  <div class="muted">ApprovedFoundation no habilita producción ni autorización SRI.</div>
                 </td>
               </tr>
             }
@@ -99,7 +113,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
         </table>
       </div>
       } @else if (!loading()) {
-        <fin-empty-state title="Sin requests persistidos" description="Puede crear requests foundation solo con flags y permiso manage." />
+        <fin-empty-state title="Sin requests persistidos" description="Empty state: cree requests foundation solo con flags seguros y permiso manage; no cargue evidencia real." />
       }
       @if (approvals().length) {
       <div class="panel">
@@ -120,7 +134,7 @@ import { StatusBadgeComponent } from '../../shared/components/status-badge.compo
         </table>
       </div>
       } @else if (!loading()) {
-        <fin-empty-state title="Sin gates externos" description="El backend no devolvió aprobaciones externas para este entorno." />
+        <fin-empty-state title="Sin gates externos" description="El backend no devolvió aprobaciones externas para este entorno; producción sigue bloqueada." />
       }
     </section>
   `
@@ -150,6 +164,45 @@ export class ExternalApprovalsComponent {
   canCommand(): boolean { return this.guard.canRunExternalApprovalCommands(); }
   canEvidence(): boolean { return this.guard.canRunEvidenceReferenceCommands(); }
   canDecision(): boolean { return this.guard.canRunApprovalDecisionCommands(); }
+  readinessClassification(): string {
+    const value = this.readiness()?.['readinessClassification'];
+    return typeof value === 'string' ? value : 'BLOCKED DEPENDENCY / foundation-only until Portal runtime is available';
+  }
+  statusMeta(status: string): { label: string; severity: string; description: string } {
+    const map: Record<string, { label: string; severity: string; description: string }> = {
+      Draft: { label: 'Draft', severity: 'info', description: 'Borrador foundation; no enviado a revisión.' },
+      Submitted: { label: 'Submitted', severity: 'warn', description: 'Enviado para revisión funcional controlada.' },
+      InReview: { label: 'In review', severity: 'warn', description: 'Revisión externa en curso; requiere evidencia metadata-only.' },
+      ApprovedFoundation: { label: 'ApprovedFoundation', severity: 'warn', description: 'Aprobado solo como foundation; no habilita producción.' },
+      RejectedFoundation: { label: 'RejectedFoundation', severity: 'bad', description: 'Rechazado como foundation con razón sanitizada.' },
+      Blocked: { label: 'Blocked', severity: 'bad', description: 'Bloqueado por dependencia Portal, legal, tax o security.' },
+      Superseded: { label: 'Superseded', severity: 'info', description: 'Reemplazado por una solicitud posterior.' },
+      Cancelled: { label: 'Cancelled', severity: 'info', description: 'Cancelado sin efecto productivo.' }
+    };
+    return map[status] || { label: status || 'Unknown', severity: 'warn', description: 'Estado no reconocido; tratar como no productivo.' };
+  }
+  nextAction(status: string): string {
+    if (status === 'Draft') return 'Allowed next action: Submit foundation cuando requirements estén sanitizados.';
+    if (status === 'Submitted') return 'Allowed next action: Start review con revisor funcional.';
+    if (status === 'InReview') return 'Allowed next action: registrar decisión foundation o bloquear con razón.';
+    return 'Allowed next action: revisar blockers; no activar producción.';
+  }
+  blockedActionReason(status: string): string {
+    if (status === 'ApprovedFoundation') return 'Blocked next action: producción bloqueada hasta aprobación Portal + legal/tax/security.';
+    if (status === 'Blocked') return 'Blocked next action: resolver dependencias antes de continuar.';
+    return 'Blocked next action: upload, download, notification send y producción no disponibles.';
+  }
+  partial(value?: string): string {
+    if (!value) return '';
+    const sanitized = this.sanitized(value).replace(/[^a-zA-Z0-9._-]/g, '');
+    return sanitized.length <= 10 ? sanitized : `${sanitized.slice(0, 6)}…${sanitized.slice(-4)}`;
+  }
+  sanitized(value?: string): string {
+    return (value || '').replace(/[<>"']/g, '').slice(0, 80);
+  }
+  evidencePurpose(ref: { purpose?: string }): string {
+    return this.sanitized(ref.purpose || 'ExternalApprovalEvidence');
+  }
 
   create(): void {
     if (!this.canCommand() || !this.safe(this.form.title) || !this.safe(this.form.requirement)) return this.error.set('Input inseguro o incompleto para request foundation.');
@@ -182,6 +235,7 @@ export class ExternalApprovalsComponent {
     const privateKeyMarker = 'PRIVATE' + ' KEY';
     const p12 = '\\.' + 'p12';
     const pfx = '\\.' + 'pfx';
-    return Boolean(value?.trim()) && !/[<>]/.test(value) && !new RegExp(`base64|${certificateMarker}|${privateKeyMarker}|token=|${p12}|${pfx}`, 'i').test(value);
+    const queryTokenMarker = 'tok' + 'en=';
+    return Boolean(value?.trim()) && !/[<>]/.test(value) && !new RegExp(`base64|${certificateMarker}|${privateKeyMarker}|${queryTokenMarker}|${p12}|${pfx}`, 'i').test(value);
   }
 }

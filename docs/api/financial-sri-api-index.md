@@ -101,3 +101,10 @@ Sprint 8 P1 agrega `GET /api/financial/portal-integration/readiness`, protegido 
 Sprint 8 P2 fortalece la respuesta con servicios esperados, requisitos de SQL común y contract drift indicators. El endpoint sigue siendo read-only y no activa producción tributaria.
 
 Sprint 8 P3 agrega clasificación explícita de readiness: `Ready`, `BlockedDependency`, `NotConfigured`, `FoundationOnly`, `ProductionBlocked`. La clasificación no oculta fallas de SQL común ni Portal runtime.
+
+Sprint 8 P4 no agrega endpoints. Endurece la UX consumidora del workflow de aprobaciones externas:
+
+- `ApprovedFoundation` significa aprobación foundation, no autorización productiva.
+- Las referencias de evidencia son Portal-owned metadata-only; Financiero no almacena archivos.
+- Los notification intents son foundation/no-send; Portal Notification mantiene ownership.
+- Producción requiere Portal runtime, aprobación legal/tributaria y aprobación security.
