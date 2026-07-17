@@ -3,6 +3,7 @@ namespace Financiero.Application;
 public sealed record PortalIntegrationCapability(string Name, string Owner, string Status, string ReuseClassification, bool Required);
 public sealed record PortalIntegrationReadinessResult(
     string Status,
+    string ReadinessClassification,
     bool IsReadyForProduction,
     string CurrentEnvironmentMode,
     IReadOnlyCollection<string> ExpectedServices,
@@ -37,6 +38,7 @@ public sealed class PortalIntegrationReadinessService
 
         return Task.FromResult(new PortalIntegrationReadinessResult(
             "BlockedFoundation",
+            "BlockedDependency",
             false,
             "DevelopmentStandaloneUntilPortalContextValidated",
             ["PortalCorporativo Gateway/Shell", "Portal Security/Auth", "Portal Menu", "Portal Configuration", "Portal Audit/Outbox", "Portal Content/File", "Portal Notification", "Shared SQL Server", "Financiero API", "Financiero Angular"],

@@ -19,6 +19,14 @@ Test-NetConnection host.docker.internal -Port 21433
 
 Expected: TCP test succeeds. If it fails, do not treat Financiero health as failed application logic; the shared SQL runtime is unavailable.
 
+Script equivalent:
+
+```powershell
+tools/validate-portal-financiero-e2e.ps1 -SkipPortalChecks -SkipApiHealthChecks -OutputMarkdown
+```
+
+Exit code `2` means `BLOCKED_DEPENDENCY`, not an application failure.
+
 ## Validate from Financiero compose
 
 ```powershell
@@ -74,7 +82,7 @@ Do not copy passwords, connection strings, dumps or customer data into evidence.
 Record sanitized facts only:
 
 - command name;
-- pass/block/fail;
+- PASS / BLOCKED_DEPENDENCY / FAIL;
 - host and port without credentials;
 - database names;
 - timestamp;

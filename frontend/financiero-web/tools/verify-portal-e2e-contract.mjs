@@ -53,7 +53,7 @@ for (const token of ['hasPermission', "!item.route.startsWith('//')"]) {
 for (const token of ['canActivateProduction', 'allowProductiveActivation', 'allowOfficialTaxFlows']) {
   if (!guard.includes(token)) throw new Error(`Command guard production block missing ${token}.`);
 }
-for (const token of ['/api/financial/portal-integration/readiness', 'Portal E2E readiness', 'development standalone only', 'production requires Portal context', 'SQL común requerido']) {
+for (const token of ['/api/financial/portal-integration/readiness', 'Portal E2E readiness', 'development standalone only', 'production requires Portal context', 'SQL común requerido', 'BLOCKED DEPENDENCY']) {
   const combined = `${api}\n${dashboard}`;
   if (!combined.includes(token)) throw new Error(`Portal E2E UI/API missing ${token}.`);
 }
@@ -66,6 +66,9 @@ for (const doc of [
   'docs/qa/financial-sprint-08-p1-e2e-evidence-template.md',
   'docs/qa/financial-sprint-08-p2-e2e-execution-evidence.md',
   'docs/runbooks/shared-sql-runtime-validation.md',
+  'docs/runbooks/financial-qa-env-template.md',
+  'docs/runbooks/financial-health-troubleshooting.md',
+  'docs/qa/financial-sprint-08-p3-qa-infra-stabilization-evidence.md',
   'tools/validate-portal-financiero-e2e.ps1'
 ]) statSync(join(repoRoot, doc));
 

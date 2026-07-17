@@ -85,7 +85,7 @@ export class DashboardComponent {
           { title: 'Catálogos tributarios', status: 'Foundation', text: `Versión ${value.catalogs.version ?? 'foundation'}.` },
           { title: 'Compras', status: 'Read-only', text: `${value.purchases.length} registros foundation para ${this.period}.` },
           { title: 'Anulados', status: 'Read-only', text: `${value.voided.length} registros foundation para ${this.period}.` },
-          { title: 'Portal E2E readiness', status: value.portal.status ?? 'BlockedFoundation', text: `${value.portal.currentEnvironmentMode ?? 'development standalone only'}; production requires Portal context; SQL común requerido; blockers: ${(value.portal.productionBlockers ?? []).slice(0, 3).join(', ') || 'foundation blockers'}; ${value.portal.disclaimer ?? 'Read-only.'}` },
+          { title: 'Portal E2E readiness', status: value.portal.readinessClassification ?? value.portal.status ?? 'BLOCKED DEPENDENCY', text: `${value.portal.currentEnvironmentMode ?? 'development standalone only'}; production requires Portal context; SQL común requerido; run tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown; blockers: ${(value.portal.productionBlockers ?? []).slice(0, 3).join(', ') || 'foundation blockers'}; ${value.portal.disclaimer ?? 'Read-only.'}` },
           { title: 'Estado', status: 'Foundation / No productivo', text: 'Sin SRI producción, sin XML completo y con comandos gated por Portal/flags.' }
         ];
         this.updatedAt.set(new Date().toLocaleString());

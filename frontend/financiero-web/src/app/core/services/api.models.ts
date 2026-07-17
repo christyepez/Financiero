@@ -92,6 +92,7 @@ export interface ProductizationReadinessResult {
 
 export interface PortalIntegrationReadiness {
   status?: string;
+  readinessClassification?: 'Ready' | 'BlockedDependency' | 'NotConfigured' | 'FoundationOnly' | 'ProductionBlocked' | string;
   isReadyForProduction?: boolean;
   currentEnvironmentMode?: string;
   expectedServices?: string[];
