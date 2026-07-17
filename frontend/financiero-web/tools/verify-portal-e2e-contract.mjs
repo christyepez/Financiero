@@ -79,9 +79,12 @@ for (const doc of [
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
   'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
+  'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
   'docs/runbooks/financial-e2e-pass-checklist.md',
   'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
+  'docs/runbooks/infra-sql-common-intervention-package.md',
+  'docs/runbooks/portal-runtime-intervention-package.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md',
   'docs/architecture/financial-risk-register.md',
@@ -94,9 +97,12 @@ for (const doc of [
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
   'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
+  'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
   'docs/runbooks/financial-e2e-pass-checklist.md',
   'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
+  'docs/runbooks/infra-sql-common-intervention-package.md',
+  'docs/runbooks/portal-runtime-intervention-package.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md'
 ]) {
@@ -111,6 +117,11 @@ for (const file of [models, validation, context, auth, api, dashboard]) {
   for (const token of forbiddenQueryTokens) {
     if (file.includes(token)) throw new Error(`Querystring token pattern must not appear: ${token}.`);
   }
+}
+
+const preflight = readFileSync(join(repoRoot, 'tools/validate-portal-financiero-e2e.ps1'), 'utf8');
+for (const token of ['PortalGatewayHealthPath', 'PortalShellHealthPath', 'FinancialApiHealthPath', 'HEALTH_PATH_NOT_CONFIRMED', 'HEALTH_ROUTE_ALTERNATIVE_REQUIRED', 'HTTP_STATUS_UNEXPECTED']) {
+  if (!preflight.includes(token)) throw new Error(`Sprint 9 P4 preflight health route configuration missing ${token}.`);
 }
 
 console.log('Portal E2E contract checks passed.');

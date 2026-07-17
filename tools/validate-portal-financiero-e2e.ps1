@@ -3,6 +3,9 @@ param(
     [string]$PortalBaseUrl = "http://localhost:8082",
     [string]$PortalShellBaseUrl = "",
     [string]$PortalHealthPath = "/health",
+    [string]$PortalGatewayHealthPath = "",
+    [string]$PortalShellHealthPath = "/health",
+    [string]$FinancialApiHealthPath = "/health",
     [string]$SqlHost = "host.docker.internal",
     [int]$SqlPort = 21433,
     [switch]$SkipPortalChecks,
@@ -31,21 +34,48 @@ function Test-Http($Name, $Url, $Headers = @{}) {
         if ([int]$response.StatusCode -ge 200 -and [int]$response.StatusCode -lt 300) {
             Write-Check $Name "PASS" ("HTTP " + [int]$response.StatusCode) "PASS" ""
         } else {
-            Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + [int]$response.StatusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness."
+            Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + [int]$response.StatusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness. If this is a health check, confirm the configured health path."
         }
     } catch {
         $statusCode = $null
         try { $statusCode = [int]$_.Exception.Response.StatusCode } catch { $statusCode = $null }
         if ($null -ne $statusCode -and $statusCode -gt 0) {
-            Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + $statusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness."
+            Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + $statusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness. If this is a health check, confirm the configured health path."
         } else {
             Write-Check $Name "BLOCKED_DEPENDENCY" $_.Exception.Message "HTTP_ENDPOINT_UNREACHABLE" "Start the external service or override the URL/health path if this environment uses a different port."
         }
     }
 }
 
+function Join-UrlPath($BaseUrl, $Path) {
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $BaseUrl.TrimEnd("/") }
+    $normalizedPath = $Path
+    if (-not $normalizedPath.StartsWith("/")) { $normalizedPath = "/" + $normalizedPath }
+    return $BaseUrl.TrimEnd("/") + $normalizedPath
+}
+
+function Write-HealthPathCheck($Name, $Path, $DefaultPath = "/health") {
+    if ([string]::IsNullOrWhiteSpace($Path)) {
+        Write-Check $Name "BLOCKED_DEPENDENCY" "Health path is empty." "HEALTH_PATH_NOT_CONFIRMED" "Set an explicit health path such as $DefaultPath or the route confirmed by the service owner."
+    } elseif ($Path -ne $DefaultPath) {
+        Write-Check $Name "BLOCKED_DEPENDENCY" "Using configured health path $Path instead of $DefaultPath." "HEALTH_ROUTE_ALTERNATIVE_REQUIRED" "Confirm the service owner documented this health route before accepting PASS evidence."
+    } else {
+        Write-Check $Name "PASS" "Using default health path $Path." "PASS" ""
+    }
+}
+
 $results = @()
 $results += Write-Check "PowerShell" "PASS" $PSVersionTable.PSVersion.ToString() "PASS" ""
+
+if ([string]::IsNullOrWhiteSpace($PortalGatewayHealthPath)) {
+    $PortalGatewayHealthPath = $PortalHealthPath
+}
+
+$results += Write-HealthPathCheck "Financial API health path configuration" $FinancialApiHealthPath "/health"
+$results += Write-HealthPathCheck "Portal Gateway health path configuration" $PortalGatewayHealthPath "/health"
+if (-not [string]::IsNullOrWhiteSpace($PortalShellBaseUrl)) {
+    $results += Write-HealthPathCheck "Portal Shell health path configuration" $PortalShellHealthPath "/health"
+}
 
 try {
     $resolved = [System.Net.Dns]::GetHostAddresses($SqlHost)
@@ -83,9 +113,9 @@ $devHeaders = @{ "X-Dev-Permissions" = "financial.electronicdocuments.read"; "X-
 if ($SkipApiHealthChecks) {
     $results += Write-Check "Financiero API health checks" "PASS" "Skipped by -SkipApiHealthChecks." "SERVICE_SKIPPED" "Run without -SkipApiHealthChecks for full E2E evidence."
 } else {
-    $results += Test-Http "Financiero health" "$FinancialBaseUrl/health"
-    $results += Test-Http "Financiero live" "$FinancialBaseUrl/health/live"
-    $results += Test-Http "Financiero ready" "$FinancialBaseUrl/health/ready"
+    $results += Test-Http "Financiero health" (Join-UrlPath $FinancialBaseUrl $FinancialApiHealthPath)
+    $results += Test-Http "Financiero live" (Join-UrlPath $FinancialBaseUrl "/health/live")
+    $results += Test-Http "Financiero ready" (Join-UrlPath $FinancialBaseUrl "/health/ready")
     $results += Test-Http "Financiero SRI health" "$FinancialBaseUrl/health/sri"
     $results += Test-Http "Financiero Content/File health" "$FinancialBaseUrl/health/content-file"
     $results += Test-Http "Financiero Portal readiness" "$FinancialBaseUrl/api/financial/portal-integration/readiness" $devHeaders
@@ -94,10 +124,10 @@ if ($SkipApiHealthChecks) {
 if ($SkipPortalChecks) {
     $results += Write-Check "Portal runtime checks" "PASS" "Skipped by -SkipPortalChecks." "SERVICE_SKIPPED" "Run without -SkipPortalChecks for full Portal evidence."
 } else {
-    $portalHealthUrl = $PortalBaseUrl.TrimEnd("/") + $PortalHealthPath
+    $portalHealthUrl = Join-UrlPath $PortalBaseUrl $PortalGatewayHealthPath
     $results += Test-Http "Portal Gateway health" $portalHealthUrl
     if (-not [string]::IsNullOrWhiteSpace($PortalShellBaseUrl)) {
-        $results += Test-Http "Portal Shell base" $PortalShellBaseUrl
+        $results += Test-Http "Portal Shell health" (Join-UrlPath $PortalShellBaseUrl $PortalShellHealthPath)
     }
 }
 

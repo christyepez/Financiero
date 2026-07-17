@@ -1,5 +1,15 @@
 # Roadmap Financiero
 
+## Sprint 9 P4 — External Infrastructure Intervention
+
+- [x] Crear paquete de intervención SQL común.
+- [x] Crear paquete de intervención Portal Gateway/Shell.
+- [x] Fortalecer preflight con rutas health configurables.
+- [x] Crear evidencia P4 PASS/BLOCKED sanitizada.
+- [x] Actualizar handoff/checklist de owners externos.
+- [x] Mantener Financiero sin SQL Server propio ni capacidades Portal duplicadas.
+- [x] Mantener `BLOCKED_DEPENDENCY` hasta evidencia real de SQL y Portal.
+
 ## Sprint 0 — Discovery
 
 - [x] Clasificar capacidades Portal y dominio financiero.

@@ -132,3 +132,8 @@ Record sanitized facts only:
 - database names;
 - timestamp;
 - blocker summary.
+# Sprint 9 P4 SQL intervention
+
+Current P4 evidence requires Infra to prove shared SQL TCP connectivity on `host.docker.internal:21433` and logical database `FinancieroDb`. Do not create a SQL Server service in Financiero. See `docs/runbooks/infra-sql-common-intervention-package.md`.
+
+Control tokens: BLOCKED_DEPENDENCY; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.

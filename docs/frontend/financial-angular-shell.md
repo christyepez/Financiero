@@ -175,3 +175,6 @@ npm install
 npm run build
 npm test
 ```
+# Sprint 9 P4 Portal Shell dependency
+
+Portal Shell remains externally owned. P4 requires owner evidence for Shell URL, health route, PortalShellContext, menu, permissions and correlation id. Financiero must not create a Portal Shell, store tokens, enable upload/download evidence or send notifications.

@@ -91,3 +91,8 @@ Validate PortalShellContext contract version, source, permissions, menu and corr
 - Short blocker.
 
 Never capture secrets, connection strings, tokens, certificates, XML or real taxpayer data.
+# Sprint 9 P4 health route configuration
+
+Preflight now accepts `-PortalGatewayHealthPath`, `-PortalShellHealthPath` and `-FinancialApiHealthPath`. HTTP 404 on a health route is classified as `HTTP_STATUS_UNEXPECTED`; owner must confirm whether `/health`, `/health/live`, `/health/ready`, `/api/health` or another documented route is correct.
+
+Control tokens: BLOCKED_DEPENDENCY; Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
