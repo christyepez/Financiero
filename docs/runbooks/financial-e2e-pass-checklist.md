@@ -74,3 +74,18 @@ PASS requires:
 - [ ] No secrets or full connection strings.
 
 Financiero remains not production-ready until this checklist passes and governance approves the next scope.
+
+## Sprint 9 P4 intervention acceptance
+
+- [ ] Owner SQL assigned and target date recorded.
+- [ ] Owner Portal Gateway assigned and target date recorded.
+- [ ] Owner Portal Shell assigned and target date recorded.
+- [ ] Agreed SQL port is documented, default `21433`.
+- [ ] Agreed Gateway health route is documented, default `/health`.
+- [ ] Agreed Shell health route is documented, default `/health`.
+- [ ] Infra returns sanitized shared SQL evidence.
+- [ ] Portal returns sanitized Gateway/Shell evidence.
+- [ ] Preflight is executed with explicit health route parameters.
+- [ ] `docs/runbooks/infra-sql-common-intervention-package.md` is satisfied.
+- [ ] `docs/runbooks/portal-runtime-intervention-package.md` is satisfied.
+- [ ] `docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md` records PASS or `BLOCKED_DEPENDENCY`.

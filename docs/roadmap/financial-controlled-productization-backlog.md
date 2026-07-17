@@ -23,3 +23,8 @@ Sprint 9 P1 status: infrastructure items remain first priority and `BLOCKED_DEPE
 Sprint 9 P2 status: dependency diagnostics improved; infrastructure items remain blocked until external services are started.
 
 Sprint 9 P3 status: dependency owner handoff and PASS checklist added; controlled productization remains blocked until E2E PASS.
+# Sprint 9 P4 backlog update
+
+Productization remains blocked by external infrastructure. New P4 backlog items are owner handoff completion, shared SQL intervention evidence, Portal Gateway health route confirmation and Portal Shell live evidence. Financiero must not add SQL Server, Gateway, Shell, token storage, upload/download, notification send or production tax activation.
+
+Control tokens: BLOCKED_DEPENDENCY; Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.

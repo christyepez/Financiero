@@ -62,3 +62,23 @@ Return sanitized text only:
 Financiero remains not production-ready until dependencies are available and preflight exits `0`.
 
 Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
+## Sprint 9 P4 owner checklist
+
+| Owner | Target date | Must return |
+|---|---|---|
+| SQL owner | TBD | Sanitized TCP evidence for `host.docker.internal:21433`, `FinancieroDb` availability and no Financiero SQL container. |
+| Portal Gateway owner | TBD | Base URL, agreed health route, HTTP 2xx evidence and correlation id behavior. |
+| Portal Shell owner | TBD | Shell URL, health route, PortalShellContext contract evidence, menu and permissions evidence. |
+
+Accepted routes and ports:
+
+- SQL port: `21433` unless Infra provides an approved override.
+- Gateway health route: `/health` unless Portal documents another route.
+- Shell health route: `/health` unless Portal documents another route.
+
+Run the preflight with explicit route parameters:
+
+```powershell
+.\tools\validate-portal-financiero-e2e.ps1 -OutputMarkdown -VerboseDiagnostics -SuggestFixes -PortalGatewayHealthPath /health -PortalShellHealthPath /health -FinancialApiHealthPath /health
+```

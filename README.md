@@ -1,5 +1,15 @@
 # Financiero
 
+## Sprint 9 P4 external infrastructure intervention
+
+Current local E2E status remains `BLOCKED_DEPENDENCY`, not PASS. Sprint 9 P4 adds an external intervention package for shared SQL and Portal runtime owners, plus configurable health route validation in `tools/validate-portal-financiero-e2e.ps1`.
+
+- SQL intervention: `docs/runbooks/infra-sql-common-intervention-package.md`.
+- Portal intervention: `docs/runbooks/portal-runtime-intervention-package.md`.
+- Evidence: `docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md`.
+- No SQL Server propio, no Gateway/Shell propio, no token storage, no upload/download evidence, no notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
 Estado: Sprint 9 P3 intenta capturar PASS real y deja evidencia final `BLOCKED_DEPENDENCY` con handoff operativo. SQL común `host.docker.internal:21433` sigue cerrado, Portal Gateway en `localhost:8082/health` responde `HTTP 404` y Portal Shell live evidence no está disponible; no se inventa PASS. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.

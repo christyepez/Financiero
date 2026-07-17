@@ -145,3 +145,8 @@ docker compose down
 ```
 
 Stop Portal services according to the Portal runbook. Do not delete real data.
+# Sprint 9 P4 local E2E intervention
+
+Before local PASS, complete SQL and Portal intervention packages, then run preflight with explicit health route parameters. If SQL or Portal remains unavailable, record `BLOCKED_DEPENDENCY` in `docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md`.
+
+Control tokens: Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
