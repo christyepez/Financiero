@@ -152,6 +152,44 @@ export interface ExternalApprovalGate {
   [key: string]: unknown;
 }
 
+export interface ExternalApprovalRequestSummary {
+  id: string;
+  scope: string;
+  status: string;
+  title: string;
+  fiscalPeriod?: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+  doesNotEnableProduction: boolean;
+  requirements?: { description: string; requiresEvidence: boolean; requiresHumanReview: boolean }[];
+  evidenceReferences?: { id: string; provider: string; referenceId: string; displayName: string; hash?: string; contentType?: string; createdAtUtc: string; createdByDisplayName?: string }[];
+  decisions?: { id: string; decisionKind: string; reason: string; decidedByDisplayName: string; decidedAtUtc: string; doesNotEnableProduction: boolean }[];
+  disclaimer?: string;
+}
+
+export interface CreateExternalApprovalRequest {
+  scope: string;
+  title: string;
+  fiscalPeriod?: string;
+  createdByDisplayName: string;
+  requirements: { description: string; requiresEvidence: boolean; requiresHumanReview: boolean }[];
+}
+
+export interface AddExternalApprovalEvidenceReferenceRequest {
+  provider: string;
+  referenceId: string;
+  displayName: string;
+  hash?: string;
+  contentType?: string;
+  createdByDisplayName?: string;
+}
+
+export interface RecordExternalApprovalDecisionRequest {
+  decision: 'ApprovedFoundation' | 'RejectedFoundation' | 'Blocked';
+  reason: string;
+  decidedByDisplayName: string;
+}
+
 export interface ApiEnvelope<T> {
   data?: T | null;
   error?: { code?: string; message?: string } | null;

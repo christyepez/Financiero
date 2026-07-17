@@ -17,11 +17,27 @@ export class CommandGuardService {
     return flags.allowMutations && flags.allowVoidedDocumentCommands && this.hasManagePermission();
   }
 
-  disabledReason(kind: 'purchase' | 'voided'): string {
+  canRunExternalApprovalCommands(): boolean {
+    const flags = this.configuration.featureFlags();
+    return flags.allowMutations && flags.allowExternalApprovalCommands && this.hasManagePermission();
+  }
+
+  canRunEvidenceReferenceCommands(): boolean {
+    const flags = this.configuration.featureFlags();
+    return this.canRunExternalApprovalCommands() && flags.allowEvidenceReferenceMetadata;
+  }
+
+  canRunApprovalDecisionCommands(): boolean {
+    const flags = this.configuration.featureFlags();
+    return this.canRunExternalApprovalCommands() && flags.allowApprovalDecisionFoundation;
+  }
+
+  disabledReason(kind: 'purchase' | 'voided' | 'approval'): string {
     const flags = this.configuration.featureFlags();
     if (!flags.allowMutations) return 'Comandos deshabilitados por feature flag allowMutations=false.';
     if (kind === 'purchase' && !flags.allowPurchaseCommands) return 'Comandos de compras deshabilitados por feature flag.';
     if (kind === 'voided' && !flags.allowVoidedDocumentCommands) return 'Comandos de anulados deshabilitados por feature flag.';
+    if (kind === 'approval' && !flags.allowExternalApprovalCommands) return 'Comandos de aprobaciones externas deshabilitados por feature flag.';
     if (!this.hasManagePermission()) return 'Permiso requerido: financial.electronicdocuments.manage.';
     return 'Comando no disponible en este contexto foundation.';
   }

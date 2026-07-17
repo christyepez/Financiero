@@ -30,6 +30,9 @@ export interface PortalFeatureFlags {
   allowDevHeaders: boolean;
   allowPurchaseCommands: boolean;
   allowVoidedDocumentCommands: boolean;
+  allowExternalApprovalCommands: boolean;
+  allowEvidenceReferenceMetadata: boolean;
+  allowApprovalDecisionFoundation: boolean;
   allowAtsOfficialActions: boolean;
   allowSriSubmission: boolean;
   allowXmlPreviewUi: boolean;

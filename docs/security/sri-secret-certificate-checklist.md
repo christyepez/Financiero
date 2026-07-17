@@ -120,3 +120,9 @@ ATS XML foundation preview está bloqueado por defecto. XML no se persiste, no s
 ## Sprint 5 P5
 
 External approval workflow es read-only/advisory. No almacena evidencias reales, certificados, XML, tokens ni datos personales. No activa configuración productiva ni envíos SRI.
+# Sprint 7 P2 approval evidence boundary
+
+- No adjuntar certificados en requests de aprobación.
+- No guardar `.p12`, `.pfx`, `.pem`, `.key`, `.cer` ni `.crt`.
+- No pegar XML, base64 ni respuestas reales SRI.
+- Evidence references deben apuntar a metadata sanitizada y futura integración Portal Content/File.

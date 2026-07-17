@@ -32,6 +32,11 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
     public DbSet<PurchaseTax> PurchaseTaxes => Set<PurchaseTax>();
     public DbSet<PurchaseSupportDocumentReference> PurchaseSupportDocumentReferences => Set<PurchaseSupportDocumentReference>();
     public DbSet<VoidedTaxDocument> VoidedTaxDocuments => Set<VoidedTaxDocument>();
+    public DbSet<ExternalApprovalRequest> ExternalApprovalRequests => Set<ExternalApprovalRequest>();
+    public DbSet<ExternalApprovalRequirementItem> ExternalApprovalRequirements => Set<ExternalApprovalRequirementItem>();
+    public DbSet<ExternalApprovalEvidenceReference> ExternalApprovalEvidenceReferences => Set<ExternalApprovalEvidenceReference>();
+    public DbSet<ExternalApprovalDecision> ExternalApprovalDecisions => Set<ExternalApprovalDecision>();
+    public DbSet<ExternalApprovalTimelineEntry> ExternalApprovalTimeline => Set<ExternalApprovalTimelineEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -325,6 +330,83 @@ public sealed class FinancialDbContext(DbContextOptions<FinancialDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.DocumentType, x.Establishment, x.EmissionPoint, x.Sequential }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.FiscalPeriod });
         });
+        modelBuilder.Entity<ExternalApprovalRequest>(entity =>
+        {
+            entity.ToTable("external_approval_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Scope).HasColumnName("scope").HasConversion<string>().HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasColumnName("title").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.FiscalPeriod).HasColumnName("fiscal_period").HasMaxLength(7);
+            entity.Property(x => x.CreatedByDisplayName).HasColumnName("created_by_display_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+            entity.Property(x => x.UpdatedAtUtc).HasColumnName("updated_at_utc");
+            entity.Ignore(x => x.DoesNotEnableProduction);
+            entity.Navigation(x => x.Requirements).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.EvidenceReferences).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.Decisions).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.Navigation(x => x.Timeline).UsePropertyAccessMode(PropertyAccessMode.Field);
+            entity.HasMany(x => x.Requirements).WithOne().HasForeignKey(x => x.ExternalApprovalRequestId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.EvidenceReferences).WithOne().HasForeignKey(x => x.ExternalApprovalRequestId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.Decisions).WithOne().HasForeignKey(x => x.ExternalApprovalRequestId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.Timeline).WithOne().HasForeignKey(x => x.ExternalApprovalRequestId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(x => new { x.TenantId, x.Scope, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.FiscalPeriod, x.CreatedAtUtc });
+        });
+        modelBuilder.Entity<ExternalApprovalRequirementItem>(entity =>
+        {
+            entity.ToTable("external_approval_requirements");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ExternalApprovalRequestId).HasColumnName("external_approval_request_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.RequiresEvidence).HasColumnName("requires_evidence");
+            entity.Property(x => x.RequiresHumanReview).HasColumnName("requires_human_review");
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+        });
+        modelBuilder.Entity<ExternalApprovalEvidenceReference>(entity =>
+        {
+            entity.ToTable("external_approval_evidence_references");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ExternalApprovalRequestId).HasColumnName("external_approval_request_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Provider).HasColumnName("provider").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReferenceId).HasColumnName("reference_id").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DisplayName).HasColumnName("display_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Hash).HasColumnName("hash").HasMaxLength(128);
+            entity.Property(x => x.ContentType).HasColumnName("content_type").HasMaxLength(128);
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+            entity.Property(x => x.CreatedByDisplayName).HasColumnName("created_by_display_name").HasMaxLength(256);
+        });
+        modelBuilder.Entity<ExternalApprovalDecision>(entity =>
+        {
+            entity.ToTable("external_approval_decisions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ExternalApprovalRequestId).HasColumnName("external_approval_request_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DecisionKind).HasColumnName("decision_kind").HasConversion<string>().HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.DecidedByDisplayName).HasColumnName("decided_by_display_name").HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DecidedAtUtc).HasColumnName("decided_at_utc");
+            entity.Property(x => x.DoesNotEnableProduction).HasColumnName("does_not_enable_production");
+        });
+        modelBuilder.Entity<ExternalApprovalTimelineEntry>(entity =>
+        {
+            entity.ToTable("external_approval_timeline");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.ExternalApprovalRequestId).HasColumnName("external_approval_request_id");
+            entity.Property(x => x.TenantId).HasColumnName("tenant_id").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Action).HasColumnName("action").HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Message).HasColumnName("message").HasMaxLength(512).IsRequired();
+            entity.Property(x => x.CreatedAtUtc).HasColumnName("created_at_utc");
+            entity.Property(x => x.ActorDisplayName).HasColumnName("actor_display_name").HasMaxLength(256);
+        });
     }
 }
 
@@ -610,6 +692,21 @@ public sealed class EfVoidedTaxDocumentRepository(FinancialDbContext db) : IVoid
     public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
 }
 
+public sealed class EfExternalApprovalRequestRepository(FinancialDbContext db) : IExternalApprovalRequestRepository
+{
+    public async Task AddAsync(ExternalApprovalRequest request, CancellationToken ct) => await db.ExternalApprovalRequests.AddAsync(request, ct);
+    public async Task<ExternalApprovalRequest?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) =>
+        await db.ExternalApprovalRequests.Include(x => x.Requirements).Include(x => x.EvidenceReferences).Include(x => x.Decisions).Include(x => x.Timeline).FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantId, ct);
+    public async Task<IReadOnlyCollection<ExternalApprovalRequest>> ListAsync(string tenantId, ExternalApprovalRequestScope? scope, ExternalApprovalRequestStatus? status, CancellationToken ct)
+    {
+        var query = db.ExternalApprovalRequests.Include(x => x.Requirements).Include(x => x.EvidenceReferences).Include(x => x.Decisions).Include(x => x.Timeline).Where(x => x.TenantId == tenantId);
+        if (scope.HasValue) query = query.Where(x => x.Scope == scope.Value);
+        if (status.HasValue) query = query.Where(x => x.Status == status.Value);
+        return await query.OrderByDescending(x => x.CreatedAtUtc).AsNoTracking().ToArrayAsync(ct);
+    }
+    public async Task SaveChangesAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
+}
+
 public sealed class FinancialSqlHealthCheck(FinancialDbContext db) : IHealthCheck
 {
     private static readonly string[] CoreTables =
@@ -715,6 +812,8 @@ public static class FinancialInfrastructureExtensions
         services.AddScoped<IAtsXmlReadinessValidator, AtsXmlReadinessValidator>();
         services.AddScoped<IAtsXmlFoundationGenerator, AtsXmlFoundationGenerator>();
         services.AddScoped<IExternalApprovalReadinessService, ExternalApprovalReadinessService>();
+        services.AddScoped<ExternalApprovalWorkflowCommandService>();
+        services.AddScoped<ExternalApprovalWorkflowQueryService>();
         services.AddScoped<ITaxReportingService, TaxReportingService>();
         services.AddScoped<ITaxExportService, TaxExportService>();
         services.AddScoped<IRideLegalGapAnalysisService, RideLegalGapAnalysisService>();
@@ -747,6 +846,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IElectronicDocumentRepository, EfElectronicDocumentRepository>();
             services.AddScoped<IPurchaseTaxDocumentRepository, EfPurchaseTaxDocumentRepository>();
             services.AddScoped<IVoidedTaxDocumentRepository, EfVoidedTaxDocumentRepository>();
+            services.AddScoped<IExternalApprovalRequestRepository, EfExternalApprovalRequestRepository>();
             services.AddHealthChecks().AddCheck<FinancialSqlHealthCheck>("financial-sql", tags: ["ready"]);
             if (configuration.GetValue<bool>("Database:Initialize") || configuration.GetValue<bool>("Database:RunMigrations")) services.AddHostedService<FinancialDatabaseInitializer>();
         }
@@ -758,6 +858,7 @@ public static class FinancialInfrastructureExtensions
             services.AddScoped<IElectronicDocumentRepository, UnconfiguredElectronicDocumentRepository>();
             services.AddScoped<IPurchaseTaxDocumentRepository, UnconfiguredPurchaseTaxDocumentRepository>();
             services.AddScoped<IVoidedTaxDocumentRepository, UnconfiguredVoidedTaxDocumentRepository>();
+            services.AddScoped<IExternalApprovalRequestRepository, UnconfiguredExternalApprovalRequestRepository>();
         }
         services.AddHealthChecks().AddCheck<SriReadinessHealthCheck>("financial-sri", tags: ["sri"]);
         services.AddHealthChecks().AddCheck<ContentFileReadinessHealthCheck>("financial-content-file", tags: ["content-file"]);
@@ -849,6 +950,15 @@ internal sealed class UnconfiguredVoidedTaxDocumentRepository : IVoidedTaxDocume
     public Task<IReadOnlyCollection<VoidedTaxDocument>> GetByPeriodAsync(string tenantId, string period, CancellationToken ct) => Task.FromException<IReadOnlyCollection<VoidedTaxDocument>>(Error);
     public Task<int> CountByPeriodAsync(string tenantId, DateOnly from, DateOnly to, CancellationToken ct) => Task.FromException<int>(Error);
     public Task<bool> ExistsDocumentNumberAsync(string tenantId, string documentType, string establishment, string emissionPoint, string sequential, Guid? excludingId, CancellationToken ct) => Task.FromException<bool>(Error);
+    public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
+}
+
+internal sealed class UnconfiguredExternalApprovalRequestRepository : IExternalApprovalRequestRepository
+{
+    private static InvalidOperationException Error => new("FinancialDb connection string is not configured.");
+    public Task AddAsync(ExternalApprovalRequest request, CancellationToken ct) => Task.FromException(Error);
+    public Task<ExternalApprovalRequest?> GetByIdAsync(Guid id, string tenantId, CancellationToken ct) => Task.FromException<ExternalApprovalRequest?>(Error);
+    public Task<IReadOnlyCollection<ExternalApprovalRequest>> ListAsync(string tenantId, ExternalApprovalRequestScope? scope, ExternalApprovalRequestStatus? status, CancellationToken ct) => Task.FromException<IReadOnlyCollection<ExternalApprovalRequest>>(Error);
     public Task SaveChangesAsync(CancellationToken ct) => Task.FromException(Error);
 }
 

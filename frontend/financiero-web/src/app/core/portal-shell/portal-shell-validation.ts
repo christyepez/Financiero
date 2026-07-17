@@ -37,6 +37,9 @@ export function sanitizePortalShellContext(input: Partial<PortalShellContext> | 
     allowMutations: !environment.production && Boolean(input.featureFlags?.allowMutations),
     allowPurchaseCommands: !environment.production && Boolean(input.featureFlags?.allowPurchaseCommands),
     allowVoidedDocumentCommands: !environment.production && Boolean(input.featureFlags?.allowVoidedDocumentCommands),
+    allowExternalApprovalCommands: !environment.production && Boolean(input.featureFlags?.allowExternalApprovalCommands),
+    allowEvidenceReferenceMetadata: !environment.production && Boolean(input.featureFlags?.allowEvidenceReferenceMetadata),
+    allowApprovalDecisionFoundation: !environment.production && Boolean(input.featureFlags?.allowApprovalDecisionFoundation),
     allowAtsOfficialActions: false,
     allowSriSubmission: false,
     allowXmlPreviewUi: false
