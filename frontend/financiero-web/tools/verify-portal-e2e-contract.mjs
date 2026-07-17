@@ -75,16 +75,20 @@ for (const doc of [
   'docs/qa/financial-sprint-08-p3-qa-infra-stabilization-evidence.md',
   'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
   'docs/coordination/financial-sprint-08-closure.md',
+  'docs/coordination/financial-sprint-09-closure.md',
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
   'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
   'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
+  'docs/qa/financial-sprint-09-final-infra-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
   'docs/runbooks/financial-e2e-pass-checklist.md',
   'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
   'docs/runbooks/infra-sql-common-intervention-package.md',
   'docs/runbooks/portal-runtime-intervention-package.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/roadmap/financial-sprint-10-decision-matrix.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md',
   'docs/architecture/financial-risk-register.md',
@@ -98,17 +102,34 @@ for (const doc of [
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
   'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
   'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
+  'docs/qa/financial-sprint-09-final-infra-evidence.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
   'docs/runbooks/financial-e2e-pass-checklist.md',
   'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
   'docs/runbooks/infra-sql-common-intervention-package.md',
   'docs/runbooks/portal-runtime-intervention-package.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/roadmap/financial-sprint-10-decision-matrix.md',
   'docs/roadmap/financial-sprint-09-decision-matrix.md',
   'docs/roadmap/financial-controlled-productization-backlog.md'
 ]) {
   const text = readFileSync(join(repoRoot, doc), 'utf8');
   for (const token of ['BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'not production-ready']) {
     if (!text.includes(token)) throw new Error(`${doc} missing Portal E2E closure token ${token}.`);
+  }
+}
+
+for (const doc of [
+  'docs/coordination/financial-sprint-09-closure.md',
+  'docs/qa/financial-sprint-09-final-infra-evidence.md',
+  'docs/roadmap/financial-sprint-10-decision-matrix.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/releases/financial-sprint-09-release-notes.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 9 P5 Portal closure token ${token}.`);
   }
 }
 

@@ -1,5 +1,7 @@
 # Financial E2E PASS Checklist
 
+Sprint 9 P5 decision: this checklist is not complete. Sprint 10 must complete external infra remediation before PASS.
+
 Use this checklist to move from `BLOCKED_DEPENDENCY` to real E2E `PASS`.
 
 This checklist requires shared SQL and Portal Gateway/Shell evidence. Financiero remains not production-ready until every item passes.

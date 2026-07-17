@@ -175,6 +175,10 @@ npm install
 npm run build
 npm test
 ```
+# Sprint 9 P5 closure note
+
+Portal Shell remains externally owned and live evidence is still missing. Sprint 10 must confirm PortalShellContext, menu, permissions and correlation id before any production readiness claim.
+
 # Sprint 9 P4 Portal Shell dependency
 
 Portal Shell remains externally owned. P4 requires owner evidence for Shell URL, health route, PortalShellContext, menu, permissions and correlation id. Financiero must not create a Portal Shell, store tokens, enable upload/download evidence or send notifications.
