@@ -145,6 +145,10 @@ La activación E2E real sigue bloqueada por infraestructura: no hay Portal Gatew
 
 El frontend no cambia runtime. Los verificadores exigen evidencia P2 y runbook de arranque para evitar que la UI o documentación conviertan `BLOCKED_DEPENDENCY` en PASS visual.
 
+## Sprint 9 P3 PASS/BLOCKED evidence
+
+El frontend sigue sin cambios runtime. La evidencia P3 y el checklist PASS exigen Portal Shell real antes de considerar la navegación integrada como validada.
+
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
 ## Sprint 8 P2 E2E execution hardening

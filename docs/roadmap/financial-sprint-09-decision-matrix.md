@@ -31,3 +31,7 @@ Option A was started. The first real execution remains `BLOCKED_DEPENDENCY`: sha
 ## Sprint 9 P2 execution note
 
 Option A remains active. P2 adds actionable diagnostics and a startup runbook, but the runtime still reports `BLOCKED_DEPENDENCY` until shared SQL and Portal Gateway/Shell are actually started.
+
+## Sprint 9 P3 execution note
+
+PASS was attempted again. Final status remains `BLOCKED_DEPENDENCY`: SQL port `21433` is closed and Portal Gateway `/health` returns `HTTP 404`. Continue Option A with Portal/Infra owner handoff before choosing productization work.

@@ -58,6 +58,8 @@ Use overrides when the shared SQL runtime intentionally uses different host/port
 .\tools\validate-portal-financiero-e2e.ps1 -SqlHost <host> -SqlPort <port> -SkipPortalChecks -SkipApiHealthChecks -OutputMarkdown -VerboseDiagnostics -SuggestFixes
 ```
 
+Sprint 9 P3 status: DNS resolves but port `21433` remains closed. The next action is external: start shared SQL or provide a correct host/port override.
+
 ## Validate from Financiero compose
 
 ```powershell

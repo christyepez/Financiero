@@ -214,6 +214,10 @@ Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OID
 - [x] P2 documentar evidencia de dependencias SQL/Portal con códigos de causa.
 - [x] P2 crear runbook de arranque SQL común + Portal Gateway/Shell.
 - [x] P2 documentar overrides de ambiente sin secretos.
+- [x] P3 capturar evidencia PASS/BLOCKED final sin falso PASS.
+- [x] P3 crear checklist operativo para obtener PASS.
+- [x] P3 crear handoff para owners de SQL/Portal.
+- [x] P3 corregir clasificación HTTP 404 como `HTTP_STATUS_UNEXPECTED`.
 - [ ] Levantar SQL común en `host.docker.internal:21433`.
 - [ ] Levantar Portal Gateway/Shell y capturar PortalShellContext real.
 - [ ] Reejecutar preflight hasta PASS.

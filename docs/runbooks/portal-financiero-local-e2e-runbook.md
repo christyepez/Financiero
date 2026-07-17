@@ -126,6 +126,8 @@ PASS requires:
 
 BLOCKED_DEPENDENCY applies when SQL, Gateway, Shell or API runtime is unavailable. Do not mark PASS from static build alone.
 
+Sprint 9 P3 adds `docs/runbooks/financial-e2e-pass-checklist.md` and `docs/runbooks/financial-e2e-dependency-owner-handoff.md` for the operational handoff required before PASS.
+
 ## 8. Validate non-production posture
 
 - SRI Production remains blocked.

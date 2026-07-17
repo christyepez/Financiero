@@ -61,6 +61,8 @@ Expected PASS evidence includes HTTP 2xx from Portal Gateway health and a Portal
 - `HTTP_STATUS_UNEXPECTED`: inspect service health path and dependencies.
 - `SERVICE_SKIPPED`: rerun without skip flags for full E2E evidence.
 
+Sprint 9 P3 observed `HTTP_STATUS_UNEXPECTED` for Portal Gateway `/health` with HTTP 404. This means something responded, but not as the expected health endpoint. Confirm route/path/port with Portal owner.
+
 ### Missing permissions
 
 For local development only, use `X-Dev-Permissions` with synthetic permissions. Production must receive delegated permissions from Portal.

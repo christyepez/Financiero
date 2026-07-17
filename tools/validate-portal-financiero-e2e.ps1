@@ -34,7 +34,13 @@ function Test-Http($Name, $Url, $Headers = @{}) {
             Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + [int]$response.StatusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness."
         }
     } catch {
-        Write-Check $Name "BLOCKED_DEPENDENCY" $_.Exception.Message "HTTP_ENDPOINT_UNREACHABLE" "Start the external service or override the URL/health path if this environment uses a different port."
+        $statusCode = $null
+        try { $statusCode = [int]$_.Exception.Response.StatusCode } catch { $statusCode = $null }
+        if ($null -ne $statusCode -and $statusCode -gt 0) {
+            Write-Check $Name "BLOCKED_DEPENDENCY" ("HTTP " + $statusCode) "HTTP_STATUS_UNEXPECTED" "Validate service health path, route and dependency readiness."
+        } else {
+            Write-Check $Name "BLOCKED_DEPENDENCY" $_.Exception.Message "HTTP_ENDPOINT_UNREACHABLE" "Start the external service or override the URL/health path if this environment uses a different port."
+        }
     }
 }
 

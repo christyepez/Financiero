@@ -21,3 +21,5 @@ Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No prod
 Sprint 9 P1 status: infrastructure items remain first priority and `BLOCKED_DEPENDENCY` until shared SQL and Portal runtime are available.
 
 Sprint 9 P2 status: dependency diagnostics improved; infrastructure items remain blocked until external services are started.
+
+Sprint 9 P3 status: dependency owner handoff and PASS checklist added; controlled productization remains blocked until E2E PASS.
