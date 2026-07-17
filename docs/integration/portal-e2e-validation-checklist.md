@@ -116,3 +116,4 @@ Fail:
 - If menu is empty, verify Portal permissions and route allow-list.
 - If auth fails, verify delegated token is supplied by Portal and not by local storage.
 - If readiness is blocked, review missing Portal capabilities and SQL runtime evidence.
+- Use `tools/validate-portal-financiero-e2e.ps1` for a sanitized local pass/block/fail check.

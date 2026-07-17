@@ -121,6 +121,10 @@ El dashboard muestra `Portal E2E readiness` consumiendo `/api/financial/portal-i
 
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
+## Sprint 8 P2 E2E execution hardening
+
+El dashboard muestra blockers resumidos de `Portal E2E readiness`, incluyendo “SQL común requerido” y “production requires Portal context”. No muestra tokens, claims raw ni tenant sensible. El script `tools/validate-portal-financiero-e2e.ps1` permite validar health/readiness de manera no invasiva cuando PortalCorporativo y SQL común están disponibles.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.

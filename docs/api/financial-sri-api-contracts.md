@@ -262,3 +262,5 @@ Sprint 7 P5 no agrega endpoints funcionales nuevos. Documenta el estado de P1-P4
 | GET | `/api/financial/portal-integration/readiness` | `financial.electronicdocuments.read` | Implementado Sprint 8 P1; read-only |
 
 Devuelve capacidades Portal requeridas, permisos esperados, rutas de menú esperadas, feature flags seguros, blockers productivos, warnings sanitizados y correlation id. No devuelve tokens, secretos, claims completas ni datos sensibles.
+
+Sprint 8 P2 agrega a la respuesta servicios esperados, requisitos de SQL común y posibles indicadores de drift del contrato PortalShellContext. No cambia permisos ni agrega mutaciones.

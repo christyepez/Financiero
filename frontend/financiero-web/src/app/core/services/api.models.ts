@@ -94,11 +94,14 @@ export interface PortalIntegrationReadiness {
   status?: string;
   isReadyForProduction?: boolean;
   currentEnvironmentMode?: string;
+  expectedServices?: string[];
   requiredCapabilities?: { name?: string; owner?: string; status?: string; reuseClassification?: string; required?: boolean }[];
   missingCapabilities?: string[];
   expectedPermissions?: string[];
   expectedMenuRoutes?: string[];
   expectedFeatureFlags?: string[];
+  sqlCommonRequirements?: string[];
+  contractDriftIndicators?: string[];
   productionBlockers?: string[];
   warnings?: string[];
   correlationId?: string;

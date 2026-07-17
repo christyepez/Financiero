@@ -209,6 +209,9 @@ for (const doc of [
   'docs/integration/portal-e2e-validation-checklist.md',
   'docs/runbooks/portal-financiero-local-e2e-runbook.md',
   'docs/qa/financial-sprint-08-p1-e2e-evidence-template.md',
+  'docs/qa/financial-sprint-08-p2-e2e-execution-evidence.md',
+  'docs/runbooks/shared-sql-runtime-validation.md',
+  'tools/validate-portal-financiero-e2e.ps1',
   'docs/frontend/portal-shell-readiness-matrix.md',
   'docs/frontend/portal-shell-contract.md'
 ]) {
