@@ -27,6 +27,8 @@ tools/validate-portal-financiero-e2e.ps1 -SkipPortalChecks -SkipApiHealthChecks 
 
 Exit code `2` means `BLOCKED_DEPENDENCY`, not an application failure.
 
+Sprint 8 P5 closure keeps final E2E status as `BLOCKED_DEPENDENCY` while shared SQL is unavailable. Do not create a Financiero-owned SQL Server to turn this into PASS.
+
 ## Validate from Financiero compose
 
 ```powershell

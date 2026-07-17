@@ -62,6 +62,8 @@ Exit codes: `0` PASS, `2` BLOCKED_DEPENDENCY, `1` FAIL.
 
 Use development headers only in local development and never in production.
 
+Sprint 8 P5 closure rule: do not mark E2E as PASS unless shared SQL, Portal Gateway/Shell, Financiero API health/readiness and Portal-integrated Angular evidence are all available. If SQL or Portal are unavailable, record `BLOCKED_DEPENDENCY`.
+
 ## 4. Start Financiero Angular
 
 ```powershell

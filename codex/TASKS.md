@@ -190,6 +190,10 @@
 - [x] P4 mostrar evidencia como Portal-owned metadata-only sin upload/download.
 - [x] P4 mostrar notification intents foundation/no-send sin envío real.
 - [x] P4 agregar evidencia QA textual de UX y fortalecer verificadores frontend.
+- [x] P5 cerrar Sprint 8 con evidencia final E2E honesta.
+- [x] P5 documentar matriz de decisión Sprint 9 y backlog productivo controlado.
+- [x] P5 crear risk register y release notes Sprint 8.
+- [x] P5 mantener resultado final `BLOCKED_DEPENDENCY` cuando SQL común/Portal no están disponibles.
 - [ ] Ejecutar validación PASS con PortalShellContext real de PortalCorporativo.
 - [ ] Validar Security/Menu/Configuration reales con Portal activo.
 - [ ] Validar Gateway routing y SQL común local estable.
