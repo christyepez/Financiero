@@ -27,3 +27,7 @@ Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No prod
 ## Sprint 9 P1 execution note
 
 Option A was started. The first real execution remains `BLOCKED_DEPENDENCY`: shared SQL TCP on `host.docker.internal:21433`, Portal Gateway `localhost:8082` and Portal Shell live evidence are unavailable. Continue Option A before selecting B, C, D or E.
+
+## Sprint 9 P2 execution note
+
+Option A remains active. P2 adds actionable diagnostics and a startup runbook, but the runtime still reports `BLOCKED_DEPENDENCY` until shared SQL and Portal Gateway/Shell are actually started.

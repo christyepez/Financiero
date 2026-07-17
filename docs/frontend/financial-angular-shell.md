@@ -141,6 +141,10 @@ El frontend queda validado de forma estática/build, pero el cierre E2E completo
 
 La activación E2E real sigue bloqueada por infraestructura: no hay Portal Gateway/Shell live evidence. El shell Angular puede compilar y pasar verificadores, pero PASS runtime requiere `PortalShellContext` real con `source=portal`, menú/permisos/feature flags y correlation id.
 
+## Sprint 9 P2 dependency diagnostics
+
+El frontend no cambia runtime. Los verificadores exigen evidencia P2 y runbook de arranque para evitar que la UI o documentación conviertan `BLOCKED_DEPENDENCY` en PASS visual.
+
 El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
 
 ## Sprint 8 P2 E2E execution hardening

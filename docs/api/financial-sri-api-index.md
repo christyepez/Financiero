@@ -112,3 +112,5 @@ Sprint 8 P4 no agrega endpoints. Endurece la UX consumidora del workflow de apro
 Sprint 8 P5 no agrega endpoints. Cierra evidencia final como `BLOCKED_DEPENDENCY` mientras SQL común y Portal Gateway/Shell no estén disponibles. Los contratos API siguen read-only/foundation y not production-ready.
 
 Sprint 9 P1 no agrega endpoints. Reejecuta E2E real y mantiene `BLOCKED_DEPENDENCY` hasta que SQL común, Portal Gateway/Shell y Financiero API estén disponibles. No cambia permisos ni activa producción.
+
+Sprint 9 P2 no agrega endpoints. Solo mejora diagnóstico/runbooks del preflight E2E y mantiene contratos API read-only/foundation.

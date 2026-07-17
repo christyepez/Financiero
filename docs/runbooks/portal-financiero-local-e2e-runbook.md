@@ -58,6 +58,7 @@ Useful variants:
 tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown
 tools/validate-portal-financiero-e2e.ps1 -SkipPortalChecks -OutputMarkdown
 tools/validate-portal-financiero-e2e.ps1 -SkipApiHealthChecks -PortalShellBaseUrl http://localhost:4201 -OutputMarkdown
+tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown -VerboseDiagnostics -SuggestFixes
 ```
 
 Exit codes: `0` PASS, `2` BLOCKED_DEPENDENCY, `1` FAIL.

@@ -210,6 +210,10 @@ Catalog, Content/File, Reporting, Integration productiva, Angular Shell, IdP/OID
 - [x] P1 documentar evidencia `BLOCKED_DEPENDENCY` sin falso PASS.
 - [x] P1 reforzar runbooks SQL/Portal con criterios PASS/BLOCKED_DEPENDENCY.
 - [x] P1 validar que no existe SQL Server propio ni duplicación de Portal.
+- [x] P2 agregar diagnósticos accionables al preflight (`-VerboseDiagnostics`, `-SuggestFixes`).
+- [x] P2 documentar evidencia de dependencias SQL/Portal con códigos de causa.
+- [x] P2 crear runbook de arranque SQL común + Portal Gateway/Shell.
+- [x] P2 documentar overrides de ambiente sin secretos.
 - [ ] Levantar SQL común en `host.docker.internal:21433`.
 - [ ] Levantar Portal Gateway/Shell y capturar PortalShellContext real.
 - [ ] Reejecutar preflight hasta PASS.

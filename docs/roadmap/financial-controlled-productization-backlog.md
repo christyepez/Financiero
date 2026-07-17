@@ -19,3 +19,5 @@ Production tax flows remain blocked until explicit governance approval.
 Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready; shared SQL and Portal Gateway/Shell PASS evidence is required first.
 
 Sprint 9 P1 status: infrastructure items remain first priority and `BLOCKED_DEPENDENCY` until shared SQL and Portal runtime are available.
+
+Sprint 9 P2 status: dependency diagnostics improved; infrastructure items remain blocked until external services are started.
