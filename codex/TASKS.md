@@ -166,7 +166,17 @@
 - [x] P4 agregar productization readiness read-only para compras y anulados.
 - [x] Agregar endpoints `/api/financial/purchases/productization-readiness` y `/api/financial/voided-documents/productization-readiness`.
 - [x] Mantener producción, SRI, ATS oficial, upload y notification send bloqueados.
+- [x] P5 cerrar Sprint 7 con QA evidence, capability matrix, security checklist, release notes y roadmap Sprint 8.
+- [x] Documentar blockers productivos y dependencias Portal/SQL/legal.
 - [ ] Validar contrato end-to-end con PortalCorporativo real.
+
+## Sprint 8 — Portal E2E and QA stabilization
+
+- [ ] Validar PortalShellContext real con PortalCorporativo.
+- [ ] Validar Security/Menu/Configuration reales.
+- [ ] Validar Gateway routing y SQL común local estable.
+- [ ] Mantener bloqueados SRI Production, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.
+- [ ] Decidir siguiente paquete entre approval UX, Content/File real contract o QA infra.
 
 ## Dependencias Portal Sprint 2
 

@@ -111,6 +111,10 @@ La pantalla muestra `/api/financial/external-approval-requests/integration-readi
 
 Las pantallas de compras y anulados muestran blockers de productización, dependencias de approval foundation, Content/File y Notification, y mantienen visibles los límites `foundation only`. No renderizan botones de producción, envío SRI, ATS oficial, upload real ni notification send.
 
+## Sprint 7 P5 closure posture
+
+Sprint 7 P5 mantiene la UI como readiness/foundation. El verificador frontend exige documentos de cierre, flags productivos apagados, ausencia de token storage, ausencia de upload controls, ausencia de notification send controls y ausencia de controles de activación productiva.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.

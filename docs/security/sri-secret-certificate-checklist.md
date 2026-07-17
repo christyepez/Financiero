@@ -126,3 +126,11 @@ External approval workflow es read-only/advisory. No almacena evidencias reales,
 - No guardar `.p12`, `.pfx`, `.pem`, `.key`, `.cer` ni `.crt`.
 - No pegar XML, base64 ni respuestas reales SRI.
 - Evidence references deben apuntar a metadata sanitizada y futura integración Portal Content/File.
+
+## Sprint 7 closure
+
+- Productization readiness no habilita producción.
+- `ApprovedFoundation` no equivale a aprobación legal/productiva.
+- Content/File sigue Portal-owned; no guardar evidencia real en Financiero.
+- Notification sigue Portal-owned; no enviar correos, Teams ni mensajes reales desde Financiero.
+- Mantener `allowProductiveActivation=false`, `allowOfficialTaxFlows=false`, `allowEvidenceUpload=false` y `allowNotificationSend=false`.

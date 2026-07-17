@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 7 P4 agrega productization readiness controlada para compras y documentos anulados. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 7 P5 cierra Sprint 7 con evidencia QA, matriz de capacidades, checklist de seguridad, release notes y roadmap Sprint 8. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -73,6 +73,11 @@ Documentos principales:
 - `docs/coordination/financial-sprint-07-p2-external-approval-persistence.md`
 - `docs/coordination/financial-sprint-07-p3-contentfile-notification-boundary.md`
 - `docs/coordination/financial-sprint-07-p4-controlled-productization-readiness.md`
+- `docs/coordination/financial-sprint-07-closure.md`
+- `docs/qa/financial-sprint-07-qa-evidence.md`
+- `docs/architecture/financial-sprint-07-capability-matrix.md`
+- `docs/security/financial-sprint-07-security-checklist.md`
+- `docs/roadmap/financial-sprint-08-roadmap.md`
 - `docs/frontend/financial-angular-shell.md`
 - `docs/frontend/portal-shell-contract.md`
 - `docs/frontend/portal-shell-readiness-matrix.md`
@@ -89,6 +94,7 @@ Documentos principales:
 - `docs/architecture/decisions/adr-025-portal-contentfile-notification-boundary.md`
 - `docs/architecture/decisions/adr-026-controlled-productization-readiness.md`
 - `docs/releases/financial-sprint-07-readiness-notes.md`
+- `docs/releases/financial-sprint-07-release-notes.md`
 - `docs/releases/financial-sprint-05-closure.md`
 - `docs/releases/financial-sprint-05-release-notes.md`
 - `docs/architecture/financial-sprint-04-architecture-snapshot.md`
@@ -168,4 +174,6 @@ Sprint 7 P3 agrega contratos y readiness para Portal Content/File y Notification
 
 Sprint 7 P4 agrega readiness read-only de productización para compras y documentos anulados. Expone gates y blockers sin mutar estado ni habilitar SRI, ATS oficial, RIDE legal final, upload o notificaciones.
 
-Próximo paso recomendado: validar contratos reales con PortalCorporativo y revisión legal/tributaria antes de cualquier activación productiva futura.
+Sprint 7 P5 cierra Sprint 7 formalmente como readiness no productivo. Consolida QA evidence, capability matrix, checklist de seguridad, release notes y roadmap Sprint 8. La ruta recomendada es validar end-to-end con PortalCorporativo real y estabilizar SQL común/health antes de cualquier productización.
+
+Próximo paso recomendado: iniciar Sprint 8 Opción A con PortalCorporativo real, Gateway, Security/Menu/Configuration y SQL común activo; mantener bloqueados SRI producción, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.

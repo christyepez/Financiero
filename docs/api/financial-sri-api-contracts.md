@@ -250,3 +250,7 @@ Sprint 7 P3 agrega boundary con Portal Content/File y Portal Notification: evide
 - `GET /api/financial/voided-documents/{id}/productization-readiness` requiere `financial.electronicdocuments.read`.
 
 Los endpoints son read-only. No mutan estado, no generan XML, no envían SRI, no suben evidencia, no envían notificaciones y no activan producción.
+
+# Sprint 7 closure API posture
+
+Sprint 7 P5 no agrega endpoints funcionales nuevos. Documenta el estado de P1-P4 y conserva los contratos existentes como foundation/no productivo. La activación de SRI Test real, SRI Production, ATS oficial, RIDE legal final, XAdES productivo, upload real y notification send sigue bloqueada.
