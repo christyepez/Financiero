@@ -177,8 +177,12 @@
 - [x] P1 agregar endpoint read-only `/api/financial/portal-integration/readiness`.
 - [x] P1 agregar verificador `verify-portal-e2e-contract.mjs`.
 - [x] P1 agregar template de evidencia QA E2E.
-- [ ] Ejecutar validación con PortalShellContext real de PortalCorporativo.
-- [ ] Validar Security/Menu/Configuration reales.
+- [x] P2 agregar script no invasivo `tools/validate-portal-financiero-e2e.ps1`.
+- [x] P2 registrar evidencia de ejecución parcial E2E.
+- [x] P2 documentar validación de SQL común y blockers reales.
+- [x] P2 endurecer readiness endpoint/dashboard con SQL común, servicios esperados y drift indicators.
+- [ ] Ejecutar validación PASS con PortalShellContext real de PortalCorporativo.
+- [ ] Validar Security/Menu/Configuration reales con Portal activo.
 - [ ] Validar Gateway routing y SQL común local estable.
 - [ ] Mantener bloqueados SRI Production, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.
 - [ ] Decidir siguiente paquete entre approval UX, Content/File real contract o QA infra.

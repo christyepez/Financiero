@@ -42,6 +42,10 @@ Recommended first because it reduces platform integration risk for every future 
 3. Option C: Approval UX and Portal boundaries.
 4. Option B: Controlled purchase QA with synthetic data.
 
+## Sprint 8 P2 update
+
+The first executable validation produced partial validation: Financiero compose is valid and no SQL Server propio exists, but shared SQL and Portal Gateway/Shell were not reachable in the local environment. The next priority is to make shared SQL and Portal runtime available, then rerun `tools/validate-portal-financiero-e2e.ps1` and capture PASS evidence.
+
 ## Explicit exclusions
 
 - No SRI Production.

@@ -12,6 +12,15 @@ Validate PortalCorporativo and Financiero together with synthetic data and no pr
 
 Do not start a Financiero-owned SQL Server.
 
+Validate SQL before starting the API:
+
+```powershell
+Test-NetConnection host.docker.internal -Port 21433
+docker compose config
+```
+
+If SQL is blocked, stop and follow `docs/runbooks/shared-sql-runtime-validation.md`.
+
 ## 2. Start PortalCorporativo
 
 - Start Portal API/Gateway/Shell from its own repository.
@@ -34,6 +43,12 @@ Validate:
 - `GET /health/sri`
 - `GET /health/content-file`
 - `GET /api/financial/portal-integration/readiness`
+
+Or run the non-invasive script:
+
+```powershell
+tools/validate-portal-financiero-e2e.ps1
+```
 
 Use development headers only in local development and never in production.
 

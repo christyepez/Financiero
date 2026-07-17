@@ -2,7 +2,7 @@
 
 Dominio de contabilidad y cumplimiento tributario/SRI, consumidor de PortalCorporativo.
 
-Estado: Sprint 8 P1 agrega validación E2E PortalCorporativo ↔ Financiero como readiness controlado. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
+Estado: Sprint 8 P2 agrega ejecución parcial y estabilización QA para validación E2E PortalCorporativo ↔ Financiero. La solución .NET 8, Clean Architecture, base lógica `FinancieroDb`, health/readiness, autorización runtime, facturación electrónica foundation, validación XML endurecida, firma dev/mock controlada, contrato SRI test dry-run/manual probe, Secret Store wiring, sanitización, observabilidad segura, adapter productivo-ready hacia Portal Content/File, RIDE/PDF foundation por tipo documental, foundation de NC/ND/Retenciones, compras/anulados foundation, mapping ATS de sustentos, catálogos foundation versionados, preview ATS XML foundation gated, workflow foundation de aprobaciones externas y frontend Angular seguro quedan documentados como readiness técnico, sin producción SRI ni certificados reales.
 
 Documentos principales:
 
@@ -81,6 +81,8 @@ Documentos principales:
 - `docs/integration/portal-e2e-validation-checklist.md`
 - `docs/runbooks/portal-financiero-local-e2e-runbook.md`
 - `docs/qa/financial-sprint-08-p1-e2e-evidence-template.md`
+- `docs/qa/financial-sprint-08-p2-e2e-execution-evidence.md`
+- `docs/runbooks/shared-sql-runtime-validation.md`
 - `docs/frontend/financial-angular-shell.md`
 - `docs/frontend/portal-shell-contract.md`
 - `docs/frontend/portal-shell-readiness-matrix.md`
@@ -182,4 +184,6 @@ Sprint 7 P5 cierra Sprint 7 formalmente como readiness no productivo. Consolida 
 
 Sprint 8 P1 agrega checklist/runbook/evidence template para validación Portal E2E, endpoint read-only `/api/financial/portal-integration/readiness`, panel de dashboard y verificador estático `verify-portal-e2e-contract.mjs`. Mantiene modo standalone como development-only y producción tributaria bloqueada.
 
-Próximo paso recomendado: ejecutar el runbook E2E con PortalCorporativo real, Gateway, Security/Menu/Configuration y SQL común activo; mantener bloqueados SRI producción, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.
+Sprint 8 P2 ejecuta el script no invasivo `tools/validate-portal-financiero-e2e.ps1` y registra partial validation: compose válido y sin SQL Server propio, pero SQL común `host.docker.internal:21433` y Portal Gateway/Shell no estaban accesibles. Se endurece el readiness endpoint/dashboard con servicios esperados, SQL común requerido y drift indicators.
+
+Próximo paso recomendado: levantar SQL común y PortalCorporativo real, ejecutar `tools/validate-portal-financiero-e2e.ps1`, capturar evidencia PASS y mantener bloqueados SRI producción, SRI Test real, ATS oficial, RIDE legal final y XAdES productivo.
