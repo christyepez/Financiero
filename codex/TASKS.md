@@ -181,6 +181,10 @@
 - [x] P2 registrar evidencia de ejecución parcial E2E.
 - [x] P2 documentar validación de SQL común y blockers reales.
 - [x] P2 endurecer readiness endpoint/dashboard con SQL común, servicios esperados y drift indicators.
+- [x] P3 estabilizar preflight QA con PASS/BLOCKED_DEPENDENCY/FAIL y exit codes 0/2/1.
+- [x] P3 documentar plantilla de ambiente QA sin secretos.
+- [x] P3 documentar troubleshooting health y diferencias dependency unavailable vs app failure.
+- [x] P3 clasificar readiness Portal como BlockedDependency/FoundationOnly/ProductionBlocked.
 - [ ] Ejecutar validación PASS con PortalShellContext real de PortalCorporativo.
 - [ ] Validar Security/Menu/Configuration reales con Portal activo.
 - [ ] Validar Gateway routing y SQL común local estable.

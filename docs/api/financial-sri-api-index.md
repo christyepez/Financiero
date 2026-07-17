@@ -99,3 +99,5 @@ Sprint 7 P5 does not add mutating API capabilities. It closes the sprint with QA
 Sprint 8 P1 agrega `GET /api/financial/portal-integration/readiness`, protegido con `financial.electronicdocuments.read`. Es read-only, no expone secretos/tokens/claims completas, reporta capacidades Portal esperadas, blockers productivos y evidencia faltante para E2E.
 
 Sprint 8 P2 fortalece la respuesta con servicios esperados, requisitos de SQL común y contract drift indicators. El endpoint sigue siendo read-only y no activa producción tributaria.
+
+Sprint 8 P3 agrega clasificación explícita de readiness: `Ready`, `BlockedDependency`, `NotConfigured`, `FoundationOnly`, `ProductionBlocked`. La clasificación no oculta fallas de SQL común ni Portal runtime.

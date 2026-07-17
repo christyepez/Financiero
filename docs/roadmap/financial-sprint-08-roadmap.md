@@ -46,6 +46,8 @@ Recommended first because it reduces platform integration risk for every future 
 
 The first executable validation produced partial validation: Financiero compose is valid and no SQL Server propio exists, but shared SQL and Portal Gateway/Shell were not reachable in the local environment. The next priority is to make shared SQL and Portal runtime available, then rerun `tools/validate-portal-financiero-e2e.ps1` and capture PASS evidence.
 
+Sprint 8 P3 adds QA preflight stabilization. The next execution should treat exit code `2` as blocked dependency and reserve `1` for repository/script/application failures.
+
 ## Explicit exclusions
 
 - No SRI Production.

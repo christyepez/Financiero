@@ -125,6 +125,8 @@ El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShe
 
 El dashboard muestra blockers resumidos de `Portal E2E readiness`, incluyendo “SQL común requerido” y “production requires Portal context”. No muestra tokens, claims raw ni tenant sensible. El script `tools/validate-portal-financiero-e2e.ps1` permite validar health/readiness de manera no invasiva cuando PortalCorporativo y SQL común están disponibles.
 
+Sprint 8 P3 muestra clasificación clara: `PASS`, `BLOCKED DEPENDENCY`, `FAIL`, `FOUNDATION ONLY` según la respuesta y el script. La UI conserva comandos productivos apagados.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.
