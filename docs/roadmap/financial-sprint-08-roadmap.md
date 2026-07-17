@@ -13,6 +13,7 @@ Control tokens: No SRI Production; No official ATS; No legal-final RIDE; No prod
 - Validate Gateway routing.
 - Validate shared SQL runtime.
 - Confirm delegated auth without token storage.
+- Use `/api/financial/portal-integration/readiness`, `portal-e2e-validation-checklist.md` and the local E2E runbook as the validation frame.
 
 Recommended first because it reduces platform integration risk for every future package.
 
@@ -36,7 +37,7 @@ Recommended first because it reduces platform integration risk for every future 
 
 ## Prioritized route
 
-1. Option A: Portal E2E validation.
+1. Option A: Portal E2E validation with Sprint 8 P1 checklist/runbook/evidence template.
 2. Option D: Stable shared SQL and health.
 3. Option C: Approval UX and Portal boundaries.
 4. Option B: Controlled purchase QA with synthetic data.

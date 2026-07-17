@@ -20,3 +20,7 @@
 | RIDE Legal Final | Blocked | Tax/Legal | BLOCKED | Foundation layout only. | Content/File | Legal invalidity | Legal review. |
 | XAdES Productive | Blocked | Security | BLOCKED | Placeholder/foundation only. | Secret Store | Certificate leakage | Custody design and approval. |
 | Certificate Custody | Blocked | Security/DevOps | BLOCKED | No cert storage. | Secret Store | Secret exposure | External vault runbook. |
+
+## Sprint 8 P1 extension
+
+`/api/financial/portal-integration/readiness`, the Portal E2E checklist and the local runbook validate these capabilities as integration contracts. They do not change ownership: Portal remains owner of Security/Auth, Menu, Configuration, Audit, Outbox, Content/File, Notification and Shell context.

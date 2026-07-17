@@ -115,6 +115,12 @@ Las pantallas de compras y anulados muestran blockers de productización, depend
 
 Sprint 7 P5 mantiene la UI como readiness/foundation. El verificador frontend exige documentos de cierre, flags productivos apagados, ausencia de token storage, ausencia de upload controls, ausencia de notification send controls y ausencia de controles de activación productiva.
 
+## Sprint 8 P1 Portal E2E readiness
+
+El dashboard muestra `Portal E2E readiness` consumiendo `/api/financial/portal-integration/readiness`. El panel muestra estado, modo `development standalone only`, recordatorio `production requires Portal context`, blockers y disclaimers sanitizados. No muestra token, claims completas, email completo, tenant raw sensible ni rutas fuera de allow-list.
+
+El verificador `tools/verify-portal-e2e-contract.mjs` valida contrato `PortalShellContext`, flags seguros, rutas allow-listed, delegated auth en memoria, bloqueo de standalone en producción y ausencia de querystring tokens.
+
 - `allowMutations=true`.
 - `allowExternalApprovalCommands=true`.
 - `financial.electronicdocuments.manage`.

@@ -3,6 +3,7 @@ import { forkJoin } from 'rxjs';
 import { ContentFileReadinessApiService } from '../../core/services/content-file-readiness-api.service';
 import { ExternalApprovalApiService } from '../../core/services/external-approval-api.service';
 import { PurchaseTaxDocumentApiService } from '../../core/services/purchase-tax-document-api.service';
+import { PortalIntegrationReadinessApiService } from '../../core/services/portal-integration-readiness-api.service';
 import { SriReadinessApiService } from '../../core/services/sri-readiness-api.service';
 import { TaxCatalogApiService } from '../../core/services/tax-catalog-api.service';
 import { TaxReportingApiService } from '../../core/services/tax-reporting-api.service';
@@ -47,6 +48,7 @@ export class DashboardComponent {
   private readonly catalogs = inject(TaxCatalogApiService);
   private readonly purchases = inject(PurchaseTaxDocumentApiService);
   private readonly voided = inject(VoidedTaxDocumentApiService);
+  private readonly portalIntegration = inject(PortalIntegrationReadinessApiService);
   protected readonly period = currentPeriod();
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -59,6 +61,7 @@ export class DashboardComponent {
     { title: 'Catálogos tributarios', status: 'Loading', text: 'Versión foundation.' },
     { title: 'Compras', status: 'Loading', text: '0 registros foundation.' },
     { title: 'Anulados', status: 'Loading', text: '0 registros foundation.' },
+    { title: 'Portal E2E readiness', status: 'Loading', text: 'Validando contrato PortalShellContext.' },
     { title: 'Estado', status: 'Foundation', text: 'No productivo. Sin envío SRI, XML completo ni aprobaciones mutables.' }
   ];
 
@@ -70,7 +73,8 @@ export class DashboardComponent {
       approvals: this.approvals.getReadiness('all'),
       catalogs: this.catalogs.getAll(),
       purchases: this.purchases.getByPeriod(this.period),
-      voided: this.voided.getByPeriod(this.period)
+      voided: this.voided.getByPeriod(this.period),
+      portal: this.portalIntegration.getReadiness()
     }).subscribe({
       next: value => {
         this.cards = [
@@ -81,6 +85,7 @@ export class DashboardComponent {
           { title: 'Catálogos tributarios', status: 'Foundation', text: `Versión ${value.catalogs.version ?? 'foundation'}.` },
           { title: 'Compras', status: 'Read-only', text: `${value.purchases.length} registros foundation para ${this.period}.` },
           { title: 'Anulados', status: 'Read-only', text: `${value.voided.length} registros foundation para ${this.period}.` },
+          { title: 'Portal E2E readiness', status: value.portal.status ?? 'BlockedFoundation', text: `${value.portal.currentEnvironmentMode ?? 'development standalone only'}; production requires Portal context; ${value.portal.disclaimer ?? 'Read-only.'}` },
           { title: 'Estado', status: 'Foundation / No productivo', text: 'Sin SRI producción, sin XML completo y con comandos gated por Portal/flags.' }
         ];
         this.updatedAt.set(new Date().toLocaleString());

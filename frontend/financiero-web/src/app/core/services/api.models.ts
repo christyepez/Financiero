@@ -90,6 +90,21 @@ export interface ProductizationReadinessResult {
   disclaimer?: string;
 }
 
+export interface PortalIntegrationReadiness {
+  status?: string;
+  isReadyForProduction?: boolean;
+  currentEnvironmentMode?: string;
+  requiredCapabilities?: { name?: string; owner?: string; status?: string; reuseClassification?: string; required?: boolean }[];
+  missingCapabilities?: string[];
+  expectedPermissions?: string[];
+  expectedMenuRoutes?: string[];
+  expectedFeatureFlags?: string[];
+  productionBlockers?: string[];
+  warnings?: string[];
+  correlationId?: string;
+  disclaimer?: string;
+}
+
 export interface CreatePurchaseTaxDocumentRequest {
   supplierIdentificationType: string;
   supplierIdentification: string;

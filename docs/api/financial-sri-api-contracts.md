@@ -254,3 +254,11 @@ Los endpoints son read-only. No mutan estado, no generan XML, no envían SRI, no
 # Sprint 7 closure API posture
 
 Sprint 7 P5 no agrega endpoints funcionales nuevos. Documenta el estado de P1-P4 y conserva los contratos existentes como foundation/no productivo. La activación de SRI Test real, SRI Production, ATS oficial, RIDE legal final, XAdES productivo, upload real y notification send sigue bloqueada.
+
+# Portal integration readiness
+
+| Método | Ruta | Permiso | Estado |
+|---|---|---|---|
+| GET | `/api/financial/portal-integration/readiness` | `financial.electronicdocuments.read` | Implementado Sprint 8 P1; read-only |
+
+Devuelve capacidades Portal requeridas, permisos esperados, rutas de menú esperadas, feature flags seguros, blockers productivos, warnings sanitizados y correlation id. No devuelve tokens, secretos, claims completas ni datos sensibles.
