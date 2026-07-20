@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Next Cycle P1 PASS reopen control
+
+PASS capture remains closed. It can reopen only after accepted SQL/Portal owner evidence and preflight `SCRIPT_EXIT=0`. Current Next Cycle P1 state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 final PASS checklist note
 
 PASS E2E real remains closed at Sprint 11 closure. Required state for any next cycle capture: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`. Current final state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`.

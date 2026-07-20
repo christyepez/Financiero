@@ -1,3 +1,9 @@
+## Next Cycle P1 note
+
+No SRI API behavior changes were introduced in Next Cycle P1. PASS capture remains closed; external SQL/Portal evidence remains `NoResponse` / `EvidencePending`; preflight remains `SCRIPT_EXIT=2`; productive tax flows remain blocked until accepted evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 note
 
 No SRI API behavior changes were introduced in Sprint 11 P5. Sprint 11 closes as `BLOCKED_DEPENDENCY`; external SQL/Portal evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`; productive tax flows remain blocked.

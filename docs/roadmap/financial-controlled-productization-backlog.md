@@ -1,5 +1,11 @@
 # Controlled Productization Backlog
 
+## Next Cycle P1 productization control
+
+Productization remains blocked. Next Cycle P1 requires a decision: continue external remediation with named owners/SLA or pause productization. PASS capture remains closed because evidence is `NoResponse` / `EvidencePending` and preflight remains `SCRIPT_EXIT=2`; unlock requires `SCRIPT_EXIT=0` plus accepted evidence. Any synthetic/demo path requires explicit executive approval and must not be represented as PASS real.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 final productization state
 
 Productization remains blocked at Sprint 11 closure. PASS E2E real is NOT_READY because evidence is `NoResponse` / `EvidencePending` and P5 preflight returned `SCRIPT_EXIT=2`. Only a clearly labeled synthetic/demo path may be considered with explicit executive approval; it must not be represented as PASS real and must not enable production, SRI real, ATS official, RIDE legal final or XAdES productivo.

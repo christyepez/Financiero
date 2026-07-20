@@ -1,3 +1,9 @@
+## Next Cycle P1 note
+
+No SRI API contract changes were introduced in Next Cycle P1. PASS capture remains closed; external evidence remains `NoResponse` / `EvidencePending`; preflight remains `SCRIPT_EXIT=2`; PASS E2E real is NOT_READY until accepted SQL/Portal evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 note
 
 No SRI API contract changes were introduced in Sprint 11 P5. Sprint 11 closes as `BLOCKED_DEPENDENCY`; external evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`; PASS E2E real is NOT_READY.

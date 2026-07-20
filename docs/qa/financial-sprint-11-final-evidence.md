@@ -1,5 +1,11 @@
 # Financial Sprint 11 Final Evidence
 
+## Next Cycle P1 update
+
+Next Cycle P1 confirms the final evidence remains unresolved: `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2`, PASS capture closed and PASS E2E real NOT_READY. Reopen requires accepted external SQL/Portal evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Final result: `BLOCKED_DEPENDENCY`  
 Preflight: `SCRIPT_EXIT=2`  

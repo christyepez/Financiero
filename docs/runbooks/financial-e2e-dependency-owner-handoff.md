@@ -1,5 +1,11 @@
 # Financial E2E Dependency Owner Handoff
 
+## Next Cycle P1 owner handoff control
+
+Next Cycle P1 requires named owners/SLA before continuing remediation. Current state remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`. PASS capture remains closed until accepted evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 closure handoff
 
 Sprint 11 closes as `BLOCKED_DEPENDENCY`. P5 preflight returned `SCRIPT_EXIT=2`; external evidence remains `NoResponse` / `EvidencePending`; PASS E2E real is NOT_READY. Continue owner handoff only through sanitized evidence and do not represent demo/synthetic evidence as PASS real.

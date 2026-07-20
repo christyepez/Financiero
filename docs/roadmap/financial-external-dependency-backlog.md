@@ -1,5 +1,15 @@
 # Financial External Dependency Backlog
 
+## Next Cycle P1 backlog update
+
+Next Cycle P1 keeps external remediation active only if owners/SLA are assigned. Pending dependencies remain: SQL Common TCP, `FinancieroDb`, Portal Gateway health, Portal Shell health, PortalShellContext live, Menu/permissions live, correlation id live and preflight `SCRIPT_EXIT=0`. Current state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`.
+
+- Decision needed: continue external remediation or pause productization.
+- Unlock condition: accepted external evidence plus `SCRIPT_EXIT=0`.
+- PASS capture: closed.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 final backlog update
 
 Sprint 11 closes as `BLOCKED_DEPENDENCY`. External evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`. Pending dependencies: shared SQL TCP, `FinancieroDb`, Portal Gateway health, Portal Shell health, PortalShellContext live, Menu/permissions live, correlation id live and `SCRIPT_EXIT=0`.

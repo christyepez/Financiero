@@ -1,5 +1,19 @@
 # Roadmap Financiero
 
+## Next Cycle P1 — External SQL/Portal Remediation Control
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base Sprint 11 P5 `20761cf4e516205c2f6089cbd05f3a09e72f8ffa`.
+- [x] Crear rama `financiero-next-cycle-p1-external-remediation-control`.
+- [x] Ejecutar preflight: `SCRIPT_EXIT=2`.
+- [x] Crear decisión operativa del siguiente ciclo.
+- [x] Crear solicitud ejecutiva de decisión.
+- [x] Crear requisitos mínimos de owner/SLA.
+- [x] Crear control para reabrir PASS capture.
+- [x] Mantener PASS capture cerrado / closed hasta evidencia aceptada + `SCRIPT_EXIT=0`.
+- [x] Mantener estado not production-ready.
+- [x] Mantener productización bloqueada: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 — Controlled Closure for External Dependency Block
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

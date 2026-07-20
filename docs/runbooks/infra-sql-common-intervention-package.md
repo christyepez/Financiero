@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Next Cycle P1 SQL control
+
+SQL remediation must continue outside Financiero only with a named SQL Common / Infra Owner and DBA Owner. Current state remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight remains `SCRIPT_EXIT=2`. Do not create SQL Server propio in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 SQL closure note
 
 Sprint 11 closes without accepted SQL evidence. shared SQL TCP and `FinancieroDb` remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; P5 preflight returned `SCRIPT_EXIT=2` with shared SQL TCP closed. Do not create SQL Server propio in Financiero.
