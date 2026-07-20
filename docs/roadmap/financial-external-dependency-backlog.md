@@ -1,5 +1,18 @@
 # Financial External Dependency Backlog
 
+## Next Cycle P3 owner remediation package update
+
+P3 converts P2 runtime evidence into owner-specific remediation packages:
+
+- SQL owner package: `docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md`.
+- Portal owner package: `docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md`.
+- Owner handoff message: `docs/coordination/financial-next-cycle-p3-owner-handoff-message.md`.
+- Accepted evidence checklist: `docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md`.
+
+Current blockers remain external: SQL Common TCP closed on `21433`, `FinancieroDb` not provable, Portal Gateway `/health` HTTP 404, and missing Portal Shell/Context/Menu/permissions/correlation evidence. Next step depends on owners. If remediated, run P4 PASS E2E real capture; if not, pause productization or escalate.
+
+No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P2 runtime activation backlog update
 
 P2 proved Financiero can start in Docker and answer health/readiness endpoints, but real E2E remains `BLOCKED_DEPENDENCY`.

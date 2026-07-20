@@ -1,5 +1,17 @@
 # Controlled Productization Backlog
 
+## Next Cycle P3 productization control
+
+Productization remains blocked while external owners remediate SQL/Portal. P3 does not authorize production, SRI real, ATS official, RIDE legal final or XAdES productivo. PASS capture remains closed until accepted owner evidence plus preflight `SCRIPT_EXIT=0`.
+
+Next path:
+
+- P4 PASS E2E real capture if owners remediate.
+- Pause/escalate if owners do not respond.
+- No infrastructure duplication in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P2 runtime activation control
 
 Productization remains blocked. P2 activated Financiero runtime locally and confirmed the API/frontend are not the current blocker, but shared SQL and Portal runtime evidence still block real E2E.

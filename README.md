@@ -1,5 +1,16 @@
 # Financiero
 
+## Next Cycle P3 external owner remediation package
+
+Next Cycle P3 turns the P2 runtime findings into owner-specific remediation packages for SQL Common and Portal. Financiero remains healthy locally, but real E2E is still blocked by external SQL/Portal dependencies and PASS capture remains closed.
+
+- SQL owner package: `docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md`.
+- Portal owner package: `docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md`.
+- Handoff message: `docs/coordination/financial-next-cycle-p3-owner-handoff-message.md`.
+- Accepted evidence checklist: `docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md`.
+- Next step: external owners remediate; P4 captures PASS E2E real only with accepted evidence and `SCRIPT_EXIT=0`.
+- No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P2 runtime activation
 
 Next Cycle P2 attempted real local runtime activation. GitHub `main` was synchronized at `151ef555c6e448a4f13014f17bb2177bcd83bb7d`, then `financial-api` was built and started with Docker. Financiero API health/readiness returned HTTP 200; backend and frontend validation passed.

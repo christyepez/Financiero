@@ -1,3 +1,18 @@
+## Next Cycle P3 external owner remediation risks
+
+P3 packages owner-specific remediation, but PASS still depends on external execution and accepted evidence.
+
+| Risk | Status | Mitigation | Owner |
+|---|---|---|---|
+| Owner handoff receives no response | Active | Use handoff message, SLA and Product Owner escalation. | Product Owner / Architecture Governance |
+| SQL is remediated partially | Active | Require both TCP PASS and `FinancieroDb` evidence. | SQL Common / DBA |
+| Portal is remediated partially | Active | Require Gateway, Shell, Context, Menu/permissions and correlation evidence. | Portal owners |
+| Health route is non-standard | Watch | Require owner-confirmed route and rerun preflight with explicit path. | Portal Gateway/Shell Owner |
+| Evidence is not sanitized | Active | Reject as `REJECTED_EVIDENCE`; require date, owner, source and safe commands. | QA Lead / Security |
+| Pressure to duplicate infrastructure | Active | Enforce no SQL/Gateway/Shell/Auth/Menu duplication in Financiero. | Architecture Governance |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P2 runtime activation risks
 
 P2 reduces uncertainty by proving Financiero API/frontend can build, test and start, while the final gate remains blocked by external SQL/Portal dependencies.

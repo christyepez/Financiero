@@ -1,5 +1,20 @@
 # Financial Next Cycle Decision Matrix
 
+## Next Cycle P3 owner remediation package update
+
+Date: 2026-07-20
+Current result: `BLOCKED_DEPENDENCY`
+PASS capture: closed
+Productization: blocked
+
+P3 creates the external SQL/Portal owner remediation package from concrete P2/P3 runtime evidence. Financiero remains healthy locally, but real E2E depends on owner remediation for SQL Common TCP, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlationId.
+
+- If owners remediate and evidence is accepted: run Next Cycle P4 PASS E2E real capture.
+- If owners do not remediate: pause productization or escalate ownership/SLA.
+- Do not create SQL/Gateway/Shell/Auth/Menu duplicates in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P2 runtime activation update
 
 Date: 2026-07-20
