@@ -1,5 +1,17 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 10 P3 handoff update
+
+P3 adds the formal owner escalation package. SQL Common, Portal Gateway, Portal Shell, Portal Contract, Menu/permissions and correlation id evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`.
+
+Use:
+
+- `docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md`
+- `docs/coordination/financial-sprint-10-p3-formal-evidence-request.md`
+- `docs/qa/financial-sprint-10-p3-external-remediation-log.md`
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Sprint 10 P2 outcome: evidence is still pending from SQL Common Owner, Portal Gateway Owner, Portal Shell Owner and Portal Contract Owner. Escalation remains required.
 
 Sprint 10 P1 handoff now flows through `docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md` and the sanitized templates in `docs/qa/templates`.

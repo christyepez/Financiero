@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 10 P3 escalation note
+
+SQL Common TCP and `FinancieroDb` evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`. The required action is owner-provided sanitized evidence using the P3 formal request and escalation matrix; Financiero must not create SQL Server propio or share another domain database.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Sprint 10 P2 review: SQL owner evidence was NotReceived, so Gate 1 and Gate 2 remain `BLOCKED_DEPENDENCY`.
 
 Sprint 10 P1 requires SQL owners to use `docs/qa/templates/sql-common-evidence-template.md` and pass Gate 1/Gate 2 in `docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md`.

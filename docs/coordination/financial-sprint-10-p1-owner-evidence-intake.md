@@ -1,5 +1,19 @@
 # Financial Sprint 10 P1 Owner Evidence Intake
 
+## Sprint 10 P3 escalation update
+
+Date: 2026-07-20. P3 prepared the external owner escalation package and remediation tracking. No external SQL/Portal evidence was received during this update, so SQL Common, Portal Gateway, Portal Shell and Portal Contract remain `EvidencePending` / `BLOCKED_DEPENDENCY`.
+
+The unresolved runtime path explicitly includes shared SQL and Portal Gateway evidence before any PASS capture.
+
+- Escalation matrix: `docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md`.
+- Formal request: `docs/coordination/financial-sprint-10-p3-formal-evidence-request.md`.
+- Remediation log: `docs/qa/financial-sprint-10-p3-external-remediation-log.md`.
+- Escalation path: owner -> technical lead -> Architecture Governance -> Product Owner.
+- Next action: send formal request and prepare Sprint 10 P4 external remediation follow-up if SLA expires.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P2 review update
 
 - Review date: 2026-07-20.

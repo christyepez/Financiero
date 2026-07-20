@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 10 P3 external owner escalation
+
+Sprint 10 P3 formalizes escalation and remediation tracking for external SQL/Portal owners. No new runtime capability is implemented, no PASS is claimed and the state remains `EvidencePending` / `BLOCKED_DEPENDENCY`.
+
+- Escalation matrix: `docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md`.
+- Formal request: `docs/coordination/financial-sprint-10-p3-formal-evidence-request.md`.
+- Remediation log: `docs/qa/financial-sprint-10-p3-external-remediation-log.md`.
+- Next decision: request sanitized owner evidence, then run Sprint 10 P4 follow-up or resolve Portal/Infra outside Financiero.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P2 owner evidence review
 
 Sprint 10 P2 reviewed owner evidence intake and executed acceptance gates. No external SQL/Portal evidence was received, so the real state remains `BLOCKED_DEPENDENCY`.

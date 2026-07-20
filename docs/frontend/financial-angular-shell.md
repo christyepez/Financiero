@@ -1,5 +1,11 @@
 # Financial Angular Shell
 
+## Sprint 10 P3 Portal Shell note
+
+P3 does not add Angular runtime features. Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`; standalone mode remains development-only and cannot be used to claim Portal-integrated PASS.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 `frontend/financiero-web` es la primera base Angular de Financiero y actúa como consumidor del Portal, no como plataforma paralela.
 
 ## Integración Portal

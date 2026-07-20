@@ -1,5 +1,20 @@
 # Financial Sprint 10 Decision Matrix
 
+## Sprint 10 P3 decision update
+
+P3 keeps the decision at `EvidencePending` / `BLOCKED_DEPENDENCY`. The recommended path is not to productize, not to claim PASS, and not to create duplicated SQL/Portal capabilities in Financiero.
+
+The unresolved runtime path explicitly includes shared SQL and Portal Gateway evidence before any PASS capture.
+
+| Condition | Decision |
+|---|---|
+| Owners deliver sanitized evidence within SLA | Validate evidence and move to PASS capture only after preflight exit 0 |
+| Owners do not respond | Execute Sprint 10 P4 external remediation follow-up or resolve Portal/Infra outside Financiero |
+| Evidence is partial or unsafe | Reject intake, keep `BLOCKED_DEPENDENCY`, request corrected evidence |
+| Team wants to continue with mocks | Allowed for development only; not production-ready and no PASS |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P2 gate result
 
 Owner evidence review found no external evidence received. Option A remains active but blocked at evidence intake. Sprint 10 P2 result is `BLOCKED_DEPENDENCY`, with Gate 9 PASS and Gates 1-8 blocked.

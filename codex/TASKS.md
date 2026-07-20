@@ -1,5 +1,16 @@
 # Roadmap Financiero
 
+## Sprint 10 P3 — External Owner Escalation and Remediation Tracking
+
+- [x] Crear matriz de escalamiento externa.
+- [x] Crear solicitud formal de evidencia para owners.
+- [x] Crear remediation log externo.
+- [x] Actualizar intake/backlog/risk register.
+- [x] Actualizar matriz de decisión Sprint 10.
+- [x] Actualizar runbooks/docs API/frontend con `EvidencePending`.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P2 — Owner Evidence Review and Acceptance Gates
 
 - [x] Crear review de evidencia por owner.

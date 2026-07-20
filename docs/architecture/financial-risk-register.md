@@ -1,5 +1,21 @@
 # Financial Risk Register
 
+## Sprint 10 P3 external escalation risks
+
+The unresolved runtime path explicitly includes shared SQL and Portal Gateway evidence before any PASS capture.
+
+| Risk | Impact | Mitigation | State |
+|---|---|---|---|
+| External owner does not respond | E2E PASS and productization remain blocked | SLA, escalation matrix and Product Owner decision gate | EvidencePending |
+| Owner is not assigned or accountable | Dependency cannot be remediated | Escalate to Architecture Governance and require named owner | EvidencePending |
+| SLA expires | Sprint 10 cannot close with runtime PASS | Execute Sprint 10 P4 follow-up or resolve outside Financiero repo | BLOCKED_DEPENDENCY |
+| Remediation is partial | False confidence or unstable PASS | Accept only gate-mapped, sanitized evidence | EvidencePending |
+| Evidence is not usable | PASS cannot be accepted | Use templates and reject secrets/private data | EvidencePending |
+| Team continues with mocks without PASS | Productization risk | Allow mocks only as development mode; do not claim production readiness | BLOCKED_DEPENDENCY |
+| Traceability is lost | Cannot audit dependency decisions | Maintain intake, backlog, remediation log and PR history | EvidencePending |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P2 evidence review risks
 
 | Risk | Status | Impact | Mitigation |

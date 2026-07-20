@@ -1,5 +1,11 @@
 # Portal Runtime Intervention Package
 
+## Sprint 10 P3 escalation note
+
+Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`. The required action is owner-provided sanitized evidence using the P3 formal request and escalation matrix; Financiero must not create Gateway propio, Shell propio, login/Auth propio or duplicated Portal services.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Sprint 10 P2 review: Portal Gateway, Portal Shell and Portal Contract evidence was NotReceived, so Gate 3, Gate 4 and Gate 5 remain `BLOCKED_DEPENDENCY`.
 
 Sprint 10 P1 requires Portal owners to use the Gateway, Shell and Contract evidence templates under `docs/qa/templates` and pass Gate 3, Gate 4 and Gate 5.

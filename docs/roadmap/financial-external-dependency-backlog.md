@@ -1,5 +1,18 @@
 # Financial External Dependency Backlog
 
+## Sprint 10 P3 escalation state
+
+Date: 2026-07-20. External SQL/Portal dependencies remain `EvidencePending` / `BLOCKED_DEPENDENCY`. P3 adds a formal escalation matrix, evidence request and remediation log instead of claiming PASS.
+
+The unresolved runtime path explicitly includes shared SQL and Portal Gateway evidence before any PASS capture.
+
+- SLA: 2 business days for SQL Common and Portal Gateway critical evidence; 3 business days for Portal Shell, PortalShellContext and menu/permissions; 4 business days for correlation id and joint E2E PASS.
+- Escalation path: owner -> lead -> Architecture Governance -> Product Owner.
+- Remediation log: `docs/qa/financial-sprint-10-p3-external-remediation-log.md`.
+- Decision if unresolved: run Sprint 10 P4 as external remediation follow-up or stop productization until Portal/Infra is resolved outside Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P2 review update
 
 No external SQL/Portal evidence was received. Current state remains `EvidencePending` or `Blocked` depending on whether the item is owner-provided or dependent on blocked runtime. Escalation paths remain active.
