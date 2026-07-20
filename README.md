@@ -1,5 +1,16 @@
 # Financiero
 
+## Next Cycle P2 runtime activation
+
+Next Cycle P2 attempted real local runtime activation. GitHub `main` was synchronized at `151ef555c6e448a4f13014f17bb2177bcd83bb7d`, then `financial-api` was built and started with Docker. Financiero API health/readiness returned HTTP 200; backend and frontend validation passed.
+
+The real E2E gate remains `BLOCKED_DEPENDENCY`: shared SQL TCP `host.docker.internal:21433` is closed, Portal Gateway `/health` returns HTTP 404, and Portal Shell/PortalShellContext/Menu/permissions/correlation evidence is missing. Productization remains blocked until accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+
+- Evidence: `docs/qa/financial-next-cycle-p2-runtime-activation-evidence.md`.
+- Root cause matrix: `docs/qa/financial-next-cycle-p2-dependency-root-cause-matrix.md`.
+- Runbook: `docs/runbooks/financial-runtime-unblock-runbook.md`.
+- No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P1 external remediation control
 
 Next Cycle P1 starts from Sprint 11 controlled closure: `BLOCKED_DEPENDENCY`, PASS E2E real NOT_READY, external evidence `NoResponse` / `EvidencePending`, and preflight `SCRIPT_EXIT=2`. The operating decision is to continue external SQL/Portal remediation only with named owners/SLA, or pause productization.

@@ -1,3 +1,18 @@
+## Next Cycle P2 runtime activation risks
+
+P2 reduces uncertainty by proving Financiero API/frontend can build, test and start, while the final gate remains blocked by external SQL/Portal dependencies.
+
+| Risk | Status | Mitigation | Owner |
+|---|---|---|---|
+| Shared SQL TCP remains closed | Active | Start shared SQL on `host.docker.internal:21433`; do not add SQL propio. | SQL Common / Infra |
+| Portal Gateway health route returns 404 | Active | Confirm or fix Portal-owned health endpoint; do not create Gateway in Financiero. | Portal Gateway Owner |
+| Portal Shell/Context evidence remains absent | Active | Provide live Shell URL, PortalShellContext, menu, permissions and correlation evidence. | Portal Shell / Contract Owners |
+| Runtime blocker misread as Financiero FAIL | Mitigated | Backend/frontend checks pass; preflight classifies external gates as `BLOCKED_DEPENDENCY`. | QA Lead |
+| Bypass pressure | Active | Keep no-duplication guardrails and require `SCRIPT_EXIT=0` for PASS. | Architecture Governance |
+| Documentation without runtime attempts | Mitigated | P2 executed Docker, health checks, backend tests, frontend build/tests and preflight. | DevOps / QA |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P1 risk update
 
 Next Cycle P1 addresses the risk of accumulating documentation without real SQL/Portal remediation. Current state remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight remains `SCRIPT_EXIT=2`; PASS capture remains closed.

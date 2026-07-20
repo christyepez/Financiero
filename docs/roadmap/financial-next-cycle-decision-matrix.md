@@ -1,5 +1,18 @@
 # Financial Next Cycle Decision Matrix
 
+## Next Cycle P2 runtime activation update
+
+Date: 2026-07-20
+Current result: `BLOCKED_DEPENDENCY`
+Preflight after Docker activation: `SCRIPT_EXIT=2`; PASS=12, BLOCKED_DEPENDENCY=2, FAIL=0
+PASS E2E real: NOT_READY
+
+P2 attempted real runtime activation. Financiero API builds, tests, starts in Docker and returns health/readiness 200. The remaining blockers are external: shared SQL TCP `host.docker.internal:21433` is closed, Portal Gateway `/health` returns HTTP 404, and Portal Shell/PortalShellContext/Menu/permissions/correlation evidence is still missing.
+
+Decision: keep Option A active. Do not switch to PASS capture until accepted SQL/Portal evidence exists and preflight returns `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P1 update
 
 Next Cycle P1 keeps Option A active only if named owners and SLA are assigned. If owners/SLA remain unavailable, pause productization. PASS capture remains closed until accepted external evidence plus `SCRIPT_EXIT=0`. Current preflight remains `SCRIPT_EXIT=2`; evidence remains `NoResponse` / `EvidencePending`.
