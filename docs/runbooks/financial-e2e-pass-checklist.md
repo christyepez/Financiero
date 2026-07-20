@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Sprint 10 P5 PASS closure update
+
+Do not run PASS capture as part of Sprint 10. Sprint 10 is closed as `BLOCKED_DEPENDENCY`; PASS capture can reopen in Sprint 11 only with accepted external evidence and preflight exit code 0.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 checklist update
 
 PASS capture remains blocked. The only accepted PASS is Gate 9 no-production guardrails. Gates 1-8 require accepted SQL/Portal evidence and preflight exit 0.

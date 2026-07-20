@@ -1,5 +1,11 @@
 # Sprint 10 P3 Owner Escalation Matrix
 
+## Sprint 10 P5 closure update
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY`; all unresolved owners remain pending for Sprint 11 external remediation. PASS capture is closed until accepted evidence and preflight exit code 0 are available.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 follow-up update
 
 Date: 2026-07-20. P4 follow-up found `NoResponse` / `EvidencePending` for SQL Common, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id. The operational SLA is unresolved for P4, so the executive action is to keep `BLOCKED_DEPENDENCY`, block productization and prepare Sprint 10 P5 controlled closure if owners do not provide accepted evidence.

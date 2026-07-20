@@ -1,5 +1,17 @@
 # Sprint 10 P4 Executive Block Decision
 
+## Sprint 10 P5 closure update
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY`. The executive block remains active and Sprint 11 should start with external infra remediation outside the Financiero repo unless accepted SQL/Portal evidence arrives before planning.
+
+References:
+
+- `docs/coordination/financial-sprint-10-closure.md`.
+- `docs/qa/financial-sprint-10-final-evidence.md`.
+- `docs/roadmap/financial-sprint-11-decision-matrix.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Decision state: `BLOCKED_DEPENDENCY`  
 Recommendation: block productization and prepare Sprint 10 P5 controlled closure unless external evidence is delivered and accepted.

@@ -1,5 +1,11 @@
 # Portal Runtime Intervention Package
 
+## Sprint 10 P5 Portal closure note
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY` with Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence still pending. Sprint 11 Option A should remediate this outside the Financiero repo.
+
+No Gateway propio, Portal Shell propio or Auth/Login propio. No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 Portal follow-up note
 
 P4 follow-up confirms `NoResponse` / `EvidencePending` for Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id. Productization remains blocked; do not create Gateway propio, Shell propio or Auth/Login propio in Financiero. Reopen PASS capture only with accepted Portal owner evidence.

@@ -1,5 +1,13 @@
 # Financial Sprint 10 Decision Matrix
 
+## Sprint 10 P5 final decision
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY`. The final closure is documented in `docs/coordination/financial-sprint-10-closure.md`, with final evidence in `docs/qa/financial-sprint-10-final-evidence.md`. Sprint 11 options are documented in `docs/roadmap/financial-sprint-11-decision-matrix.md`.
+
+Final decision: do not productize, do not claim PASS, keep external dependency backlog active outside Financiero, and reopen PASS capture only after accepted SQL/Portal evidence and preflight exit 0.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 decision update
 
 P4 confirms `NoResponse` / `EvidencePending`. Without owner evidence, the objective decision is to continue P5 as closure of external block, not productize and keep the external dependency backlog outside Financiero until SQL/Portal owners deliver accepted evidence.
