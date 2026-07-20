@@ -1,3 +1,18 @@
+## Next Cycle P4 productization pause risks
+
+P4 pauses productization because evidence remains pending and preflight remains `SCRIPT_EXIT=2`.
+
+| Risk | Status | Mitigation | Owner |
+|---|---|---|---|
+| Productization without PASS | Active | Pause productization until accepted evidence and `SCRIPT_EXIT=0`. | Product Owner |
+| CRM starts on unresolved base | Active | Allow only isolated CRM discovery; block CRM implementation dependent on Portal/SQL PASS. | Product Owner / Architecture Governance |
+| Evidence remains partial | Active | Require the P3 checklist before reopening PASS capture. | QA Lead |
+| Pause becomes indefinite | Active | Keep owner backlog and escalation path open with explicit reactivation criteria. | Product Owner |
+| Bypass pressure | Active | Continue no SQL/Gateway/Shell/Auth/Menu duplication guardrails. | Architecture Governance |
+| Evidence later contains secrets | Watch | Reject as `REJECTED_EVIDENCE` and request sanitized replacement. | Security / QA |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P3 external owner remediation risks
 
 P3 packages owner-specific remediation, but PASS still depends on external execution and accepted evidence.

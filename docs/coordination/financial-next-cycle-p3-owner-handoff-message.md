@@ -1,5 +1,9 @@
 # Next Cycle P3 - External Owner Handoff Message
 
+## P4 status update
+
+P4 found no accepted owner evidence and the preflight returned `SCRIPT_EXIT=2`. Financiero productization is paused. The message below remains the active remediation request to SQL/Infra and Portal owners.
+
 Subject: Action required - shared SQL and Portal runtime blockers for Financiero E2E PASS
 
 Hello SQL/Infra and Portal owners,

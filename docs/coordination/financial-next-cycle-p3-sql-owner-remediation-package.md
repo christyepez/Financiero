@@ -1,5 +1,9 @@
 # Next Cycle P3 - SQL Owner Remediation Package
 
+## P4 status
+
+P4 reviewed owner evidence and reran preflight. No accepted SQL owner evidence was found. SQL Common TCP still resolves but remains closed on `host.docker.internal:21433`; `FinancieroDb` remains not validable. Productization is paused until accepted SQL and Portal evidence exists and preflight returns `SCRIPT_EXIT=0`.
+
 Date: 2026-07-20
 Owner target: SQL Common / Infra + DBA
 Current state: `BLOCKED_DEPENDENCY`

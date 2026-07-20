@@ -1,5 +1,20 @@
 # Financial External Dependency Backlog
 
+## Next Cycle P4 pause update
+
+P4 evidence intake remains `EVIDENCE_PENDING`; preflight remains `SCRIPT_EXIT=2`. The external dependency backlog stays open, but Financiero productization is paused.
+
+- SQL Common TCP: still closed on `host.docker.internal:21433`.
+- `FinancieroDb`: not validable until SQL Common TCP passes.
+- Portal Gateway `/health`: HTTP 404.
+- Portal Shell/PortalShellContext/Menu/permissions/correlation: no accepted live evidence.
+- Financiero API: healthy locally.
+- Next action: owners remediate externally; QA reruns preflight only after evidence is available.
+
+CRM implementation dependent on real Portal/SQL PASS should not start from this backlog state. CRM discovery may continue only if isolated.
+
+No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P3 owner remediation package update
 
 P3 converts P2 runtime evidence into owner-specific remediation packages:
