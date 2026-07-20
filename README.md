@@ -1,5 +1,15 @@
 # Financiero
 
+## Sprint 11 P4 external escalation follow-up
+
+Sprint 11 P4 executed the follow-up gate. No accepted SQL/Portal owner evidence was received (`NoResponse` / `EvidencePending`), and the preflight returned `SCRIPT_EXIT=2`. The result remains `BLOCKED_DEPENDENCY`; PASS E2E real is NOT_READY and Financiero remains not production-ready.
+
+- Execution evidence: `docs/qa/financial-sprint-11-p4-execution-evidence.md`.
+- Escalation follow-up: `docs/coordination/financial-sprint-11-p4-external-escalation-followup.md`.
+- Unlock condition: accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 external evidence gate decision
 
 Sprint 11 P3 executed the external evidence gate decision. No accepted SQL/Portal owner evidence was received (`NoResponse` / `EvidencePending`), and the preflight returned `SCRIPT_EXIT=2`, so the result remains `BLOCKED_DEPENDENCY` and Financiero remains not production-ready.

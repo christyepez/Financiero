@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 11 P4 SQL follow-up note
+
+No accepted SQL evidence was received in P4. shared SQL TCP and `FinancieroDb` remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight returned `SCRIPT_EXIT=2` with shared SQL TCP closed. Do not create SQL Server propio in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 SQL escalation note
 
 No accepted SQL evidence was received in P3. shared SQL TCP and `FinancieroDb` remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight returned `SCRIPT_EXIT=2` with shared SQL TCP closed. Do not create SQL Server propio in Financiero.

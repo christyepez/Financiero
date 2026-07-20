@@ -1,3 +1,9 @@
+## Sprint 11 P4 follow-up
+
+P4 re-executed the gate and confirmed the same outcome: `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2`, gates 1-8 `BLOCKED_DEPENDENCY`, Gate 9 PASS. PASS E2E real remains NOT_READY until accepted external owner evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Financial Sprint 11 P3 Gate Decision Evidence
 
 Date: 2026-07-20  

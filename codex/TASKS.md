@@ -1,5 +1,17 @@
 # Roadmap Financiero
 
+## Sprint 11 P4 — External Escalation Follow-up or PASS E2E Real Capture
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base P3 `5814833c55343bceb1e336f8cfcfe24d7600fc66`.
+- [x] Crear rama `financiero-sprint-11-p4-external-escalation-or-pass-e2e`.
+- [x] Revisar evidencia externa: `NoResponse` / `EvidencePending`.
+- [x] Ejecutar preflight: `SCRIPT_EXIT=2`.
+- [x] Documentar ejecución P4 como `BLOCKED_DEPENDENCY`.
+- [x] Crear follow-up de escalamiento externo P4.
+- [x] Mantener PASS E2E real NOT_READY hasta evidencia aceptada + `SCRIPT_EXIT=0`.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 — External Evidence Escalation or PASS Capture Gate
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

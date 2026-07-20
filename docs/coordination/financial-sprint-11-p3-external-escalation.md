@@ -1,3 +1,9 @@
+## Sprint 11 P4 follow-up update
+
+P4 confirms the P3 escalation remains unresolved: `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2`, gates 1-8 `BLOCKED_DEPENDENCY`, Gate 9 PASS. PASS E2E real is NOT_READY until accepted SQL/Portal owner evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Financial Sprint 11 P3 External Escalation
 
 Date: 2026-07-20  

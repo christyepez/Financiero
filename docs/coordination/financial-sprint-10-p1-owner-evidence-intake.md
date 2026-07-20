@@ -1,3 +1,9 @@
+## Sprint 11 P4 intake update
+
+Date: 2026-07-20. Sprint 11 P4 reviewed the external evidence intake and found `NoResponse` / `EvidencePending`. No owner evidence was accepted or rejected because no evidence was submitted. Preflight returned `SCRIPT_EXIT=2`; the result remains `BLOCKED_DEPENDENCY`. PASS E2E real is NOT_READY until accepted external evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 intake update
 
 Date: 2026-07-20. Sprint 11 P3 reviewed external evidence intake and found `NoResponse` / `EvidencePending`. No owner evidence was accepted or rejected because no evidence was submitted. Preflight returned `SCRIPT_EXIT=2`; the gate result remains `BLOCKED_DEPENDENCY`. PASS capture is NOT_READY until accepted external evidence plus `SCRIPT_EXIT=0`.

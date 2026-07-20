@@ -1,5 +1,11 @@
 # Financial Sprint 11 Decision Matrix
 
+## Sprint 11 P4 update
+
+P4 result: `BLOCKED_DEPENDENCY` with `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. Option A remains active: external escalation follow-up and no productization. PASS E2E real is NOT_READY and can be captured only if evidence is accepted and preflight returns `SCRIPT_EXIT=0`. If this does not change, Sprint 11 should close as an external dependency block.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 update
 
 P3 result: `BLOCKED_DEPENDENCY` with `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. Option A remains active: keep external escalation and do not productize. Option B PASS capture is NOT_READY and can start only if evidence is accepted and preflight returns `SCRIPT_EXIT=0`. If future evidence is rejected, mark `REJECTED_EVIDENCE`; if a real Financiero application defect is proven, create a fix sprint and mark FAIL.
