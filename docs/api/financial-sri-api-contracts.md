@@ -1,3 +1,9 @@
+## Sprint 11 P4 note
+
+No SRI API contract changes were introduced in Sprint 11 P4. External evidence remains `NoResponse` / `EvidencePending`; preflight returned `SCRIPT_EXIT=2`; PASS E2E real is NOT_READY until accepted SQL/Portal evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 note
 
 No SRI API contract changes were introduced in Sprint 11 P3. External evidence remains `NoResponse` / `EvidencePending`; preflight returned `SCRIPT_EXIT=2`; PASS capture is NOT_READY until accepted SQL/Portal evidence plus `SCRIPT_EXIT=0`.

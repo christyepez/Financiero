@@ -1,3 +1,17 @@
+## Sprint 11 P4 risk update
+
+P4 follow-up confirms `NoResponse` / `EvidencePending`: shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives. Preflight returned `SCRIPT_EXIT=2`; PASS E2E real remains NOT_READY.
+
+| Risk | Status | Mitigation |
+|---|---|---|
+| Evidence remains pending after P4 | Active | Escalate for owner decision or close Sprint 11 as external block |
+| Premature PASS E2E claim | Active | Require accepted evidence plus `SCRIPT_EXIT=0` |
+| Rejected evidence later | Watch | Mark `REJECTED_EVIDENCE` and request correction |
+| Real Financiero FAIL later | Watch | Create fix sprint only if an application defect is proven |
+| Dependency outside Financiero | Active | Keep remediation outside repo; no duplicated SQL/Gateway/Shell/Auth |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 risk update
 
 Executive escalation confirms `NoResponse` / `EvidencePending`: shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives. Preflight returned `SCRIPT_EXIT=2`; PASS capture remains NOT_READY.

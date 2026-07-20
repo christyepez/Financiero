@@ -1,3 +1,9 @@
+## Sprint 11 P4 note
+
+No Angular runtime changes were introduced in Sprint 11 P4. Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `NoResponse` / `EvidencePending`; preflight returned `SCRIPT_EXIT=2`; standalone mode remains development-only and not production-ready.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 note
 
 No Angular runtime changes were introduced in Sprint 11 P3. Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `NoResponse` / `EvidencePending`; preflight returned `SCRIPT_EXIT=2`; standalone mode remains development-only and not production-ready.

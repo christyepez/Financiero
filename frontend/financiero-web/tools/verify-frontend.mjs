@@ -470,6 +470,25 @@ for (const doc of [
 }
 
 for (const doc of [
+  'docs/qa/financial-sprint-11-p4-execution-evidence.md',
+  'docs/coordination/financial-sprint-11-p4-external-escalation-followup.md',
+  'docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md',
+  'docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md',
+  'docs/coordination/financial-sprint-11-p1-external-remediation-plan.md',
+  'docs/coordination/financial-sprint-11-p3-external-escalation.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/roadmap/financial-sprint-11-decision-matrix.md',
+  'docs/releases/financial-sprint-11-notes.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md'
+]) {
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['NoResponse', 'EvidencePending', 'BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'SCRIPT_EXIT=2', 'SCRIPT_EXIT=0', 'PASS E2E real', 'NOT_READY', 'not production-ready', 'No SRI Production', 'No official ATS', 'No legal-final RIDE', 'No productive XAdES']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 11 P4 execution token ${token}.`);
+  }
+}
+
+for (const doc of [
   'docs/coordination/financial-sprint-07-closure.md',
   'docs/qa/financial-sprint-07-qa-evidence.md',
   'docs/security/financial-sprint-07-security-checklist.md',

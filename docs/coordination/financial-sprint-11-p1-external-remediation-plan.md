@@ -1,5 +1,16 @@
 # Financial Sprint 11 P1 External Remediation Plan
 
+## Sprint 11 P4 follow-up update
+
+Sprint 11 P4 confirms `NoResponse` / `EvidencePending` for external SQL/Portal evidence. Preflight returned `SCRIPT_EXIT=2`, so the current decision remains `BLOCKED_DEPENDENCY`; remediation must continue outside the Financiero repo. PASS E2E real is NOT_READY until external evidence is accepted and preflight returns `SCRIPT_EXIT=0`.
+
+References:
+
+- `docs/qa/financial-sprint-11-p4-execution-evidence.md`.
+- `docs/coordination/financial-sprint-11-p4-external-escalation-followup.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 escalation update
 
 Sprint 11 P3 confirms `NoResponse` / `EvidencePending` for external SQL/Portal evidence. Preflight returned `SCRIPT_EXIT=2`, so the current decision remains `BLOCKED_DEPENDENCY`; remediation must continue outside the Financiero repo. PASS capture is NOT_READY until external evidence is accepted and preflight returns `SCRIPT_EXIT=0`.
