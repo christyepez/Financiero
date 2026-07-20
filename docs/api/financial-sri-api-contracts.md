@@ -1,5 +1,11 @@
 # Financial SRI API Contracts
 
+## Sprint 10 P4 contract note
+
+No contract behavior changes are introduced in P4. The current executive decision is `BLOCKED_DEPENDENCY` because owner evidence remains `NoResponse` / `EvidencePending`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 contract note
 
 No contract behavior changes are introduced in P3. The sprint formalizes external owner escalation while SQL/Portal evidence remains `EvidencePending` / `BLOCKED_DEPENDENCY`.

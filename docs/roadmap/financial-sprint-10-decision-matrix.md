@@ -1,5 +1,22 @@
 # Financial Sprint 10 Decision Matrix
 
+## Sprint 10 P4 decision update
+
+P4 confirms `NoResponse` / `EvidencePending`. Without owner evidence, the objective decision is to continue P5 as closure of external block, not productize and keep the external dependency backlog outside Financiero until SQL/Portal owners deliver accepted evidence.
+
+Executive follow-up confirms shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+The executive block decision remains active while evidence is pending.
+
+| Evidence state | P4 decision | P5 direction |
+|---|---|---|
+| No evidence received | Keep `BLOCKED_DEPENDENCY`; block productization | Controlled closure of external block |
+| Evidence received and accepted | Re-run preflight; PASS only on exit 0 | PASS capture package |
+| Evidence unsafe or partial | Mark `REJECTED_EVIDENCE`; request correction | Remediation follow-up |
+| Application failure proven | Mark FAIL and fix in scope | Bugfix package |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P3 decision update
 
 P3 keeps the decision at `EvidencePending` / `BLOCKED_DEPENDENCY`. The recommended path is not to productize, not to claim PASS, and not to create duplicated SQL/Portal capabilities in Financiero.

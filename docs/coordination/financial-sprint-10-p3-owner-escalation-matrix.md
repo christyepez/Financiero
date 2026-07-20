@@ -1,5 +1,18 @@
 # Sprint 10 P3 Owner Escalation Matrix
 
+## Sprint 10 P4 follow-up update
+
+Date: 2026-07-20. P4 follow-up found `NoResponse` / `EvidencePending` for SQL Common, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id. The operational SLA is unresolved for P4, so the executive action is to keep `BLOCKED_DEPENDENCY`, block productization and prepare Sprint 10 P5 controlled closure if owners do not provide accepted evidence.
+
+Executive follow-up confirms shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+References:
+
+- `docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md`.
+- `docs/coordination/financial-sprint-10-p4-executive-block-decision.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Date: 2026-07-20  
 State: `EvidencePending` / `BLOCKED_DEPENDENCY`  
 Scope: external owner escalation only. No PASS, no production activation, no duplicated Portal or SQL capabilities.

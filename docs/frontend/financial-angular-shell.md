@@ -1,5 +1,11 @@
 # Financial Angular Shell
 
+## Sprint 10 P4 Portal Shell executive block note
+
+P4 adds no Angular runtime behavior. Portal Shell, PortalShellContext, Menu/permissions and correlation id remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; standalone mode remains development-only and cannot be used to claim Portal-integrated PASS.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 Portal Shell note
 
 P3 does not add Angular runtime features. Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`; standalone mode remains development-only and cannot be used to claim Portal-integrated PASS.
