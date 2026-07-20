@@ -1,5 +1,15 @@
 # Financial Next Cycle Notes
 
+## CRM Discovery P1 isolated domain scope
+
+Date: 2026-07-20
+Phase: CRM Discovery P1
+Status: discovery only
+
+CRM discovery starts as isolated documentation while Financiero productization remains paused. No CRM runtime, backend, frontend, database, endpoints, migrations, tables, real menu entries or real permissions were created.
+
+CRM implementation that depends on real Portal/SQL PASS remains blocked. Discovery may continue only as architecture/product analysis until executive decision, Portal readiness, DB strategy and master data ownership are approved.
+
 ## Next Cycle P4 PASS E2E or productization pause
 
 Date: 2026-07-20

@@ -1,5 +1,13 @@
 # Controlled Productization Backlog
 
+## CRM Discovery P1 control
+
+CRM discovery is allowed only as isolated documentation. CRM implementation remains blocked while Financiero productization is paused and Portal/SQL real PASS is unresolved.
+
+- Allowed: CRM charter, bounded context, conceptual model, boundaries, readiness checklist and roadmap draft.
+- Blocked: CRM runtime, database, backend, frontend, endpoints, migrations, real menu entries and real permissions.
+- Required before implementation: executive decision, Portal capability readiness or decoupling, DB strategy, master data ownership and security model.
+
 ## Next Cycle P4 productization pause
 
 Productization is paused. P4 did not receive accepted SQL/Portal evidence and preflight returned `SCRIPT_EXIT=2`. Controlled productization cannot resume until all accepted evidence exists and PASS E2E real is captured as non-production.

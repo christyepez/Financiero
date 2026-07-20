@@ -183,6 +183,35 @@ foreach ($decisionPath in $p4DecisionPaths) {
     }
 }
 
+$crmDiscoveryPaths = @(
+    "docs/crm/crm-discovery-p1-charter.md",
+    "docs/crm/crm-bounded-context.md",
+    "docs/crm/crm-conceptual-domain-model.md",
+    "docs/crm/crm-integration-boundaries.md",
+    "docs/crm/crm-implementation-readiness-checklist.md",
+    "docs/crm/crm-roadmap-draft.md"
+)
+foreach ($crmPath in $crmDiscoveryPaths) {
+    if (Test-Path $crmPath) {
+        $results += Write-Check "CRM discovery artifact $crmPath" "PASS" "Artifact exists." "PASS" ""
+    } else {
+        $results += Write-Check "CRM discovery artifact $crmPath" "FAIL" "Artifact missing." "CRM_DISCOVERY_ARTIFACT_MISSING" "Create CRM discovery artifacts before delivery."
+    }
+}
+
+$crmRuntimeMatches = @()
+try {
+    $crmRuntimeMatches = @(Get-ChildItem -Path "src","tests","frontend","database" -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -notmatch "\\(bin|obj|node_modules|dist|\.angular)\\" -and $_.FullName -match "\\crm|\\CRM|Crm" })
+} catch {
+    $crmRuntimeMatches = @()
+}
+if ($crmRuntimeMatches.Count -eq 0) {
+    $results += Write-Check "No CRM runtime artifacts" "PASS" "No CRM runtime files found in src/tests/frontend/database." "PASS" ""
+} else {
+    $results += Write-Check "No CRM runtime artifacts" "FAIL" (($crmRuntimeMatches | Select-Object -First 5 | ForEach-Object { $_.FullName }) -join "; ") "CRM_RUNTIME_FOUND" "Remove CRM runtime/backend/frontend/database artifacts from discovery-only scope."
+}
+
 try {
     $tcp = Test-NetConnection -ComputerName $SqlHost -Port $SqlPort -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($tcp) {
