@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 10 P5 controlled closure
+
+Sprint 10 closes as a controlled external infra block: `BLOCKED_DEPENDENCY`, not PASS. No accepted external SQL/Portal evidence was received, so productization remains stopped and Sprint 11 should prioritize external infra remediation outside the Financiero repo.
+
+- Closure: `docs/coordination/financial-sprint-10-closure.md`.
+- Final evidence: `docs/qa/financial-sprint-10-final-evidence.md`.
+- Release notes: `docs/releases/financial-sprint-10-release-notes.md`.
+- Sprint 11 decision matrix: `docs/roadmap/financial-sprint-11-decision-matrix.md`.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 external remediation follow-up
 
 Sprint 10 P4 executed the formal follow-up of external owner escalation. No accepted SQL/Portal evidence was received, so the executive decision is to keep productization blocked and prepare P5 controlled closure if evidence remains unavailable.

@@ -1,5 +1,11 @@
 # Financial SRI API Index
 
+## Sprint 10 P5 closure note
+
+Sprint 10 closure adds no SRI API behavior and no production activation. The final state is `BLOCKED_DEPENDENCY`; SRI Test real, SRI Production, official ATS, legal-final RIDE and productive XAdES remain blocked.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 executive block note
 
 P4 adds no SRI API behavior and no production activation. External SQL/Portal evidence remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; SRI Test real, SRI Production, official ATS, legal-final RIDE and productive XAdES remain blocked.

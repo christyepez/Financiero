@@ -1,5 +1,16 @@
 # Financial External Dependency Backlog
 
+## Sprint 10 P5 final backlog state
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY`. Pending dependencies remain shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight exit code 0.
+
+- Owner pending: SQL Common / Infra, SQL Common / DBA, Portal Gateway, Portal Shell, Portal Contract, Security/Menu and Observability.
+- SLA status: unresolved for Sprint 10 closure.
+- Unlock condition: accepted owner evidence plus preflight exit 0.
+- Sprint 11 decision: use `docs/roadmap/financial-sprint-11-decision-matrix.md`; recommended Option A is external infra remediation outside Financiero repo.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 executive block state
 
 Date: 2026-07-20. P4 follow-up keeps shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id as `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`.

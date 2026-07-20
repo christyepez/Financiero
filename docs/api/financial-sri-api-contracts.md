@@ -1,5 +1,11 @@
 # Financial SRI API Contracts
 
+## Sprint 10 P5 closure contract note
+
+No contract behavior changes are introduced in Sprint 10 closure. The final state is `BLOCKED_DEPENDENCY`, and all productive tax flows remain blocked until Sprint 11 evidence conditions are met.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 contract note
 
 No contract behavior changes are introduced in P4. The current executive decision is `BLOCKED_DEPENDENCY` because owner evidence remains `NoResponse` / `EvidencePending`.

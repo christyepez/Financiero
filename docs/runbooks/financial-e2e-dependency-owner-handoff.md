@@ -1,5 +1,17 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 10 P5 closure update
+
+Sprint 10 is closed as `BLOCKED_DEPENDENCY`. Handoff for Sprint 11 must use external infra remediation outside Financiero repo unless accepted evidence arrives and preflight can exit 0.
+
+Use:
+
+- `docs/coordination/financial-sprint-10-closure.md`
+- `docs/qa/financial-sprint-10-final-evidence.md`
+- `docs/roadmap/financial-sprint-11-decision-matrix.md`
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 handoff update
 
 P4 follow-up confirms `NoResponse` / `EvidencePending`. Use the executive block decision as the current source for leadership alignment. Do not attempt PASS capture until owner evidence is received, sanitized, accepted and preflight exits 0.

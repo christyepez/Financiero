@@ -1,5 +1,17 @@
 # Financial Risk Register
 
+## Sprint 10 P5 closure risks
+
+| Risk | Impact | Mitigation | Mitigation owner | State |
+|---|---|---|---|---|
+| External block closes without remediation | Productization remains stopped | Sprint 11 Option A external remediation | Product Owner + external owners | BLOCKED_DEPENDENCY |
+| Bypass pressure after closure | Architecture and security drift | No duplicated SQL/Portal capabilities; verifier enforcement | Architecture Governance | BLOCKED_DEPENDENCY |
+| Owner remains undefined | No unlock path | Require named SQL/Portal owners before PASS capture | Product Owner | EvidencePending |
+| Late evidence appears after closure | Reopen decision may be unclear | Use Sprint 11 Option B only after accepted evidence and preflight 0 | QA Lead | EvidencePending |
+| Synthetic productization is requested | False readiness | Require explicit executive approval and keep non-production | Product Owner | High risk |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 executive block risks
 
 Executive follow-up confirms `NoResponse` / `EvidencePending`: shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.

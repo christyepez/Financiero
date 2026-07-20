@@ -1,5 +1,16 @@
 # Roadmap Financiero
 
+## Sprint 10 P5 — Controlled Closure and Sprint 11 Decision
+
+- [x] Crear cierre Sprint 10.
+- [x] Crear evidencia final Sprint 10.
+- [x] Crear release notes Sprint 10.
+- [x] Crear matriz de decisión Sprint 11.
+- [x] Actualizar backlog externo, risk register y matriz Sprint 10.
+- [x] Actualizar documentación y verificadores de cierre.
+- [x] Cerrar como `BLOCKED_DEPENDENCY`; no PASS falso.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 — External Remediation Follow-up and Executive Block Decision
 
 - [x] Revisar evidencia externa recibida.

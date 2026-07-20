@@ -1,5 +1,11 @@
 # Financial Angular Shell
 
+## Sprint 10 P5 closure UX note
+
+Sprint 10 closure adds no Angular runtime behavior. Portal-integrated UX PASS remains blocked by missing Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence. Standalone mode remains development-only.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P4 Portal Shell executive block note
 
 P4 adds no Angular runtime behavior. Portal Shell, PortalShellContext, Menu/permissions and correlation id remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; standalone mode remains development-only and cannot be used to claim Portal-integrated PASS.

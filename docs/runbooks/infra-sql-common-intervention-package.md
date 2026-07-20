@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 10 P5 SQL closure note
+
+Sprint 10 closes as `BLOCKED_DEPENDENCY` with shared SQL and `FinancieroDb` evidence still pending. Sprint 11 Option A should remediate this outside the Financiero repo.
+
+No SQL Server propio. No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P4 SQL follow-up note
 
 P4 follow-up confirms `NoResponse` / `EvidencePending` for shared SQL TCP and `FinancieroDb`. Productization remains blocked; do not create SQL Server propio in Financiero. Reopen PASS capture only with accepted SQL owner evidence.
