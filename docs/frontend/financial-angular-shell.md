@@ -175,6 +175,10 @@ npm install
 npm run build
 npm test
 ```
+# Sprint 10 P1 Shell evidence
+
+Portal Shell evidence must use `docs/qa/templates/portal-shell-evidence-template.md` and PortalShellContext evidence must use `docs/qa/templates/portal-contract-evidence-template.md`. Financiero still must not create a Shell or store tokens.
+
 # Sprint 9 P5 closure note
 
 Portal Shell remains externally owned and live evidence is still missing. Sprint 10 must confirm PortalShellContext, menu, permissions and correlation id before any production readiness claim.

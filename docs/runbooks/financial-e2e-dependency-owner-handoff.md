@@ -1,5 +1,7 @@
 # Financial E2E Dependency Owner Handoff
 
+Sprint 10 P1 handoff now flows through `docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md` and the sanitized templates in `docs/qa/templates`.
+
 Sprint 9 P5 closes with `BLOCKED_DEPENDENCY`. This handoff is now the required Sprint 10 entry artifact for Infra/Portal owners.
 
 ## Purpose

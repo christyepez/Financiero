@@ -1,20 +1,25 @@
 # Financial External Dependency Backlog
 
+## Sprint 10 P1 intake update
+
+Each dependency now requires an owner, target date, evidence artifact, acceptance gate, escalation path and current state. Evidence must use the sanitized templates under `docs/qa/templates`.
+
 ## Purpose
 
 Track external dependencies required before Financiero E2E PASS and productization.
 
-| Item | Owner | Target date | Acceptance criteria | Evidence required | Status |
-|---|---|---|---|---|---|
-| Shared SQL runtime | Infra owner TBD | TBD | TCP `host.docker.internal:21433` open. | Sanitized TCP and SQL connectivity evidence. | `BLOCKED_DEPENDENCY` |
-| `FinancieroDb` logical database | Infra/DBA owner TBD | TBD | Separate logical DB exists or migrations can initialize it. | Sanitized DB existence proof. | `BLOCKED_DEPENDENCY` |
-| Portal Gateway health route | Portal Gateway owner TBD | TBD | Owner-confirmed route returns HTTP 2xx. | URL/path/status with no tokens. | `BLOCKED_DEPENDENCY` |
-| Portal Shell runtime | Portal Shell owner TBD | TBD | Shell URL reachable. | Sanitized HTTP/browser evidence. | `BLOCKED_DEPENDENCY` |
-| PortalShellContext | Portal owner TBD | TBD | `contractVersion=1.0`, source portal, menu, permissions, feature flags, correlation id. | Sanitized context sample. | `BLOCKED_DEPENDENCY` |
-| Menu/permissions alignment | Portal Security/Menu owner TBD | TBD | Financial routes and permissions align with allow-list. | Sanitized menu/permission matrix. | `BLOCKED_DEPENDENCY` |
-| Correlation id propagation | Portal/Infra owner TBD | TBD | Correlation id reaches Financiero. | Sanitized trace/header evidence. | `BLOCKED_DEPENDENCY` |
-| Shared runtime evidence | Infra/Portal owner TBD | TBD | SQL + Gateway + Shell evidence returned together. | Evidence bundle. | `BLOCKED_DEPENDENCY` |
-| E2E PASS evidence | QA owner TBD | TBD | Preflight exits `0` and smoke passes. | Sanitized final report. | `BLOCKED_DEPENDENCY` |
+| Item | Owner | Target date | Evidence artifact | Acceptance gate | Escalation path | Current state after P1 | Acceptance criteria | Evidence required |
+|---|---|---|---|---|---|---|---|---|
+| Shared SQL runtime | SQL Common Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 1 | Infra lead | Requested | TCP `host.docker.internal:21433` open. | Sanitized TCP and SQL connectivity evidence. |
+| `FinancieroDb` logical database | SQL Common/DBA Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 2 | Infra/DBA lead | Requested | Separate logical DB exists or migrations can initialize it. | Sanitized DB existence proof. |
+| Portal Gateway health route | Portal Gateway Owner TBD | TBD | `portal-gateway-evidence-template.md` | Gate 3 | Portal lead | Requested | Owner-confirmed route returns HTTP 2xx. | URL/path/status with no tokens. |
+| Portal Shell runtime | Portal Shell Owner TBD | TBD | `portal-shell-evidence-template.md` | Gate 4 | Portal lead | EvidencePending | Shell URL reachable. | Sanitized HTTP/browser evidence. |
+| PortalShellContext | Portal Contract Owner TBD | TBD | `portal-contract-evidence-template.md` | Gate 5 | Portal architecture lead | EvidencePending | `contractVersion=1.0`, source portal, menu, permissions, feature flags, correlation id. | Sanitized context sample. |
+| Menu/permissions alignment | Portal Security/Menu Owner TBD | TBD | `portal-contract-evidence-template.md` | Gate 5 | Portal security lead | EvidencePending | Financial routes and permissions align with allow-list. | Sanitized menu/permission matrix. |
+| Correlation id propagation | Portal/Infra Owner TBD | TBD | `portal-contract-evidence-template.md` | Gate 5 | Portal/Infra lead | EvidencePending | Correlation id reaches Financiero. | Sanitized trace/header evidence. |
+| Financiero API health | Financiero Owner | TBD | Preflight evidence output | Gate 6 | Financiero lead | Blocked | API health passes after SQL available. | Sanitized health output. |
+| Portal integration readiness | Financiero + Portal Owners | TBD | Preflight evidence output | Gate 7 | Joint owner review | Blocked | Readiness endpoint returns sanitized PASS. | Sanitized readiness output. |
+| E2E PASS evidence | QA Owner TBD | TBD | Final QA evidence | Gate 8/Final | QA lead | Blocked | Preflight exits `0` and smoke passes. | Sanitized final report. |
 
 ## Guardrails
 

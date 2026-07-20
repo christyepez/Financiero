@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 10 P1 external infra remediation kickoff
+
+Sprint 10 starts as external infrastructure remediation, not production activation. Owner evidence intake and E2E gates are now the source of acceptance for the next PASS attempt.
+
+- Intake: `docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md`.
+- Acceptance gate: `docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md`.
+- Evidence templates: `docs/qa/templates/`.
+- Current state remains `BLOCKED_DEPENDENCY` until owner evidence is accepted.
+- No SQL Server propio, Gateway propio, Portal Shell propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 9 P5 closure
 
 Sprint 9 closes as `BLOCKED_DEPENDENCY`. The recommended Sprint 10 decision is External Infra Remediation plus Portal contract alignment before productization.

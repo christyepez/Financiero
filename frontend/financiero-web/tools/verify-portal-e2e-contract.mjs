@@ -76,12 +76,18 @@ for (const doc of [
   'docs/qa/financial-sprint-08-p4-external-approval-ux-evidence.md',
   'docs/coordination/financial-sprint-08-closure.md',
   'docs/coordination/financial-sprint-09-closure.md',
+  'docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md',
   'docs/qa/financial-sprint-08-final-e2e-evidence.md',
   'docs/qa/financial-sprint-09-p1-real-e2e-infra-evidence.md',
   'docs/qa/financial-sprint-09-p2-dependency-diagnostic-evidence.md',
   'docs/qa/financial-sprint-09-p3-pass-or-blocked-evidence.md',
   'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
   'docs/qa/financial-sprint-09-final-infra-evidence.md',
+  'docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md',
+  'docs/qa/templates/sql-common-evidence-template.md',
+  'docs/qa/templates/portal-gateway-evidence-template.md',
+  'docs/qa/templates/portal-shell-evidence-template.md',
+  'docs/qa/templates/portal-contract-evidence-template.md',
   'docs/runbooks/start-shared-sql-and-portal-runtime.md',
   'docs/runbooks/financial-e2e-pass-checklist.md',
   'docs/runbooks/financial-e2e-dependency-owner-handoff.md',
@@ -121,7 +127,13 @@ for (const doc of [
 
 for (const doc of [
   'docs/coordination/financial-sprint-09-closure.md',
+  'docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md',
   'docs/qa/financial-sprint-09-final-infra-evidence.md',
+  'docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md',
+  'docs/qa/templates/sql-common-evidence-template.md',
+  'docs/qa/templates/portal-gateway-evidence-template.md',
+  'docs/qa/templates/portal-shell-evidence-template.md',
+  'docs/qa/templates/portal-contract-evidence-template.md',
   'docs/roadmap/financial-sprint-10-decision-matrix.md',
   'docs/roadmap/financial-external-dependency-backlog.md',
   'docs/releases/financial-sprint-09-release-notes.md'
@@ -141,7 +153,7 @@ for (const file of [models, validation, context, auth, api, dashboard]) {
 }
 
 const preflight = readFileSync(join(repoRoot, 'tools/validate-portal-financiero-e2e.ps1'), 'utf8');
-for (const token of ['PortalGatewayHealthPath', 'PortalShellHealthPath', 'FinancialApiHealthPath', 'HEALTH_PATH_NOT_CONFIRMED', 'HEALTH_ROUTE_ALTERNATIVE_REQUIRED', 'HTTP_STATUS_UNEXPECTED']) {
+for (const token of ['PortalGatewayHealthPath', 'PortalShellHealthPath', 'FinancialApiHealthPath', 'EvidenceOutputPath', 'OwnerEvidenceRequired', 'AcceptanceGateSummary', 'HEALTH_PATH_NOT_CONFIRMED', 'HEALTH_ROUTE_ALTERNATIVE_REQUIRED', 'HTTP_STATUS_UNEXPECTED']) {
   if (!preflight.includes(token)) throw new Error(`Sprint 9 P4 preflight health route configuration missing ${token}.`);
 }
 

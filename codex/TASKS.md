@@ -1,5 +1,16 @@
 # Roadmap Financiero
 
+## Sprint 10 P1 — External Infra Remediation Kickoff
+
+- [x] Crear intake formal para owners de Infra/Portal.
+- [x] Crear plantillas sanitizadas de evidencia SQL/Gateway/Shell/Contrato.
+- [x] Crear E2E acceptance gate.
+- [x] Actualizar backlog externo con owners, gates y estados.
+- [x] Actualizar risk register para evidencia/owner/gates.
+- [x] Agregar soporte preflight para `-EvidenceOutputPath`, owner evidence y acceptance summary.
+- [x] Fortalecer verificadores para Sprint 10 P1.
+- [x] Mantener `BLOCKED_DEPENDENCY` y no producción.
+
 ## Sprint 9 P5 — Sprint Closure and External Infrastructure Decision
 
 - [x] Crear cierre ejecutivo Sprint 9.
