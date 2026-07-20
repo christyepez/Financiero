@@ -1,5 +1,11 @@
 # Financial Sprint 10 Final Evidence
 
+## Sprint 11 P1 follow-up
+
+Sprint 11 P1 uses this final evidence as the baseline for external remediation outside the Financiero repo. Return-to-PASS criteria are defined in `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Final result: `BLOCKED_DEPENDENCY`  
 Evidence state: `NoResponse` / `EvidencePending`  

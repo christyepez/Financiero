@@ -1,5 +1,13 @@
 # Financial Sprint 10 P1 Owner Evidence Intake
 
+## Sprint 11 P1 external remediation intake update
+
+Sprint 11 P1 moves remediation work outside the Financiero repo. Intake remains `BLOCKED_DEPENDENCY` until external owners provide accepted evidence for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext/Menu/permissions/correlation id and preflight exit code 0.
+
+Return criteria: `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 closure update
 
 Sprint 10 closes as `BLOCKED_DEPENDENCY`. No owner evidence was accepted in P1-P5, so intake remains `NoResponse` / `EvidencePending`. Reopen only through Sprint 11 Option B after accepted owner evidence and preflight exit code 0.

@@ -1,5 +1,11 @@
 # Financial Angular Shell
 
+## Sprint 11 P1 Portal Shell remediation note
+
+No Angular runtime behavior changes are introduced in Sprint 11 P1. Portal Shell and PortalShellContext remediation must happen outside Financiero; standalone mode remains development-only.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P5 closure UX note
 
 Sprint 10 closure adds no Angular runtime behavior. Portal-integrated UX PASS remains blocked by missing Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence. Standalone mode remains development-only.

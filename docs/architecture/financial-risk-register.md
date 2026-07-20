@@ -1,5 +1,18 @@
 # Financial Risk Register
 
+## Sprint 11 P1 external remediation risks
+
+| Risk | Impact | Mitigation | State |
+|---|---|---|---|
+| Remediation outside repo loses visibility | PASS capture may reopen without traceability | Use handoff checklist and return-to-PASS criteria | EvidencePending |
+| Evidence outside standard | Evidence cannot be accepted | Require templates and QA acceptance review | BLOCKED_DEPENDENCY |
+| External fix without Financiero coordination | Runtime may drift from expected preflight | Re-run preflight and document evidence outside repo | BLOCKED_DEPENDENCY |
+| Gateway/Shell partially remediated | Portal-integrated UX still blocked | Require all Portal gates, not partial PASS | EvidencePending |
+| SQL enabled without `FinancieroDb` | DB gate remains blocked | Require TCP and logical DB evidence | EvidencePending |
+| Premature return to PASS capture | False readiness | P2 only after accepted evidence and `SCRIPT_EXIT=0` | BLOCKED_DEPENDENCY |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 closure risks
 
 | Risk | Impact | Mitigation | Mitigation owner | State |

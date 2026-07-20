@@ -1,5 +1,11 @@
 # Financial Sprint 10 Closure
 
+## Sprint 11 P1 follow-up
+
+Sprint 11 P1 starts external infra remediation outside the Financiero repo. Sprint 10 closure remains `BLOCKED_DEPENDENCY` until accepted owner evidence and preflight exit code 0 allow PASS capture to reopen.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Final result: `BLOCKED_DEPENDENCY`  
 Release decision: controlled closure for external infra block.  
