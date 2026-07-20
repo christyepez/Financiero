@@ -1,5 +1,23 @@
 # Roadmap Financiero
 
+## Next Cycle P4 — PASS E2E Real Capture or Productization Pause Decision
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base Next Cycle P3 `eeff6f0dc936836a567f9a0e4c16897095db94f5`.
+- [x] Crear rama `financiero-next-cycle-p4-pass-e2e-or-productization-pause`.
+- [x] Validar `docker compose config`.
+- [x] Validar que Financiero no define SQL Server propio.
+- [x] Revisar evidencia owner SQL/Portal: no aceptada / pendiente.
+- [x] Ejecutar preflight P4: `SCRIPT_EXIT=2`.
+- [x] Crear evidence intake review P4.
+- [x] Crear productization pause decision.
+- [x] No crear PASS E2E real capture porque no existe `SCRIPT_EXIT=0`.
+- [x] No crear rejected evidence decision porque no llegó evidencia inválida.
+- [x] Actualizar owner packages, runbook, roadmap, backlog, risks, release notes y README.
+- [x] Mantener PASS capture cerrado y productización pausada.
+- [x] Bloquear CRM implementation dependiente de real Portal/SQL PASS; permitir solo discovery aislado.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P3 — External SQL/Portal Owner Remediation Package
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

@@ -28,3 +28,7 @@ Financiero runtime is locally activatable in Docker, but real Portal/SQL E2E rem
 | SQL Common / Infra + DBA | `docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md` | SQL TCP PASS and `FinancieroDb` accessible in shared SQL. | Preflight Gate 1 and Gate 2. |
 | Portal Gateway / Shell / Contract / Security-Menu / Observability | `docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md` | Gateway/Shell health, PortalShellContext, Menu/permissions and correlationId live evidence. | Preflight Gate 3, Gate 4, Gate 5 and Gate 7. |
 | QA Lead | `docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md` | Sanitized owner evidence with date, owner, source and commands. | Reopen PASS capture only with `SCRIPT_EXIT=0`. |
+
+## P4 decision mapping
+
+No accepted owner evidence was received for the SQL or Portal rows above. The P4 decision is to pause productization, keep the external backlog open, and rerun PASS capture only after evidence is accepted and preflight exits `0`.

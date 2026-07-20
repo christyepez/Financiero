@@ -1,5 +1,13 @@
 # Controlled Productization Backlog
 
+## Next Cycle P4 productization pause
+
+Productization is paused. P4 did not receive accepted SQL/Portal evidence and preflight returned `SCRIPT_EXIT=2`. Controlled productization cannot resume until all accepted evidence exists and PASS E2E real is captured as non-production.
+
+CRM impact: do not start CRM implementation that depends on unresolved Portal/SQL PASS. Isolated CRM discovery may continue if it does not assume Financiero PASS and does not duplicate Portal capabilities.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P3 productization control
 
 Productization remains blocked while external owners remediate SQL/Portal. P3 does not authorize production, SRI real, ATS official, RIDE legal final or XAdES productivo. PASS capture remains closed until accepted owner evidence plus preflight `SCRIPT_EXIT=0`.

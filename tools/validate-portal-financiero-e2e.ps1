@@ -171,6 +171,18 @@ foreach ($packagePath in $p3PackagePaths) {
     }
 }
 
+$p4DecisionPaths = @(
+    "docs/qa/financial-next-cycle-p4-evidence-intake-review.md",
+    "docs/coordination/financial-next-cycle-p4-productization-pause-decision.md"
+)
+foreach ($decisionPath in $p4DecisionPaths) {
+    if (Test-Path $decisionPath) {
+        $results += Write-Check "P4 decision artifact $decisionPath" "PASS" "Artifact exists." "PASS" ""
+    } else {
+        $results += Write-Check "P4 decision artifact $decisionPath" "FAIL" "Artifact missing." "P4_DECISION_ARTIFACT_MISSING" "Create P4 evidence intake and either PASS capture, pause decision or rejected evidence decision before delivery."
+    }
+}
+
 try {
     $tcp = Test-NetConnection -ComputerName $SqlHost -Port $SqlPort -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($tcp) {

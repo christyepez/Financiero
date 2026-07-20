@@ -1,5 +1,9 @@
 # Next Cycle P3 - Accepted Evidence Checklist
 
+## P4 status
+
+P4 evidence intake remains `EVIDENCE_PENDING`. No owner evidence was accepted or rejected. PASS capture stays closed and productization is paused until this checklist is satisfied and the preflight returns `SCRIPT_EXIT=0`.
+
 Date: 2026-07-20
 Purpose: define what QA may accept before reopening PASS capture.
 

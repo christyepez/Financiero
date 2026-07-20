@@ -66,4 +66,8 @@ Next Cycle P3 packages the P2 runtime findings for external owners:
 
 Owner remediation must produce sanitized evidence for SQL TCP, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlationId. The next validation is a preflight rerun; PASS capture reopens only with accepted owner evidence and `SCRIPT_EXIT=0`.
 
+## P4 pause decision
+
+P4 found no accepted owner evidence and the preflight returned `SCRIPT_EXIT=2`. PASS E2E real remains NOT_READY and Financiero productization is paused. CRM implementation dependent on real Portal/SQL PASS should not start; only isolated CRM discovery may continue.
+
 No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI production, official ATS, legal-final RIDE, productive XAdES, real certificates, real XML, or personal data were introduced.

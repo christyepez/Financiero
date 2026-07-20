@@ -1,5 +1,21 @@
 # Financial Next Cycle Decision Matrix
 
+## Next Cycle P4 PASS or pause decision
+
+Date: 2026-07-20
+Current result: `EVIDENCE_PENDING` / `BLOCKED_DEPENDENCY`
+Preflight: `SCRIPT_EXIT=2`
+Decision: pause productization
+
+P4 found no accepted SQL/Portal owner evidence and did not receive a preflight `SCRIPT_EXIT=0`. PASS E2E real is NOT_READY. Productization is paused until accepted owner evidence exists and preflight returns `0`.
+
+- If owners remediate later: run a new PASS E2E real capture sprint.
+- If evidence is invalid: mark `REJECTED_EVIDENCE` and request correction.
+- If a real Financiero bug appears: open a fix sprint.
+- CRM implementation dependent on real Portal/SQL PASS should not start; only isolated CRM discovery may continue.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P3 owner remediation package update
 
 Date: 2026-07-20

@@ -41,6 +41,10 @@ Purpose: activate real Financiero runtime against shared Portal/SQL dependencies
 
 Use these artifacts before rerunning PASS capture. They define owners, SLA, expected commands and evidence acceptance criteria.
 
+## P4 pause state
+
+P4 did not receive accepted SQL/Portal owner evidence and the preflight returned `SCRIPT_EXIT=2`. Productization is paused. Use this runbook only to revalidate after owners remediate; do not use it to justify SQL/Gateway/Shell/Auth/Menu duplication in Financiero.
+
 ## Interpreting exit codes
 
 | Exit code | Meaning | Action |

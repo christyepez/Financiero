@@ -1,5 +1,16 @@
 # Financiero
 
+## Next Cycle P4 PASS E2E or productization pause
+
+Next Cycle P4 reviewed external owner evidence and reran preflight. No accepted SQL/Portal owner evidence was found, preflight returned `SCRIPT_EXIT=2`, and PASS E2E real remains NOT_READY. Productization is paused.
+
+- Evidence intake review: `docs/qa/financial-next-cycle-p4-evidence-intake-review.md`.
+- Pause decision: `docs/coordination/financial-next-cycle-p4-productization-pause-decision.md`.
+- Financiero API remains healthy locally.
+- E2E real remains blocked by SQL Common TCP closed, Portal Gateway `/health` 404 and missing Portal Shell/Context/Menu/correlation evidence.
+- CRM implementation dependent on real Portal/SQL PASS should not start; isolated CRM discovery may continue only if it does not assume PASS.
+- No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P3 external owner remediation package
 
 Next Cycle P3 turns the P2 runtime findings into owner-specific remediation packages for SQL Common and Portal. Financiero remains healthy locally, but real E2E is still blocked by external SQL/Portal dependencies and PASS capture remains closed.
