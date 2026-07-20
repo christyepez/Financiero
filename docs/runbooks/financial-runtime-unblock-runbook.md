@@ -32,6 +32,15 @@ Purpose: activate real Financiero runtime against shared Portal/SQL dependencies
 9. Run preflight:
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File tools/validate-portal-financiero-e2e.ps1 -OutputMarkdown -VerboseDiagnostics -SuggestFixes -PortalGatewayHealthPath /health -PortalShellHealthPath /health -FinancialApiHealthPath /health -EvidenceOutputPath <TEMP_PATH_OUTSIDE_REPO> -AcceptanceGateReport <TEMP_PATH_OUTSIDE_REPO>`
 
+## P3 owner handoff artifacts
+
+- SQL owner package: `docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md`.
+- Portal owner package: `docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md`.
+- Owner handoff message: `docs/coordination/financial-next-cycle-p3-owner-handoff-message.md`.
+- Accepted evidence checklist: `docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md`.
+
+Use these artifacts before rerunning PASS capture. They define owners, SLA, expected commands and evidence acceptance criteria.
+
 ## Interpreting exit codes
 
 | Exit code | Meaning | Action |

@@ -1,5 +1,21 @@
 # Roadmap Financiero
 
+## Next Cycle P3 — External SQL/Portal Owner Remediation Package
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base Next Cycle P2 `0128b860b21a1b5f8236d518490fce7ceb051903`.
+- [x] Crear rama `financiero-next-cycle-p3-external-owner-remediation-package`.
+- [x] Validar `docker compose config`.
+- [x] Validar que Financiero no define SQL Server propio.
+- [x] Ejecutar preflight P3: `SCRIPT_EXIT=2`.
+- [x] Crear paquete de remediación para owner SQL.
+- [x] Crear paquete de remediación para owner Portal.
+- [x] Crear mensaje de handoff externo listo para enviar.
+- [x] Crear checklist de evidencia aceptada.
+- [x] Actualizar evidencia P2, matriz de causa raíz, runbook, roadmap, backlog, risks, release notes y README.
+- [x] Mantener PASS capture cerrado y productización bloqueada.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P2 — Financial Runtime Activation and Real E2E Unblock
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

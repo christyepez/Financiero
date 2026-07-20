@@ -1,5 +1,19 @@
 # Financial Next Cycle Notes
 
+## Next Cycle P3 external SQL/Portal owner remediation package
+
+Date: 2026-07-20
+Phase: Next Cycle P3
+Current result: `BLOCKED_DEPENDENCY`
+PASS capture: closed
+Production state: not production-ready.
+
+P3 packages concrete P2/P3 runtime evidence for SQL and Portal owners. Financiero remains healthy locally; the E2E real blocker is external SQL/Portal runtime evidence.
+
+Created owner packages for SQL Common and Portal, a handoff message ready to send, and an accepted evidence checklist. Next action is external remediation. If owners remediate and evidence is accepted, run P4 PASS E2E real capture. If not, pause productization or escalate.
+
+No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P2 runtime activation
 
 Date: 2026-07-20

@@ -157,6 +157,20 @@ try {
     $results += Write-Check "Docker compose config" "FAIL" $_.Exception.Message "COMPOSE_CONFIG_INVALID" "Fix docker compose syntax/configuration before E2E runtime validation."
 }
 
+$p3PackagePaths = @(
+    "docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md",
+    "docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md",
+    "docs/coordination/financial-next-cycle-p3-owner-handoff-message.md",
+    "docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md"
+)
+foreach ($packagePath in $p3PackagePaths) {
+    if (Test-Path $packagePath) {
+        $results += Write-Check "P3 owner package $packagePath" "PASS" "Package exists." "PASS" ""
+    } else {
+        $results += Write-Check "P3 owner package $packagePath" "FAIL" "Package missing." "P3_OWNER_PACKAGE_MISSING" "Create the external SQL/Portal owner remediation package before delivery."
+    }
+}
+
 try {
     $tcp = Test-NetConnection -ComputerName $SqlHost -Port $SqlPort -InformationLevel Quiet -WarningAction SilentlyContinue
     if ($tcp) {

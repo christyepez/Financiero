@@ -55,4 +55,15 @@ The current blocker is not a demonstrated Financiero code defect. Financiero bui
 
 External owners must start/repair shared SQL on `host.docker.internal:21433`, confirm `FinancieroDb`, expose a valid Portal Gateway health endpoint, provide Portal Shell/PortalShellContext/Menu/permissions/correlation evidence, then rerun the preflight until `SCRIPT_EXIT=0`.
 
+## P3 external handoff
+
+Next Cycle P3 packages the P2 runtime findings for external owners:
+
+- SQL owner package: `docs/coordination/financial-next-cycle-p3-sql-owner-remediation-package.md`.
+- Portal owner package: `docs/coordination/financial-next-cycle-p3-portal-owner-remediation-package.md`.
+- Handoff message: `docs/coordination/financial-next-cycle-p3-owner-handoff-message.md`.
+- Accepted evidence checklist: `docs/qa/financial-next-cycle-p3-accepted-evidence-checklist.md`.
+
+Owner remediation must produce sanitized evidence for SQL TCP, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlationId. The next validation is a preflight rerun; PASS capture reopens only with accepted owner evidence and `SCRIPT_EXIT=0`.
+
 No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI production, official ATS, legal-final RIDE, productive XAdES, real certificates, real XML, or personal data were introduced.
