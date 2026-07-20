@@ -282,6 +282,10 @@ Sprint 9 P1 no agrega contratos nuevos. El resultado real permanece `BlockedDepe
 Sprint 9 P2 no agrega contratos nuevos. Los códigos de diagnóstico del preflight no son contrato API productivo y no habilitan mutaciones.
 
 Sprint 9 P3 no agrega contratos nuevos. El checklist PASS y handoff de dependencias son operativos; no habilitan SRI real, ATS oficial, RIDE legal final ni XAdES productivo.
+# Sprint 10 P2 contract note
+
+No SRI contract changes. Gate execution did not enable SRI Test real, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 # Sprint 10 P1 contract note
 
 No SRI contract changes. Owner evidence intake and E2E gates do not enable SRI Test real, SRI Production, official ATS, legal-final RIDE or productive XAdES.

@@ -11,6 +11,7 @@ param(
     [switch]$SkipPortalChecks,
     [switch]$SkipApiHealthChecks,
     [string]$EvidenceOutputPath = "",
+    [switch]$AcceptanceGateReport,
     [switch]$OutputMarkdown,
     [switch]$VerboseDiagnostics,
     [switch]$SuggestFixes
@@ -82,6 +83,34 @@ function Write-MarkdownResults($Results) {
         }
     }
     return $lines
+}
+
+function Write-AcceptanceGateRows($Results) {
+    $sqlTcp = $Results | Where-Object { $_.check -eq "Shared SQL TCP" } | Select-Object -First 1
+    $gateway = $Results | Where-Object { $_.check -eq "Portal Gateway health" } | Select-Object -First 1
+    $financialHealth = $Results | Where-Object { $_.check -eq "Financiero health" } | Select-Object -First 1
+    $financialReady = $Results | Where-Object { $_.check -eq "Financiero ready" } | Select-Object -First 1
+    $portalReadiness = $Results | Where-Object { $_.check -eq "Financiero Portal readiness" } | Select-Object -First 1
+    $shell = $Results | Where-Object { $_.check -eq "Portal Shell health" } | Select-Object -First 1
+
+    $rows = @()
+    $rows += "| Gate | Status | Evidence |"
+    $rows += "|---|---|---|"
+    $rows += "| Gate 1 SQL TCP | $($sqlTcp.status) | $($sqlTcp.code): $($sqlTcp.detail -replace '\|','/') |"
+    $rows += "| Gate 2 FinancieroDb | BLOCKED_DEPENDENCY | Requires SQL TCP PASS and owner DB evidence. |"
+    $rows += "| Gate 3 Portal Gateway health | $($gateway.status) | $($gateway.code): $($gateway.detail -replace '\|','/') |"
+    if ($null -ne $shell) {
+        $rows += "| Gate 4 Portal Shell health | $($shell.status) | $($shell.code): $($shell.detail -replace '\|','/') |"
+    } else {
+        $rows += "| Gate 4 Portal Shell health | BLOCKED_DEPENDENCY | PortalShellBaseUrl not provided; owner evidence required. |"
+    }
+    $rows += "| Gate 5 PortalShellContext live | BLOCKED_DEPENDENCY | Owner evidence required. |"
+    $rows += "| Gate 6 Financiero API health | $($financialHealth.status) | $($financialHealth.code): $($financialHealth.detail -replace '\|','/') |"
+    $rows += "| Gate 7 Portal integration readiness | $($portalReadiness.status) | $($portalReadiness.code): $($portalReadiness.detail -replace '\|','/') |"
+    $rows += "| Gate 8 Preflight exit code 0 | BLOCKED_DEPENDENCY | Requires all runtime gates PASS. |"
+    $rows += "| Gate 9 No-production guardrails | PASS | Static/documented guardrails remain enabled. |"
+    $rows += "| Final gate | BLOCKED_DEPENDENCY | Sprint 10 P2 cannot capture PASS until all gates are accepted. |"
+    return $rows
 }
 
 $results = @()
@@ -159,6 +188,11 @@ $results += Write-Check "AcceptanceGateSummary" ($(if ($failCount -gt 0) { "FAIL
 
 if ($OutputMarkdown) {
     Write-MarkdownResults $results
+    if ($AcceptanceGateReport) {
+        ""
+        "## AcceptanceGateReport"
+        Write-AcceptanceGateRows $results
+    }
 } else {
     if ($VerboseDiagnostics -or $SuggestFixes) {
         $results | Format-Table check,status,code,detail,suggestion -AutoSize
@@ -194,6 +228,12 @@ if (-not [string]::IsNullOrWhiteSpace($EvidenceOutputPath)) {
     $content += "## Results"
     $content += ""
     $content += (Write-MarkdownResults $results)
+    if ($AcceptanceGateReport) {
+        $content += ""
+        $content += "## AcceptanceGateReport"
+        $content += ""
+        $content += (Write-AcceptanceGateRows $results)
+    }
     Set-Content -Path $safePath -Value $content -Encoding UTF8
 }
 

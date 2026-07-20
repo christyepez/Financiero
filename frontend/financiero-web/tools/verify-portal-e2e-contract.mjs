@@ -84,6 +84,8 @@ for (const doc of [
   'docs/qa/financial-sprint-09-p4-infra-intervention-evidence.md',
   'docs/qa/financial-sprint-09-final-infra-evidence.md',
   'docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md',
+  'docs/qa/financial-sprint-10-p2-owner-evidence-review.md',
+  'docs/qa/financial-sprint-10-p2-acceptance-gate-execution.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -130,6 +132,8 @@ for (const doc of [
   'docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md',
   'docs/qa/financial-sprint-09-final-infra-evidence.md',
   'docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md',
+  'docs/qa/financial-sprint-10-p2-owner-evidence-review.md',
+  'docs/qa/financial-sprint-10-p2-acceptance-gate-execution.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -153,8 +157,19 @@ for (const file of [models, validation, context, auth, api, dashboard]) {
 }
 
 const preflight = readFileSync(join(repoRoot, 'tools/validate-portal-financiero-e2e.ps1'), 'utf8');
-for (const token of ['PortalGatewayHealthPath', 'PortalShellHealthPath', 'FinancialApiHealthPath', 'EvidenceOutputPath', 'OwnerEvidenceRequired', 'AcceptanceGateSummary', 'HEALTH_PATH_NOT_CONFIRMED', 'HEALTH_ROUTE_ALTERNATIVE_REQUIRED', 'HTTP_STATUS_UNEXPECTED']) {
+for (const token of ['PortalGatewayHealthPath', 'PortalShellHealthPath', 'FinancialApiHealthPath', 'EvidenceOutputPath', 'AcceptanceGateReport', 'OwnerEvidenceRequired', 'AcceptanceGateSummary', 'HEALTH_PATH_NOT_CONFIRMED', 'HEALTH_ROUTE_ALTERNATIVE_REQUIRED', 'HTTP_STATUS_UNEXPECTED']) {
   if (!preflight.includes(token)) throw new Error(`Sprint 9 P4 preflight health route configuration missing ${token}.`);
+}
+
+for (const doc of [
+  'docs/qa/financial-sprint-10-p2-owner-evidence-review.md',
+  'docs/qa/financial-sprint-10-p2-acceptance-gate-execution.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['NotReceived', 'EvidencePending', 'BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 10 P2 Portal evidence token ${token}.`);
+  }
 }
 
 console.log('Portal E2E contract checks passed.');

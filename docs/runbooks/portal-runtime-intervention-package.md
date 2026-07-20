@@ -1,5 +1,7 @@
 # Portal Runtime Intervention Package
 
+Sprint 10 P2 review: Portal Gateway, Portal Shell and Portal Contract evidence was NotReceived, so Gate 3, Gate 4 and Gate 5 remain `BLOCKED_DEPENDENCY`.
+
 Sprint 10 P1 requires Portal owners to use the Gateway, Shell and Contract evidence templates under `docs/qa/templates` and pass Gate 3, Gate 4 and Gate 5.
 
 Sprint 9 P5 closure keeps this intervention as a Sprint 10 prerequisite. Portal Gateway and Portal Shell evidence are required before E2E PASS.
