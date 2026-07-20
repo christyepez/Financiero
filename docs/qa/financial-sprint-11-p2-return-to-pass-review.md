@@ -1,3 +1,9 @@
+## Sprint 11 P3 review update
+
+Sprint 11 P3 keeps Return-to-PASS closed. Owner response remains `NoResponse`, evidence remains `EvidencePending`, preflight returned `SCRIPT_EXIT=2`, and the final gate result remains `BLOCKED_DEPENDENCY`. PASS capture is NOT_READY until accepted external evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Financial Sprint 11 P2 Return-to-PASS Criteria Review
 
 Date: 2026-07-20  

@@ -1,5 +1,17 @@
 # Roadmap Financiero
 
+## Sprint 11 P3 — External Evidence Escalation or PASS Capture Gate
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base P2 `6a18c5f9599917a28684452509ad8cc9db5c4b33`.
+- [x] Crear rama `financiero-sprint-11-p3-external-evidence-escalation-or-pass-capture`.
+- [x] Revisar evidencia externa: `NoResponse` / `EvidencePending`.
+- [x] Ejecutar preflight: `SCRIPT_EXIT=2`.
+- [x] Documentar gate decision P3 como `BLOCKED_DEPENDENCY`.
+- [x] Crear paquete de escalamiento externo P3.
+- [x] Mantener PASS capture NOT_READY hasta evidencia aceptada + `SCRIPT_EXIT=0`.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 — External Evidence Intake Follow-up
 
 - [x] Crear registro de follow-up de evidencia externa.

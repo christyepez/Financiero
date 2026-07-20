@@ -1,5 +1,11 @@
 # Financial Sprint 11 P1 External Repo / Owner Handoff Checklist
 
+## Sprint 11 P3 gate decision update
+
+Date: 2026-07-20. P3 found `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. All external handoff items remain `BLOCKED_DEPENDENCY`: shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id. PASS capture is NOT_READY until accepted owner evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 follow-up update
 
 Date: 2026-07-20. No accepted external owner evidence was received. All checklist items remain `EvidencePending` / `BLOCKED_DEPENDENCY`; owner response is `NoResponse`. The unlock condition remains accepted external evidence plus preflight `SCRIPT_EXIT=0`.

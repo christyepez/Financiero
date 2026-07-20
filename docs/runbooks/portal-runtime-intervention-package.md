@@ -1,5 +1,11 @@
 # Portal Runtime Intervention Package
 
+## Sprint 11 P3 Portal escalation note
+
+No accepted Portal evidence was received in P3. Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight returned `SCRIPT_EXIT=2` and Portal Gateway `/health` returned HTTP 404. Do not create Gateway propio, Shell propio or Auth/Login propio in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 Portal follow-up note
 
 No accepted Portal evidence was received in P2. Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id remain `EvidencePending` / `BLOCKED_DEPENDENCY`.

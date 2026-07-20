@@ -1,5 +1,11 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 11 P3 evidence gate handoff
+
+P3 confirms `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. Continue handoff to Infra/Portal owners and do not reopen PASS capture until `docs/qa/financial-sprint-11-p3-gate-decision-evidence.md` is superseded by accepted owner evidence and preflight `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 evidence follow-up handoff
 
 No accepted external evidence was received in Sprint 11 P2. Continue handoff to Infra/Portal owners and do not reopen PASS capture until `docs/qa/financial-sprint-11-p2-return-to-pass-review.md` accepts evidence and preflight returns `SCRIPT_EXIT=0`.

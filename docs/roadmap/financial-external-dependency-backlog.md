@@ -1,5 +1,17 @@
 # Financial External Dependency Backlog
 
+## Sprint 11 P3 gate decision update
+
+Sprint 11 P3 status remains `BLOCKED_DEPENDENCY`. Evidence status is `NoResponse` / `EvidencePending` for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight `SCRIPT_EXIT=0`. Preflight returned `SCRIPT_EXIT=2`, so PASS capture is NOT_READY.
+
+- Gates blocked: 1-8.
+- Gate PASS: 9 no-production guardrails.
+- Unlock condition: accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+- Next step: external escalation package and owner response.
+- Decision: escalation, not PASS capture.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 evidence follow-up update
 
 Sprint 11 P2 status remains `BLOCKED_DEPENDENCY`. Evidence status is `NoResponse` / `EvidencePending` for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight `SCRIPT_EXIT=0`.
