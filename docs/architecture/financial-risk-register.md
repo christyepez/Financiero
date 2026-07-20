@@ -17,6 +17,20 @@
 This register must be reviewed before any Sprint 9 productization decision.
 # Sprint 9 P5 external infrastructure closure risks
 
+## Sprint 10 P1 remediation intake risks
+
+| Risk | Status | Impact | Mitigation |
+|---|---|---|---|
+| Owner missing or unresponsive | Active | Blocks all external remediation gates. | Assign SQL, Gateway, Shell and Contract owners in P1 intake. |
+| Invalid evidence | Active | Creates false confidence. | Require templates and acceptance gates. |
+| Evidence includes secrets | Active | Security incident risk. | Reject evidence containing passwords, tokens, full connection strings, certificates, XML reales or personal data. |
+| Gateway health fixed but Shell remains absent | Active | Partial remediation cannot produce E2E PASS. | Gate 4 and Gate 5 remain required. |
+| SQL TCP opens but `FinancieroDb` unavailable | Active | API readiness still blocked. | Gate 2 requires logical DB proof. |
+| Preflight partial PASS misread as complete PASS | Active | False PASS and governance breach. | Final gate requires exit code `0` and all gates accepted. |
+| Productive activation before gates | Active | Production and tax compliance risk. | Keep no-production guardrails and release approval blocked. |
+
+Control tokens: BLOCKED_DEPENDENCY; Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 | Risk | Status | Impact | Mitigation |
 |---|---|---|---|
 | Shared SQL port `21433` remains closed | Active | Blocks real E2E PASS. | Sprint 10 Option A: Infra remediation with sanitized TCP evidence. |

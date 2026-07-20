@@ -1,5 +1,7 @@
 # Portal Runtime Intervention Package
 
+Sprint 10 P1 requires Portal owners to use the Gateway, Shell and Contract evidence templates under `docs/qa/templates` and pass Gate 3, Gate 4 and Gate 5.
+
 Sprint 9 P5 closure keeps this intervention as a Sprint 10 prerequisite. Portal Gateway and Portal Shell evidence are required before E2E PASS.
 
 Sprint 9 P4 prepares the Portal Gateway and Portal Shell intervention needed before Financiero can claim real E2E `PASS`.
