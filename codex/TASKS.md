@@ -1,5 +1,23 @@
 # Roadmap Financiero
 
+## Next Cycle P2 — Financial Runtime Activation and Real E2E Unblock
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base Next Cycle P1 `151ef555c6e448a4f13014f17bb2177bcd83bb7d`.
+- [x] Crear rama `financiero-next-cycle-p2-runtime-activation-e2e-unblock`.
+- [x] Validar `docker compose config`.
+- [x] Validar que Financiero no define SQL Server propio.
+- [x] Ejecutar diagnóstico SQL Common TCP: `host.docker.internal:21433` cerrado.
+- [x] Validar Portal Gateway `/health`: HTTP 404.
+- [x] Levantar Financiero con `docker compose up -d --build`.
+- [x] Confirmar Financiero API `/health` y `/health/ready`: HTTP 200.
+- [x] Ejecutar backend restore/build/test: PASS.
+- [x] Ejecutar frontend install/build/test y contrato Portal E2E estático: PASS.
+- [x] Mejorar verificador para aceptar ruta de reporte de acceptance gates sin confundirla con URL de servicio.
+- [x] Documentar evidencia P2, matriz de causa raíz y runbook de desbloqueo.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso hasta `SCRIPT_EXIT=0`.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P1 — External SQL/Portal Remediation Control
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

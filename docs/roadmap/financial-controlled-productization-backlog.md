@@ -1,5 +1,15 @@
 # Controlled Productization Backlog
 
+## Next Cycle P2 runtime activation control
+
+Productization remains blocked. P2 activated Financiero runtime locally and confirmed the API/frontend are not the current blocker, but shared SQL and Portal runtime evidence still block real E2E.
+
+- Allow next: external SQL/Portal remediation and sanitized PASS evidence capture.
+- Do not allow: local SQL/Gateway/Shell/Auth duplication in Financiero.
+- Reopen productization path only after accepted evidence plus preflight `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Next Cycle P1 productization control
 
 Productization remains blocked. Next Cycle P1 requires a decision: continue external remediation with named owners/SLA or pause productization. PASS capture remains closed because evidence is `NoResponse` / `EvidencePending` and preflight remains `SCRIPT_EXIT=2`; unlock requires `SCRIPT_EXIT=0` plus accepted evidence. Any synthetic/demo path requires explicit executive approval and must not be represented as PASS real.

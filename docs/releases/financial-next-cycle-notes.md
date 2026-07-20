@@ -1,5 +1,20 @@
 # Financial Next Cycle Notes
 
+## Next Cycle P2 runtime activation
+
+Date: 2026-07-20
+Phase: Next Cycle P2
+Current result: `BLOCKED_DEPENDENCY`
+Runtime result: Financiero API/frontend PASS; SQL/Portal external gates blocked
+Preflight after Docker activation: `SCRIPT_EXIT=2`
+Production state: not production-ready.
+
+P2 attempted real runtime activation instead of accumulating only blocking documentation. `docker compose up -d --build` started `financial-api`, and Financiero health/readiness endpoints returned HTTP 200. Backend restore/build/tests passed; frontend install/build/test and Portal E2E static contract verifier passed.
+
+Remaining blockers: SQL Common TCP `host.docker.internal:21433` is closed, Portal Gateway `/health` returns HTTP 404, and Portal Shell/PortalShellContext/Menu/permissions/correlation evidence is missing.
+
+No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 Date: 2026-07-20  
 Phase: Next Cycle P1  
 Current result: `BLOCKED_DEPENDENCY`  

@@ -1,5 +1,20 @@
 # Financial External Dependency Backlog
 
+## Next Cycle P2 runtime activation backlog update
+
+P2 proved Financiero can start in Docker and answer health/readiness endpoints, but real E2E remains `BLOCKED_DEPENDENCY`.
+
+- SQL Common TCP: `BLOCKED_DEPENDENCY`; `host.docker.internal:21433` closed.
+- `FinancieroDb`: `BLOCKED_DEPENDENCY`; cannot prove until SQL TCP opens and DBA evidence is provided.
+- Portal Gateway `/health`: `BLOCKED_DEPENDENCY`; HTTP 404.
+- Portal Shell / PortalShellContext / Menu / permissions / correlation: `BLOCKED_DEPENDENCY`; owner evidence missing.
+- Financiero API: `PASS`; `/health`, `/health/live`, `/health/ready`, SRI, Content/File and Portal readiness returned HTTP 200 after Docker start.
+- Preflight: `SCRIPT_EXIT=2`; PASS=12, BLOCKED_DEPENDENCY=2, FAIL=0.
+
+Next action: external owners remediate SQL/Portal, then QA reruns preflight for `SCRIPT_EXIT=0`.
+
+No SQL Server propio, Gateway propio, Shell propio, login/Auth propio, token storage, SRI Production, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P1 backlog update
 
 Next Cycle P1 keeps external remediation active only if owners/SLA are assigned. Pending dependencies remain: SQL Common TCP, `FinancieroDb`, Portal Gateway health, Portal Shell health, PortalShellContext live, Menu/permissions live, correlation id live and preflight `SCRIPT_EXIT=0`. Current state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`.
