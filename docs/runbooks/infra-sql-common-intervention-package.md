@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 11 P2 SQL follow-up note
+
+No accepted SQL evidence was received in P2. shared SQL TCP and `FinancieroDb` remain `EvidencePending` / `BLOCKED_DEPENDENCY`.
+
+No SQL Server propio. No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 SQL external remediation
 
 SQL remediation must happen outside the Financiero repo. Required return evidence: shared SQL TCP PASS and separate `FinancieroDb` availability, both sanitized and accepted.

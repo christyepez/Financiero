@@ -1,5 +1,11 @@
 # Controlled Productization Backlog
 
+## Sprint 11 P2 productization state
+
+Productization remains blocked after external evidence follow-up. PASS capture is not open because evidence is `NoResponse` / `EvidencePending` and preflight remains blocked until `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 11 P1 productization state
 
 Productization remains blocked. Sprint 11 P1 directs remediation to Infra/Portal outside the Financiero repo. Financiero must not create SQL Server propio, Gateway propio, Portal Shell propio, Auth/Login propio, token storage, upload/download evidence or notification send to bypass the block.

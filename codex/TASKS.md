@@ -1,5 +1,15 @@
 # Roadmap Financiero
 
+## Sprint 11 P2 — External Evidence Intake Follow-up
+
+- [x] Crear registro de follow-up de evidencia externa.
+- [x] Crear review de Return-to-PASS criteria.
+- [x] Actualizar handoff checklist y remediation plan.
+- [x] Actualizar backlog externo, risk register y Sprint 11 matrix.
+- [x] Actualizar notas, roadmap, runbooks, API/frontend docs y verificadores.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 — External Infra Remediation Outside Financiero Repo
 
 - [x] Crear plan operativo externo SQL/Portal.

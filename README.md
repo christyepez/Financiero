@@ -1,5 +1,15 @@
 # Financiero
 
+## Sprint 11 P2 external evidence follow-up
+
+Sprint 11 P2 reviewed external evidence intake. No accepted Infra/Portal evidence was received, so PASS capture remains closed and Financiero stays `BLOCKED_DEPENDENCY`.
+
+- Evidence follow-up: `docs/qa/financial-sprint-11-p2-external-evidence-followup.md`.
+- Return-to-PASS review: `docs/qa/financial-sprint-11-p2-return-to-pass-review.md`.
+- Next step: continue external owner follow-up; start PASS capture only with accepted evidence and preflight `SCRIPT_EXIT=0`.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 external infra remediation plan
 
 Sprint 11 starts with external infra remediation outside the Financiero repo. Financiero remains `BLOCKED_DEPENDENCY` until SQL/Portal owners provide accepted evidence and the preflight exits 0.

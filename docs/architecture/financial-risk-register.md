@@ -1,5 +1,17 @@
 # Financial Risk Register
 
+## Sprint 11 P2 external evidence risks
+
+| Risk | Impact | Mitigation | State |
+|---|---|---|---|
+| External evidence remains pending | PASS capture stays blocked | Continue owner follow-up and keep Option A active | BLOCKED_DEPENDENCY |
+| Rejected evidence arrives later | PASS capture still blocked | Apply Return-to-PASS review and mark `REJECTED_EVIDENCE` | EvidencePending |
+| Partial remediation is mistaken for PASS | False readiness | Require all gates and `SCRIPT_EXIT=0` | BLOCKED_DEPENDENCY |
+| Preflight 0 absent | Cannot prove E2E readiness | Keep PASS capture closed | BLOCKED_DEPENDENCY |
+| Productization pressure continues | Governance/security risk | Maintain no-production guardrails | BLOCKED_DEPENDENCY |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 external remediation risks
 
 | Risk | Impact | Mitigation | State |

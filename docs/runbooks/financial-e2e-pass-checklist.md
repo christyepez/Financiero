@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Sprint 11 P2 PASS follow-up note
+
+PASS capture remains closed after P2. Required state to open P3 PASS capture: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 11 P1 PASS return note
 
 PASS capture remains closed. Sprint 11 P2 may start only after external owners provide accepted evidence and preflight returns `SCRIPT_EXIT=0`.
