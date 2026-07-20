@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 11 P5 controlled closure
+
+Sprint 11 closes as `BLOCKED_DEPENDENCY`, not PASS. No accepted external SQL/Portal evidence was received, P5 preflight returned `SCRIPT_EXIT=2`, and PASS E2E real remains NOT_READY.
+
+- Closure: `docs/coordination/financial-sprint-11-closure.md`.
+- Final evidence: `docs/qa/financial-sprint-11-final-evidence.md`.
+- Next cycle matrix: `docs/roadmap/financial-next-cycle-decision-matrix.md`.
+- Recommendation: continue external SQL/Portal remediation outside Financiero; do not productize.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 external escalation follow-up
 
 Sprint 11 P4 executed the follow-up gate. No accepted SQL/Portal owner evidence was received (`NoResponse` / `EvidencePending`), and the preflight returned `SCRIPT_EXIT=2`. The result remains `BLOCKED_DEPENDENCY`; PASS E2E real is NOT_READY and Financiero remains not production-ready.

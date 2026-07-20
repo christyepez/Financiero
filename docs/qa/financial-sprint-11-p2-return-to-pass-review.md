@@ -1,3 +1,9 @@
+## Sprint 11 P5 closure review
+
+Sprint 11 closes as `BLOCKED_DEPENDENCY`. Return-to-PASS remains closed because external evidence is `NoResponse` / `EvidencePending` and P5 preflight returned `SCRIPT_EXIT=2`. PASS E2E real is NOT_READY.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P3 review update
 
 Sprint 11 P3 keeps Return-to-PASS closed. Owner response remains `NoResponse`, evidence remains `EvidencePending`, preflight returned `SCRIPT_EXIT=2`, and the final gate result remains `BLOCKED_DEPENDENCY`. PASS capture is NOT_READY until accepted external evidence plus `SCRIPT_EXIT=0`.

@@ -1,3 +1,9 @@
+## Sprint 11 P5 closure update
+
+P5 closes Sprint 11 as `BLOCKED_DEPENDENCY`. The P3 escalation remains unresolved: `NoResponse` / `EvidencePending`, P5 preflight `SCRIPT_EXIT=2`, gates 1-8 blocked and Gate 9 PASS. Use `docs/coordination/financial-sprint-11-closure.md` as the final closure record.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 follow-up update
 
 P4 confirms the P3 escalation remains unresolved: `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2`, gates 1-8 `BLOCKED_DEPENDENCY`, Gate 9 PASS. PASS E2E real is NOT_READY until accepted SQL/Portal owner evidence plus `SCRIPT_EXIT=0`.

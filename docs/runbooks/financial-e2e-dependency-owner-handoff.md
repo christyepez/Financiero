@@ -1,5 +1,11 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 11 P5 closure handoff
+
+Sprint 11 closes as `BLOCKED_DEPENDENCY`. P5 preflight returned `SCRIPT_EXIT=2`; external evidence remains `NoResponse` / `EvidencePending`; PASS E2E real is NOT_READY. Continue owner handoff only through sanitized evidence and do not represent demo/synthetic evidence as PASS real.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 evidence follow-up handoff
 
 P4 confirms `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. Continue handoff to Infra/Portal owners and do not claim PASS E2E real until `docs/qa/financial-sprint-11-p4-execution-evidence.md` is superseded by accepted owner evidence and preflight `SCRIPT_EXIT=0`.

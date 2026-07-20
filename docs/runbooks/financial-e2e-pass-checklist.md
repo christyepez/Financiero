@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Sprint 11 P5 final PASS checklist note
+
+PASS E2E real remains closed at Sprint 11 closure. Required state for any next cycle capture: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`. Current final state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 PASS follow-up note
 
 PASS E2E real remains closed after P4. Required state: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`. Current state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`, so PASS E2E real is NOT_READY.

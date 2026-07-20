@@ -1,5 +1,11 @@
 # Controlled Productization Backlog
 
+## Sprint 11 final productization state
+
+Productization remains blocked at Sprint 11 closure. PASS E2E real is NOT_READY because evidence is `NoResponse` / `EvidencePending` and P5 preflight returned `SCRIPT_EXIT=2`. Only a clearly labeled synthetic/demo path may be considered with explicit executive approval; it must not be represented as PASS real and must not enable production, SRI real, ATS official, RIDE legal final or XAdES productivo.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 productization state
 
 Productization remains blocked after the P4 external escalation follow-up. PASS E2E real is NOT_READY because evidence is `NoResponse` / `EvidencePending` and preflight returned `SCRIPT_EXIT=2`. Unlock requires accepted external evidence and preflight `SCRIPT_EXIT=0`.

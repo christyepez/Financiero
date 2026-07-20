@@ -1,3 +1,18 @@
+## Sprint 11 final risk update
+
+Sprint 11 closes as an external dependency block. Evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`; PASS E2E real remains NOT_READY.
+
+| Risk | Status | Mitigation | Mitigation owner |
+|---|---|---|---|
+| Missing owner/SLA | Active | Establish named SQL/Portal owners and deadlines | Product Owner / Architecture Governance |
+| Architecture bypass | Active | Do not create SQL/Gateway/Shell/Auth/Menu duplicates in Financiero | Architecture Governance |
+| Demo confused with PASS real | Active | Label any synthetic/demo path and keep it separate from PASS | Product Owner / QA Lead |
+| Productization pressure | Active | Keep controlled productization backlog blocked | Release Manager |
+| Late evidence | Watch | Reopen PASS capture only after accepted evidence and `SCRIPT_EXIT=0` | QA Lead |
+| Traceability loss | Watch | Use owner templates and sanitized evidence records | DevOps / Portal Integration |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 risk update
 
 P4 follow-up confirms `NoResponse` / `EvidencePending`: shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives. Preflight returned `SCRIPT_EXIT=2`; PASS E2E real remains NOT_READY.

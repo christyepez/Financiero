@@ -1,3 +1,9 @@
+## Sprint 11 P5 closure update
+
+P5 confirms this follow-up remains unresolved. Sprint 11 closes as `BLOCKED_DEPENDENCY`; evidence remains `NoResponse` / `EvidencePending`; preflight returned `SCRIPT_EXIT=2`; PASS E2E real is NOT_READY.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Financial Sprint 11 P4 External Escalation Follow-up
 
 Date: 2026-07-20  
