@@ -1,5 +1,17 @@
 # Financial External Dependency Backlog
 
+## Sprint 11 final backlog update
+
+Sprint 11 closes as `BLOCKED_DEPENDENCY`. External evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`. Pending dependencies: shared SQL TCP, `FinancieroDb`, Portal Gateway health, Portal Shell health, PortalShellContext live, Menu/permissions live, correlation id live and `SCRIPT_EXIT=0`.
+
+- Owners pending: SQL Common / Infra, DBA, Portal Gateway, Portal Shell, Portal Contract, Portal Security/Menu and Portal Observability.
+- SLA: unresolved.
+- Unlock condition: accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+- Next cycle recommendation: continue external remediation outside Financiero or pause productization.
+- Decision: no PASS E2E real, no production.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 execution update
 
 Sprint 11 P4 status remains `BLOCKED_DEPENDENCY`. Evidence status is `NoResponse` / `EvidencePending` for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight `SCRIPT_EXIT=0`. Preflight returned `SCRIPT_EXIT=2`, so PASS E2E real is NOT_READY.

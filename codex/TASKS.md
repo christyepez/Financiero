@@ -1,5 +1,18 @@
 # Roadmap Financiero
 
+## Sprint 11 P5 — Controlled Closure for External Dependency Block
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base P4 `9b0453323be9d63ff5aea3a8604836c491f2d22f`.
+- [x] Crear rama `financiero-sprint-11-p5-controlled-closure-external-block`.
+- [x] Ejecutar preflight final: `SCRIPT_EXIT=2`.
+- [x] Crear cierre Sprint 11 como `BLOCKED_DEPENDENCY`.
+- [x] Crear evidencia final Sprint 11.
+- [x] Crear matriz de decisión del siguiente ciclo.
+- [x] Actualizar release notes, backlog externo, productización, riesgos y verificadores.
+- [x] Mantener PASS E2E real NOT_READY hasta evidencia aceptada + `SCRIPT_EXIT=0`.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 — External Escalation Follow-up or PASS E2E Real Capture
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

@@ -1,3 +1,9 @@
+## Sprint 11 P5 closure
+
+P5 confirms the final Sprint 11 outcome: `BLOCKED_DEPENDENCY`, preflight `SCRIPT_EXIT=2`, external evidence `NoResponse` / `EvidencePending`, PASS E2E real NOT_READY and Gate 9 PASS.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 follow-up
 
 P4 re-executed the gate and confirmed the same outcome: `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2`, gates 1-8 `BLOCKED_DEPENDENCY`, Gate 9 PASS. PASS E2E real remains NOT_READY until accepted external owner evidence plus `SCRIPT_EXIT=0`.

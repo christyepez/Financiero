@@ -1,5 +1,20 @@
 # Financial Sprint 11 Notes
 
+## Sprint 11 final release notes
+
+Sprint 11 closes as `BLOCKED_DEPENDENCY`, not PASS. PRs P1-P4 established external remediation, evidence follow-up, gate decision and escalation follow-up. P5 consolidates the closure, final evidence and next cycle decision matrix.
+
+- Final closure: `docs/coordination/financial-sprint-11-closure.md`.
+- Final evidence: `docs/qa/financial-sprint-11-final-evidence.md`.
+- Next cycle matrix: `docs/roadmap/financial-next-cycle-decision-matrix.md`.
+- Final preflight: `SCRIPT_EXIT=2`.
+- Gates 1-8: `BLOCKED_DEPENDENCY`.
+- Gate 9: PASS no-production guardrails.
+- State: not production-ready.
+- Recommendation: continue external SQL/Portal remediation outside Financiero, or pause productization if owners/SLA remain unavailable.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 update
 
 External escalation follow-up completed with `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. PASS E2E real remains blocked and NOT_READY. Sprint 11 should proceed to closure as an external dependency block unless accepted owner evidence and preflight `SCRIPT_EXIT=0` become available.

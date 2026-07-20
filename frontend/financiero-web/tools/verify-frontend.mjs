@@ -489,6 +489,22 @@ for (const doc of [
 }
 
 for (const doc of [
+  'docs/coordination/financial-sprint-11-closure.md',
+  'docs/qa/financial-sprint-11-final-evidence.md',
+  'docs/releases/financial-sprint-11-notes.md',
+  'docs/roadmap/financial-next-cycle-decision-matrix.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/roadmap/financial-sprint-11-decision-matrix.md'
+]) {
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['Sprint 11', 'BLOCKED_DEPENDENCY', 'NoResponse', 'EvidencePending', 'SCRIPT_EXIT=2', 'SCRIPT_EXIT=0', 'PASS E2E real', 'NOT_READY', 'not production-ready', 'No SRI Production', 'No official ATS', 'No legal-final RIDE', 'No productive XAdES']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 11 P5 controlled closure token ${token}.`);
+  }
+}
+
+for (const doc of [
   'docs/coordination/financial-sprint-07-closure.md',
   'docs/qa/financial-sprint-07-qa-evidence.md',
   'docs/security/financial-sprint-07-security-checklist.md',

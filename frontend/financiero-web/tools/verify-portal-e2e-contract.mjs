@@ -323,4 +323,21 @@ for (const doc of [
   }
 }
 
+for (const doc of [
+  'docs/coordination/financial-sprint-11-closure.md',
+  'docs/qa/financial-sprint-11-final-evidence.md',
+  'docs/releases/financial-sprint-11-notes.md',
+  'docs/roadmap/financial-next-cycle-decision-matrix.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/roadmap/financial-sprint-11-decision-matrix.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['Sprint 11', 'BLOCKED_DEPENDENCY', 'NoResponse', 'EvidencePending', 'SCRIPT_EXIT=2', 'SCRIPT_EXIT=0', 'PASS E2E real', 'NOT_READY', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 11 P5 Portal closure token ${token}.`);
+  }
+}
+
 console.log('Portal E2E contract checks passed.');

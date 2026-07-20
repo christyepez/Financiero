@@ -1,5 +1,11 @@
 # Financial Sprint 11 P1 Return-to-PASS Criteria
 
+## Sprint 11 P5 closure review
+
+Sprint 11 closes with Return-to-PASS still closed. P5 preflight returned `SCRIPT_EXIT=2`, evidence remains `NoResponse` / `EvidencePending`, and PASS E2E real is NOT_READY until accepted external evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P4 review update
 
 Sprint 11 P4 reviewed Return-to-PASS criteria and found `NoResponse` / `EvidencePending`. Preflight returned `SCRIPT_EXIT=2`; PASS E2E real remains NOT_READY until evidence is accepted and preflight returns `SCRIPT_EXIT=0`.
