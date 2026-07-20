@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Sprint 11 P1 PASS return note
+
+PASS capture remains closed. Sprint 11 P2 may start only after external owners provide accepted evidence and preflight returns `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P5 PASS closure update
 
 Do not run PASS capture as part of Sprint 10. Sprint 10 is closed as `BLOCKED_DEPENDENCY`; PASS capture can reopen in Sprint 11 only with accepted external evidence and preflight exit code 0.

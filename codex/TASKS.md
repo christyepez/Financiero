@@ -1,5 +1,16 @@
 # Roadmap Financiero
 
+## Sprint 11 P1 — External Infra Remediation Outside Financiero Repo
+
+- [x] Crear plan operativo externo SQL/Portal.
+- [x] Crear checklist de handoff a repos/owners externos.
+- [x] Crear criterios Return-to-PASS.
+- [x] Actualizar intake/backlog/risk register/Sprint 11 matrix.
+- [x] Crear notas Sprint 11 y actualizar backlog de productización controlada.
+- [x] Actualizar documentación y verificadores.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 — Controlled Closure and Sprint 11 Decision
 
 - [x] Crear cierre Sprint 10.

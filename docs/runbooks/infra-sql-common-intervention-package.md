@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 11 P1 SQL external remediation
+
+SQL remediation must happen outside the Financiero repo. Required return evidence: shared SQL TCP PASS and separate `FinancieroDb` availability, both sanitized and accepted.
+
+No SQL Server propio. No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 SQL closure note
 
 Sprint 10 closes as `BLOCKED_DEPENDENCY` with shared SQL and `FinancieroDb` evidence still pending. Sprint 11 Option A should remediate this outside the Financiero repo.

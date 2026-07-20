@@ -1,5 +1,11 @@
 # Portal Runtime Intervention Package
 
+## Sprint 11 P1 Portal external remediation
+
+Portal remediation must happen outside the Financiero repo. Required return evidence: Portal Gateway health, Portal Shell health, PortalShellContext live, Menu/permissions live and correlation id live evidence.
+
+No Gateway propio, Portal Shell propio or Auth/Login propio. No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 Portal closure note
 
 Sprint 10 closes as `BLOCKED_DEPENDENCY` with Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence still pending. Sprint 11 Option A should remediate this outside the Financiero repo.

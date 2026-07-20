@@ -1,5 +1,16 @@
 # Financial External Dependency Backlog
 
+## Sprint 11 P1 external remediation backlog update
+
+Sprint 11 P1 confirms remediation belongs outside the Financiero repo. The backlog remains active for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight exit code 0.
+
+- Current state: `BLOCKED_DEPENDENCY`.
+- Owner external: SQL Common / Infra, SQL Common / DBA, Portal Gateway, Portal Shell, Portal Contract, Security/Menu and Observability.
+- Return condition: accepted owner evidence plus `SCRIPT_EXIT=0`.
+- Action next: execute external repo/owner handoff checklist.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P5 final backlog state
 
 Sprint 10 closes as `BLOCKED_DEPENDENCY`. Pending dependencies remain shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight exit code 0.

@@ -1,5 +1,11 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 11 P1 external remediation handoff
+
+Sprint 11 P1 moves the next action to Infra/Portal owners outside the Financiero repo. Use `docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md` and return only when evidence satisfies `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P5 closure update
 
 Sprint 10 is closed as `BLOCKED_DEPENDENCY`. Handoff for Sprint 11 must use external infra remediation outside Financiero repo unless accepted evidence arrives and preflight can exit 0.

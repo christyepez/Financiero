@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 11 P1 external infra remediation plan
+
+Sprint 11 starts with external infra remediation outside the Financiero repo. Financiero remains `BLOCKED_DEPENDENCY` until SQL/Portal owners provide accepted evidence and the preflight exits 0.
+
+- Plan: `docs/coordination/financial-sprint-11-p1-external-remediation-plan.md`.
+- Handoff checklist: `docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md`.
+- Return-to-PASS criteria: `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.
+- Sprint 11 notes: `docs/releases/financial-sprint-11-notes.md`.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P5 controlled closure
 
 Sprint 10 closes as a controlled external infra block: `BLOCKED_DEPENDENCY`, not PASS. No accepted external SQL/Portal evidence was received, so productization remains stopped and Sprint 11 should prioritize external infra remediation outside the Financiero repo.

@@ -1,5 +1,17 @@
 # Financial Sprint 11 Decision Matrix
 
+## Sprint 11 P1 update
+
+P1 confirms Option A as the active recommendation: external infra remediation outside Financiero repo. Switch to Option B PASS capture only when external owners provide accepted evidence and preflight can return `SCRIPT_EXIT=0`. Do not continue productization if owners remain undefined or evidence cannot be mapped to gates.
+
+Artifacts:
+
+- `docs/coordination/financial-sprint-11-p1-external-remediation-plan.md`.
+- `docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md`.
+- `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Input: Sprint 10 closes as `BLOCKED_DEPENDENCY`.  
 Production state: not production-ready.

@@ -1,5 +1,11 @@
 # Financial SRI API Contracts
 
+## Sprint 11 P1 external remediation contract note
+
+No SRI contract behavior changes are introduced in Sprint 11 P1. Return to PASS depends on external SQL/Portal evidence, not backend contract changes.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P5 closure contract note
 
 No contract behavior changes are introduced in Sprint 10 closure. The final state is `BLOCKED_DEPENDENCY`, and all productive tax flows remain blocked until Sprint 11 evidence conditions are met.
