@@ -1,5 +1,13 @@
 # Financial E2E PASS Checklist
 
+## Sprint 10 P3 checklist update
+
+Do not attempt PASS capture until the P3 external escalation items move from `EvidencePending` to accepted evidence. If owners do not respond within SLA, keep `BLOCKED_DEPENDENCY` and schedule Sprint 10 P4 external remediation follow-up.
+
+No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio or token storage is allowed.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Sprint 10 P2 executed gates and did not pass final acceptance. External evidence remains pending.
 
 Sprint 10 P1 adds formal gates. PASS is allowed only after Gate 1 through Gate 9 and the final gate are accepted.

@@ -109,7 +109,7 @@ function Write-AcceptanceGateRows($Results) {
     $rows += "| Gate 7 Portal integration readiness | $($portalReadiness.status) | $($portalReadiness.code): $($portalReadiness.detail -replace '\|','/') |"
     $rows += "| Gate 8 Preflight exit code 0 | BLOCKED_DEPENDENCY | Requires all runtime gates PASS. |"
     $rows += "| Gate 9 No-production guardrails | PASS | Static/documented guardrails remain enabled. |"
-    $rows += "| Final gate | BLOCKED_DEPENDENCY | Sprint 10 P2 cannot capture PASS until all gates are accepted. |"
+    $rows += "| Final gate | BLOCKED_DEPENDENCY | Sprint 10 cannot capture PASS until all gates are accepted. |"
     return $rows
 }
 
