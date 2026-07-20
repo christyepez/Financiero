@@ -1,5 +1,12 @@
 # Financial Next Cycle Decision Matrix
 
+## CRM Discovery P1 decision
+
+Date: 2026-07-20
+Decision: allow isolated CRM discovery only
+
+CRM discovery may proceed as documentation and architecture analysis while Financiero productization is paused. CRM implementation remains blocked until Portal/SQL readiness or an explicit decoupling decision exists. CRM must not be embedded inside billing/SRI flows and must not duplicate Portal capabilities or customer/master data ownership.
+
 ## Next Cycle P4 PASS or pause decision
 
 Date: 2026-07-20

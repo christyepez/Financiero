@@ -1,5 +1,17 @@
 # Financiero
 
+## CRM Discovery P1 isolated domain scope
+
+CRM discovery has started as isolated documentation only. Financiero productization remains paused, PASS E2E real is NOT_READY, and CRM implementation dependent on real Portal/SQL PASS remains blocked.
+
+- Charter: `docs/crm/crm-discovery-p1-charter.md`.
+- Bounded context: `docs/crm/crm-bounded-context.md`.
+- Conceptual model: `docs/crm/crm-conceptual-domain-model.md`.
+- Integration boundaries: `docs/crm/crm-integration-boundaries.md`.
+- Readiness checklist: `docs/crm/crm-implementation-readiness-checklist.md`.
+- Roadmap draft: `docs/crm/crm-roadmap-draft.md`.
+- No CRM runtime, DB, backend, frontend, endpoints, migrations, tables, real menu entries or real permissions were created.
+
 ## Next Cycle P4 PASS E2E or productization pause
 
 Next Cycle P4 reviewed external owner evidence and reran preflight. No accepted SQL/Portal owner evidence was found, preflight returned `SCRIPT_EXIT=2`, and PASS E2E real remains NOT_READY. Productization is paused.

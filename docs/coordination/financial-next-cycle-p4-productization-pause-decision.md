@@ -1,5 +1,9 @@
 # Next Cycle P4 - Productization Pause Decision
 
+## CRM Discovery P1 update
+
+CRM implementation dependent on real Portal/SQL PASS remains blocked. Isolated CRM discovery is allowed only for documentation and architecture analysis. No CRM runtime, backend, frontend, database, endpoints, migrations, real menu entries or real permissions may be created until implementation readiness criteria are approved.
+
 Date: 2026-07-20
 Decision: pause Financiero productization
 Runtime result: `BLOCKED_DEPENDENCY`

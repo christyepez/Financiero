@@ -1,5 +1,21 @@
 # Roadmap Financiero
 
+## CRM Discovery P1 — Isolated CRM Discovery Without Financial Productization Dependency
+
+- [x] Confirmar `main` desde GitHub como fuente principal.
+- [x] Validar commit base Next Cycle P4 `32d21f835662d065ac9bcf7801fdbf53c923c3e7`.
+- [x] Crear rama `crm-discovery-p1-isolated-domain-scope`.
+- [x] Mantener Financiero productización pausada y PASS E2E real NOT_READY.
+- [x] Crear CRM discovery charter.
+- [x] Crear CRM bounded context.
+- [x] Crear CRM conceptual domain model.
+- [x] Crear CRM integration boundaries.
+- [x] Crear CRM implementation readiness checklist.
+- [x] Crear CRM roadmap draft.
+- [x] Actualizar README, release notes, roadmap, backlog, pause decision y risk register.
+- [x] Validar que no existe CRM runtime, endpoints, migraciones/tablas ni frontend CRM.
+- [x] Mantener no-production guardrails y no duplicar Portal capabilities.
+
 ## Next Cycle P4 — PASS E2E Real Capture or Productization Pause Decision
 
 - [x] Confirmar `main` desde GitHub como fuente principal.

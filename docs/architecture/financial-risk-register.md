@@ -1,3 +1,18 @@
+## CRM Discovery P1 risks
+
+CRM discovery is permitted only as isolated architecture analysis while Financiero productization remains paused.
+
+| Risk | Status | Mitigation | Owner |
+|---|---|---|---|
+| Starting CRM on unresolved Portal/SQL base | Active | Block implementation; allow discovery only. | Product Owner / Architecture Governance |
+| Embedding CRM inside Financiero billing/SRI | Active | Define CRM as separate bounded context candidate. | CRM Domain Architect |
+| Duplicating customer/master data | Active | Require master data ownership decision before implementation. | Architecture Governance |
+| Duplicating Portal capabilities | Active | Reuse Portal Auth/Menu/permissions/Gateway/Audit/Notification/Configuration. | Portal Integration / Security |
+| Confusing discovery with implementation approval | Active | Explicitly mark no runtime, no DB, no frontend/backend. | Product Owner |
+| Creating documentary debt without runtime path | Watch | Require readiness checklist and GO/NO-GO decision before P2. | QA Lead |
+
+No CRM runtime, SQL propio, Gateway propio, Shell propio, login/Auth propio, token storage, production SRI, official ATS, legal-final RIDE or productive XAdES.
+
 ## Next Cycle P4 productization pause risks
 
 P4 pauses productization because evidence remains pending and preflight remains `SCRIPT_EXIT=2`.
