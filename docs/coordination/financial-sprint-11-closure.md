@@ -1,5 +1,11 @@
 # Financial Sprint 11 Controlled Closure
 
+## Next Cycle P1 update
+
+Next Cycle P1 starts from this closure with `BLOCKED_DEPENDENCY`, evidence `NoResponse` / `EvidencePending`, preflight `SCRIPT_EXIT=2` and PASS capture closed. The operating decision is to continue external SQL/Portal remediation only with named owners/SLA, or pause productization. PASS capture can reopen only with accepted evidence plus `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Phase: Sprint 11 P5  
 Final result: `BLOCKED_DEPENDENCY`  

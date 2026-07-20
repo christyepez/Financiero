@@ -340,4 +340,22 @@ for (const doc of [
   }
 }
 
+for (const doc of [
+  'docs/coordination/financial-next-cycle-p1-operating-decision.md',
+  'docs/coordination/financial-next-cycle-p1-executive-decision-request.md',
+  'docs/coordination/financial-next-cycle-p1-owner-sla-requirements.md',
+  'docs/qa/financial-next-cycle-p1-pass-capture-reopen-control.md',
+  'docs/releases/financial-next-cycle-notes.md',
+  'docs/roadmap/financial-next-cycle-decision-matrix.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/architecture/financial-risk-register.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['Next Cycle P1', 'BLOCKED_DEPENDENCY', 'NoResponse', 'EvidencePending', 'SCRIPT_EXIT=2', 'SCRIPT_EXIT=0', 'PASS capture', 'closed', 'owner', 'SLA', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Next Cycle P1 Portal remediation control token ${token}.`);
+  }
+}
+
 console.log('Portal E2E contract checks passed.');

@@ -1,3 +1,18 @@
+## Next Cycle P1 risk update
+
+Next Cycle P1 addresses the risk of accumulating documentation without real SQL/Portal remediation. Current state remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight remains `SCRIPT_EXIT=2`; PASS capture remains closed.
+
+| Risk | Status | Mitigation |
+|---|---|---|
+| Documentation accumulation without remediation | Active | Require executive decision and owners/SLA |
+| Owner/SLA absent | Active | Pause productization if owners are unavailable |
+| Executive decision pending | Active | Use P1 executive decision request |
+| Synthetic demo confused with PASS real | Active | Require explicit labeling and approval |
+| Portal/Infra duplication pressure | Active | Enforce no SQL/Gateway/Shell/Auth duplication |
+| Productization pressure | Active | Keep controlled productization blocked |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 final risk update
 
 Sprint 11 closes as an external dependency block. Evidence remains `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`; PASS E2E real remains NOT_READY.

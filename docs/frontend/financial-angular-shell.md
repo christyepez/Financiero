@@ -1,3 +1,9 @@
+## Next Cycle P1 note
+
+No Angular runtime changes were introduced in Next Cycle P1. PASS capture remains closed; Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `NoResponse` / `EvidencePending`; preflight remains `SCRIPT_EXIT=2`; standalone mode remains development-only and not production-ready.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 note
 
 No Angular runtime changes were introduced in Sprint 11 P5. Sprint 11 closes as `BLOCKED_DEPENDENCY`; Portal Shell, PortalShellContext, Menu/permissions and correlation id evidence remain `NoResponse` / `EvidencePending`; P5 preflight returned `SCRIPT_EXIT=2`; standalone mode remains development-only and not production-ready.

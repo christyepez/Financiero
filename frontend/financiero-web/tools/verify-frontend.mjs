@@ -505,6 +505,25 @@ for (const doc of [
 }
 
 for (const doc of [
+  'docs/coordination/financial-next-cycle-p1-operating-decision.md',
+  'docs/coordination/financial-next-cycle-p1-executive-decision-request.md',
+  'docs/coordination/financial-next-cycle-p1-owner-sla-requirements.md',
+  'docs/qa/financial-next-cycle-p1-pass-capture-reopen-control.md',
+  'docs/releases/financial-next-cycle-notes.md',
+  'docs/roadmap/financial-next-cycle-decision-matrix.md',
+  'docs/roadmap/financial-controlled-productization-backlog.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'README.md',
+  'codex/TASKS.md'
+]) {
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['Next Cycle P1', 'BLOCKED_DEPENDENCY', 'NoResponse', 'EvidencePending', 'SCRIPT_EXIT=2', 'SCRIPT_EXIT=0', 'PASS capture', 'closed', 'owner', 'SLA', 'not production-ready', 'No SRI Production', 'No official ATS', 'No legal-final RIDE', 'No productive XAdES']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Next Cycle P1 remediation control token ${token}.`);
+  }
+}
+
+for (const doc of [
   'docs/coordination/financial-sprint-07-closure.md',
   'docs/qa/financial-sprint-07-qa-evidence.md',
   'docs/security/financial-sprint-07-security-checklist.md',

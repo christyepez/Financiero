@@ -1,5 +1,17 @@
 # Financiero
 
+## Next Cycle P1 external remediation control
+
+Next Cycle P1 starts from Sprint 11 controlled closure: `BLOCKED_DEPENDENCY`, PASS E2E real NOT_READY, external evidence `NoResponse` / `EvidencePending`, and preflight `SCRIPT_EXIT=2`. The operating decision is to continue external SQL/Portal remediation only with named owners/SLA, or pause productization.
+
+- Operating decision: `docs/coordination/financial-next-cycle-p1-operating-decision.md`.
+- Executive request: `docs/coordination/financial-next-cycle-p1-executive-decision-request.md`.
+- Owner/SLA requirements: `docs/coordination/financial-next-cycle-p1-owner-sla-requirements.md`.
+- PASS reopen control: `docs/qa/financial-next-cycle-p1-pass-capture-reopen-control.md`.
+- PASS capture remains closed until accepted evidence plus `SCRIPT_EXIT=0`.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 controlled closure
 
 Sprint 11 closes as `BLOCKED_DEPENDENCY`, not PASS. No accepted external SQL/Portal evidence was received, P5 preflight returned `SCRIPT_EXIT=2`, and PASS E2E real remains NOT_READY.

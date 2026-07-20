@@ -1,5 +1,11 @@
 # Financial Next Cycle Decision Matrix
 
+## Next Cycle P1 update
+
+Next Cycle P1 keeps Option A active only if named owners and SLA are assigned. If owners/SLA remain unavailable, pause productization. PASS capture remains closed until accepted external evidence plus `SCRIPT_EXIT=0`. Current preflight remains `SCRIPT_EXIT=2`; evidence remains `NoResponse` / `EvidencePending`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Source: Sprint 11 controlled closure  
 Current result: `BLOCKED_DEPENDENCY`  

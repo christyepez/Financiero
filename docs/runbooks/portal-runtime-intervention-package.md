@@ -1,5 +1,11 @@
 # Portal Runtime Intervention Package
 
+## Next Cycle P1 Portal control
+
+Portal remediation must continue outside Financiero only with named Gateway, Shell, Contract, Menu/Security and Observability owners. Current state remains `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; preflight remains `SCRIPT_EXIT=2`. Do not create Gateway propio, Shell propio or Auth/Login propio in Financiero.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P5 Portal closure note
 
 Sprint 11 closes without accepted Portal evidence. Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id remain `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`; P5 preflight returned `SCRIPT_EXIT=2` and Portal Gateway `/health` returned HTTP 404. Do not create Gateway propio, Shell propio or Auth/Login propio in Financiero.
