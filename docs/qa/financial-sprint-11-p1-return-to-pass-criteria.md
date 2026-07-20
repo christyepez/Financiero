@@ -1,5 +1,13 @@
 # Financial Sprint 11 P1 Return-to-PASS Criteria
 
+## Sprint 11 P2 review update
+
+Sprint 11 P2 reviewed these criteria and found no accepted external owner evidence. Return-to-PASS remains closed until evidence is accepted and preflight returns `SCRIPT_EXIT=0`.
+
+Review: `docs/qa/financial-sprint-11-p2-return-to-pass-review.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Current state: `BLOCKED_DEPENDENCY`  
 PASS capture state: closed until accepted evidence exists.

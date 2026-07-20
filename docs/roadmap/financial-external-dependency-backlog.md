@@ -1,5 +1,15 @@
 # Financial External Dependency Backlog
 
+## Sprint 11 P2 evidence follow-up update
+
+Sprint 11 P2 status remains `BLOCKED_DEPENDENCY`. Evidence status is `NoResponse` / `EvidencePending` for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight `SCRIPT_EXIT=0`.
+
+- Gate status: Gates 1-8 blocked; Gate 9 PASS.
+- Unlock condition: accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+- Next action: continue follow-up with external owners; do not productize.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 11 P1 external remediation backlog update
 
 Sprint 11 P1 confirms remediation belongs outside the Financiero repo. The backlog remains active for shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions, correlation id and preflight exit code 0.

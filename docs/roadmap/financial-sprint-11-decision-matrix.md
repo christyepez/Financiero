@@ -1,5 +1,11 @@
 # Financial Sprint 11 Decision Matrix
 
+## Sprint 11 P2 update
+
+P2 result: `BLOCKED_DEPENDENCY` with `NoResponse` / `EvidencePending`. Option A remains active. Do not productize. Continue external follow-up. Switch to Option B PASS capture only if evidence is accepted and preflight returns `SCRIPT_EXIT=0`. If evidence is rejected, keep Option A with correction. If a real application FAIL is proven, create a Financiero fix sprint.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 update
 
 P1 confirms Option A as the active recommendation: external infra remediation outside Financiero repo. Switch to Option B PASS capture only when external owners provide accepted evidence and preflight can return `SCRIPT_EXIT=0`. Do not continue productization if owners remain undefined or evidence cannot be mapped to gates.

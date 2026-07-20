@@ -1,5 +1,13 @@
 # Financial Sprint 11 P1 External Repo / Owner Handoff Checklist
 
+## Sprint 11 P2 follow-up update
+
+Date: 2026-07-20. No accepted external owner evidence was received. All checklist items remain `EvidencePending` / `BLOCKED_DEPENDENCY`; owner response is `NoResponse`. The unlock condition remains accepted external evidence plus preflight `SCRIPT_EXIT=0`.
+
+Next action: continue external owner follow-up and use `docs/qa/financial-sprint-11-p2-return-to-pass-review.md` before reopening PASS capture.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 State: `BLOCKED_DEPENDENCY`  
 Purpose: handoff to Infra/Portal owners outside the Financiero repository.

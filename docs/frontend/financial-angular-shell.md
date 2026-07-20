@@ -1,5 +1,11 @@
 # Financial Angular Shell
 
+## Sprint 11 P2 Portal evidence note
+
+No Angular runtime behavior changes are introduced in Sprint 11 P2. Portal Shell and PortalShellContext evidence remains pending; standalone mode remains development-only and not production-ready.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P1 Portal Shell remediation note
 
 No Angular runtime behavior changes are introduced in Sprint 11 P1. Portal Shell and PortalShellContext remediation must happen outside Financiero; standalone mode remains development-only.

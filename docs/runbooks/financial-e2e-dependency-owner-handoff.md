@@ -1,5 +1,11 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 11 P2 evidence follow-up handoff
+
+No accepted external evidence was received in Sprint 11 P2. Continue handoff to Infra/Portal owners and do not reopen PASS capture until `docs/qa/financial-sprint-11-p2-return-to-pass-review.md` accepts evidence and preflight returns `SCRIPT_EXIT=0`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 11 P1 external remediation handoff
 
 Sprint 11 P1 moves the next action to Infra/Portal owners outside the Financiero repo. Use `docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md` and return only when evidence satisfies `docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md`.

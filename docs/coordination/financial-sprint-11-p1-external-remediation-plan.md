@@ -1,5 +1,16 @@
 # Financial Sprint 11 P1 External Remediation Plan
 
+## Sprint 11 P2 follow-up update
+
+Sprint 11 P2 found no accepted external Infra/Portal evidence. Owner response is `NoResponse` and the evidence state remains `EvidencePending`. The current decision remains `BLOCKED_DEPENDENCY`; remediation must continue outside the Financiero repo. PASS capture is not allowed until external evidence is accepted and preflight returns `SCRIPT_EXIT=0`.
+
+References:
+
+- `docs/qa/financial-sprint-11-p2-external-evidence-followup.md`.
+- `docs/qa/financial-sprint-11-p2-return-to-pass-review.md`.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 Date: 2026-07-20  
 Phase: Sprint 11 P1  
 State: `BLOCKED_DEPENDENCY`  

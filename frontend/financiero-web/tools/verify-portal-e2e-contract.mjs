@@ -99,6 +99,8 @@ for (const doc of [
   'docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md',
   'docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md',
   'docs/releases/financial-sprint-11-notes.md',
+  'docs/qa/financial-sprint-11-p2-external-evidence-followup.md',
+  'docs/qa/financial-sprint-11-p2-return-to-pass-review.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -160,6 +162,8 @@ for (const doc of [
   'docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md',
   'docs/qa/financial-sprint-11-p1-return-to-pass-criteria.md',
   'docs/releases/financial-sprint-11-notes.md',
+  'docs/qa/financial-sprint-11-p2-external-evidence-followup.md',
+  'docs/qa/financial-sprint-11-p2-return-to-pass-review.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -260,6 +264,23 @@ for (const doc of [
   const text = readFileSync(join(repoRoot, doc), 'utf8');
   for (const token of ['BLOCKED_DEPENDENCY', 'external', 'outside', 'shared SQL', 'Portal Gateway', 'SCRIPT_EXIT=0', 'not production-ready']) {
     if (!text.includes(token)) throw new Error(`${doc} missing Sprint 11 P1 Portal remediation token ${token}.`);
+  }
+}
+
+for (const doc of [
+  'docs/qa/financial-sprint-11-p2-external-evidence-followup.md',
+  'docs/qa/financial-sprint-11-p2-return-to-pass-review.md',
+  'docs/coordination/financial-sprint-11-p1-external-repo-handoff-checklist.md',
+  'docs/coordination/financial-sprint-11-p1-external-remediation-plan.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/roadmap/financial-sprint-11-decision-matrix.md',
+  'docs/releases/financial-sprint-11-notes.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['NoResponse', 'EvidencePending', 'BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'SCRIPT_EXIT=0', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 11 P2 Portal evidence follow-up token ${token}.`);
   }
 }
 

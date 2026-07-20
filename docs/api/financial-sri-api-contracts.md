@@ -1,5 +1,11 @@
 # Financial SRI API Contracts
 
+## Sprint 11 P2 external evidence contract note
+
+No SRI contract behavior changes are introduced in Sprint 11 P2. External evidence remains `NoResponse` / `EvidencePending`; PASS capture remains blocked.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 11 P1 external remediation contract note
 
 No SRI contract behavior changes are introduced in Sprint 11 P1. Return to PASS depends on external SQL/Portal evidence, not backend contract changes.
