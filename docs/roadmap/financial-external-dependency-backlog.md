@@ -1,5 +1,17 @@
 # Financial External Dependency Backlog
 
+## Sprint 10 P4 executive block state
+
+Date: 2026-07-20. P4 follow-up keeps shared SQL, `FinancieroDb`, Portal Gateway, Portal Shell, PortalShellContext, Menu/permissions and correlation id as `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`.
+
+Executive follow-up confirms shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+- Executive action: block productization and escalate remediation outside the Financiero repository.
+- New target: reopen PASS capture only after owner evidence is accepted and preflight exits 0.
+- Closure path: prepare Sprint 10 P5 controlled closure if evidence remains unavailable.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 escalation state
 
 Date: 2026-07-20. External SQL/Portal dependencies remain `EvidencePending` / `BLOCKED_DEPENDENCY`. P3 adds a formal escalation matrix, evidence request and remediation log instead of claiming PASS.

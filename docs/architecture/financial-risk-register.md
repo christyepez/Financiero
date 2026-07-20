@@ -1,5 +1,20 @@
 # Financial Risk Register
 
+## Sprint 10 P4 executive block risks
+
+Executive follow-up confirms `NoResponse` / `EvidencePending`: shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+| Risk | Impact | Mitigation | State |
+|---|---|---|---|
+| SLA unresolved after follow-up | Productization remains blocked | Executive block decision and P5 controlled closure | BLOCKED_DEPENDENCY |
+| Productization pressure without E2E PASS | False readiness and operational exposure | Explicit no-PASS/no-production guardrails | BLOCKED_DEPENDENCY |
+| Late evidence arrives after closure | PASS capture may need re-open decision | Require sanitized intake and rerun preflight before acceptance | EvidencePending |
+| External remediation stays outside Financiero | Ownership gap remains unresolved | Keep backlog and executive decision traceable | EvidencePending |
+| Team bypasses Portal/Infra with local duplicates | Architecture drift and security risk | No SQL/Gateway/Shell/Auth propios; enforce verifiers | BLOCKED_DEPENDENCY |
+| Traceability is lost across P1-P4 | Governance cannot audit why PASS was blocked | Maintain PR history, intake, matrix, log and executive decision | EvidencePending |
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 external escalation risks
 
 The unresolved runtime path explicitly includes shared SQL and Portal Gateway evidence before any PASS capture.

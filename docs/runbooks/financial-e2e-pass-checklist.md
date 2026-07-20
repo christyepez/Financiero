@@ -1,5 +1,13 @@
 # Financial E2E PASS Checklist
 
+## Sprint 10 P4 checklist update
+
+PASS capture remains blocked. The only accepted PASS is Gate 9 no-production guardrails. Gates 1-8 require accepted SQL/Portal evidence and preflight exit 0.
+
+If evidence is still unavailable, continue Sprint 10 P5 as controlled closure of the external block.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 checklist update
 
 Do not attempt PASS capture until the P3 external escalation items move from `EvidencePending` to accepted evidence. If owners do not respond within SLA, keep `BLOCKED_DEPENDENCY` and schedule Sprint 10 P4 external remediation follow-up.

@@ -1,5 +1,17 @@
 # Roadmap Financiero
 
+## Sprint 10 P4 — External Remediation Follow-up and Executive Block Decision
+
+- [x] Revisar evidencia externa recibida.
+- [x] Registrar `NoResponse` / `EvidencePending`.
+- [x] Crear evidencia de follow-up P4.
+- [x] Crear decisión ejecutiva de bloqueo externo.
+- [x] Actualizar matriz de escalamiento y remediation log.
+- [x] Actualizar intake/backlog/risk/decision matrix.
+- [x] Actualizar documentación y verificadores.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso.
+- [x] Mantener no-production guardrails: No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P3 — External Owner Escalation and Remediation Tracking
 
 - [x] Crear matriz de escalamiento externa.

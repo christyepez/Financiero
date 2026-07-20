@@ -89,6 +89,8 @@ for (const doc of [
   'docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md',
   'docs/coordination/financial-sprint-10-p3-formal-evidence-request.md',
   'docs/qa/financial-sprint-10-p3-external-remediation-log.md',
+  'docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md',
+  'docs/coordination/financial-sprint-10-p4-executive-block-decision.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -140,6 +142,8 @@ for (const doc of [
   'docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md',
   'docs/coordination/financial-sprint-10-p3-formal-evidence-request.md',
   'docs/qa/financial-sprint-10-p3-external-remediation-log.md',
+  'docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md',
+  'docs/coordination/financial-sprint-10-p4-executive-block-decision.md',
   'docs/qa/templates/sql-common-evidence-template.md',
   'docs/qa/templates/portal-gateway-evidence-template.md',
   'docs/qa/templates/portal-shell-evidence-template.md',
@@ -191,6 +195,23 @@ for (const doc of [
   const text = readFileSync(join(repoRoot, doc), 'utf8');
   for (const token of ['EvidencePending', 'BLOCKED_DEPENDENCY', 'Portal Gateway', 'shared SQL', 'not production-ready', 'SLA']) {
     if (!text.includes(token)) throw new Error(`${doc} missing Sprint 10 P3 Portal escalation token ${token}.`);
+  }
+}
+
+for (const doc of [
+  'docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md',
+  'docs/coordination/financial-sprint-10-p4-executive-block-decision.md',
+  'docs/coordination/financial-sprint-10-p3-owner-escalation-matrix.md',
+  'docs/qa/financial-sprint-10-p3-external-remediation-log.md',
+  'docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md',
+  'docs/roadmap/financial-external-dependency-backlog.md',
+  'docs/architecture/financial-risk-register.md',
+  'docs/roadmap/financial-sprint-10-decision-matrix.md'
+]) {
+  statSync(join(repoRoot, doc));
+  const text = readFileSync(join(repoRoot, doc), 'utf8');
+  for (const token of ['NoResponse', 'EvidencePending', 'BLOCKED_DEPENDENCY', 'executive', 'Portal Gateway', 'shared SQL', 'not production-ready']) {
+    if (!text.includes(token)) throw new Error(`${doc} missing Sprint 10 P4 Portal executive block token ${token}.`);
   }
 }
 

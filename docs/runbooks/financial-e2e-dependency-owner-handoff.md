@@ -1,5 +1,14 @@
 # Financial E2E Dependency Owner Handoff
 
+## Sprint 10 P4 handoff update
+
+P4 follow-up confirms `NoResponse` / `EvidencePending`. Use the executive block decision as the current source for leadership alignment. Do not attempt PASS capture until owner evidence is received, sanitized, accepted and preflight exits 0.
+
+- `docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md`
+- `docs/coordination/financial-sprint-10-p4-executive-block-decision.md`
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 handoff update
 
 P3 adds the formal owner escalation package. SQL Common, Portal Gateway, Portal Shell, Portal Contract, Menu/permissions and correlation id evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`.

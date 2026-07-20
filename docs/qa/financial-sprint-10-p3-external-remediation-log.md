@@ -1,5 +1,17 @@
 # Sprint 10 P3 External Remediation Log
 
+## Sprint 10 P4 follow-up entry
+
+| Date | Dependency | Action requested | Owner | State | Response received | Evidence received | Validation | Result | Next action |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-07-20 | All external SQL/Portal gates | Follow up P3 escalation and request accepted evidence | SQL Common + Portal owners | NoResponse / EvidencePending | NoResponse | NotReceived | P4 follow-up evidence created; no owner evidence accepted | BLOCKED_DEPENDENCY | Execute executive block decision and prepare P5 closure |
+
+P4 confirms no evidence was received or accepted. `REJECTED_EVIDENCE` is not applicable because no evidence was submitted. Gate 9 no-production guardrails remains the only accepted PASS.
+
+Executive follow-up confirms shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 Date: 2026-07-20  
 Final state: `EvidencePending` / `BLOCKED_DEPENDENCY`  
 Purpose: track external remediation without inventing evidence or claiming PASS.

@@ -1,5 +1,11 @@
 # Infra SQL Common Intervention Package
 
+## Sprint 10 P4 SQL follow-up note
+
+P4 follow-up confirms `NoResponse` / `EvidencePending` for shared SQL TCP and `FinancieroDb`. Productization remains blocked; do not create SQL Server propio in Financiero. Reopen PASS capture only with accepted SQL owner evidence.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 escalation note
 
 SQL Common TCP and `FinancieroDb` evidence remain `EvidencePending` / `BLOCKED_DEPENDENCY`. The required action is owner-provided sanitized evidence using the P3 formal request and escalation matrix; Financiero must not create SQL Server propio or share another domain database.

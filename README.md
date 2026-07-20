@@ -1,5 +1,16 @@
 # Financiero
 
+## Sprint 10 P4 external remediation follow-up
+
+Sprint 10 P4 executed the formal follow-up of external owner escalation. No accepted SQL/Portal evidence was received, so the executive decision is to keep productization blocked and prepare P5 controlled closure if evidence remains unavailable.
+
+- Follow-up evidence: `docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md`.
+- Executive block decision: `docs/coordination/financial-sprint-10-p4-executive-block-decision.md`.
+- Current state: `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY`.
+- Gate 9 no-production guardrails remains the only accepted PASS.
+- No SQL Server propio, Gateway propio, Portal Shell propio, login/Auth propio, token storage, upload/download evidence or notification send.
+- No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 10 P3 external owner escalation
 
 Sprint 10 P3 formalizes escalation and remediation tracking for external SQL/Portal owners. No new runtime capability is implemented, no PASS is claimed and the state remains `EvidencePending` / `BLOCKED_DEPENDENCY`.

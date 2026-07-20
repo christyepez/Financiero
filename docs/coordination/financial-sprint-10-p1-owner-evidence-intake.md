@@ -1,5 +1,17 @@
 # Financial Sprint 10 P1 Owner Evidence Intake
 
+## Sprint 10 P4 follow-up update
+
+Date: 2026-07-20. P4 reviewed the external escalation state and found `NoResponse` / `EvidencePending`. No owner evidence was accepted or rejected because no evidence was submitted. The intake state remains `BLOCKED_DEPENDENCY`; next action is executive block decision and Sprint 10 P5 controlled closure if the external owners still do not respond.
+
+Executive follow-up confirms shared SQL and Portal Gateway remain not production-ready until accepted evidence arrives.
+
+- Follow-up evidence: `docs/qa/financial-sprint-10-p4-remediation-followup-evidence.md`.
+- Executive block decision: `docs/coordination/financial-sprint-10-p4-executive-block-decision.md`.
+- Gate 9 no-production guardrails remains the only accepted PASS.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES. Financiero remains not production-ready.
+
 ## Sprint 10 P3 escalation update
 
 Date: 2026-07-20. P3 prepared the external owner escalation package and remediation tracking. No external SQL/Portal evidence was received during this update, so SQL Common, Portal Gateway, Portal Shell and Portal Contract remain `EvidencePending` / `BLOCKED_DEPENDENCY`.
