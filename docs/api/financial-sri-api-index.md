@@ -116,6 +116,10 @@ Sprint 9 P1 no agrega endpoints. Reejecuta E2E real y mantiene `BLOCKED_DEPENDEN
 Sprint 9 P2 no agrega endpoints. Solo mejora diagnóstico/runbooks del preflight E2E y mantiene contratos API read-only/foundation.
 
 Sprint 9 P3 no agrega endpoints. Captura evidencia final `BLOCKED_DEPENDENCY` y handoff operativo; los contratos siguen not production-ready.
+# Sprint 10 P2 note
+
+No API endpoint changes are introduced. Acceptance gates remain blocked by external SQL/Portal evidence pending. Production tax flows remain blocked.
+
 # Sprint 10 P1 note
 
 No API endpoint changes are introduced. Sprint 10 P1 only adds owner evidence intake and gates for external SQL/Portal remediation. Production tax flows remain blocked.

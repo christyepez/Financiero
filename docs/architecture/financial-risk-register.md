@@ -1,5 +1,18 @@
 # Financial Risk Register
 
+## Sprint 10 P2 evidence review risks
+
+| Risk | Status | Impact | Mitigation |
+|---|---|---|---|
+| Evidence not received | Active | Gates 1-8 cannot pass. | Escalate using owner intake and templates. |
+| Evidence invalid or incomplete | Watch | Could delay acceptance after owners respond. | Validate against templates before accepting. |
+| Evidence contains secrets | Watch | Security incident risk. | Reject evidence with tokens, passwords, full connection strings, certificates, XML reales or personal data. |
+| Dependency confirmed out of scope by owner | Watch | Requires governance decision. | Mark Blocked/OutOfScope only with formal owner response. |
+| Partial PASS | Active | Can be mistaken for E2E readiness. | Require all gates accepted and preflight exit `0`. |
+| Prolonged external block | Active | Productization remains blocked. | Escalate owner assignment and target dates. |
+
+Control tokens: BLOCKED_DEPENDENCY; Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 | Risk | Impact | Status | Mitigation |
 |---|---|---|---|
 | Shared SQL unavailable | Blocks API readiness and full E2E PASS. | Open | Start one shared SQL container and keep logical databases separate. |

@@ -113,6 +113,12 @@ No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
 Financiero remains not production-ready until real E2E PASS evidence exists.
 
 Never commit passwords, tokens, full connection strings, certificates, real XML, SRI responses, personal data, screenshots with secrets or generated artifacts.
+# Sprint 10 P2 gate execution
+
+P2 preflight still exits `2`. Use `-AcceptanceGateReport` and `-EvidenceOutputPath <TEMP_PATH_OUTSIDE_REPO>` to capture sanitized gate output without committing generated evidence.
+
+Control tokens: BLOCKED_DEPENDENCY; Portal Gateway; shared SQL; not production-ready; No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 # Sprint 10 P1 kickoff
 
 Before starting runtime again, collect owner evidence using `docs/coordination/financial-sprint-10-p1-owner-evidence-intake.md` and write optional sanitized preflight output with `-EvidenceOutputPath`.

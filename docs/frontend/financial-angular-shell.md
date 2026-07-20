@@ -175,6 +175,10 @@ npm install
 npm run build
 npm test
 ```
+# Sprint 10 P2 Shell evidence review
+
+No Portal Shell or PortalShellContext evidence was received. Financiero Angular remains static-verified only and cannot claim Portal-integrated PASS.
+
 # Sprint 10 P1 Shell evidence
 
 Portal Shell evidence must use `docs/qa/templates/portal-shell-evidence-template.md` and PortalShellContext evidence must use `docs/qa/templates/portal-contract-evidence-template.md`. Financiero still must not create a Shell or store tokens.

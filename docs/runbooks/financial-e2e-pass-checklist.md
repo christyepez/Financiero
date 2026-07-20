@@ -1,5 +1,7 @@
 # Financial E2E PASS Checklist
 
+Sprint 10 P2 executed gates and did not pass final acceptance. External evidence remains pending.
+
 Sprint 10 P1 adds formal gates. PASS is allowed only after Gate 1 through Gate 9 and the final gate are accepted.
 
 Sprint 9 P5 decision: this checklist is not complete. Sprint 10 must complete external infra remediation before PASS.

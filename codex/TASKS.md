@@ -1,5 +1,15 @@
 # Roadmap Financiero
 
+## Sprint 10 P2 — Owner Evidence Review and Acceptance Gates
+
+- [x] Crear review de evidencia por owner.
+- [x] Crear ejecución de acceptance gates.
+- [x] Actualizar intake con `EvidencePending`/`EvidenceReceived` real.
+- [x] Actualizar backlog externo con estado P2.
+- [x] Actualizar risk register por evidencia no recibida y PASS parcial.
+- [x] Agregar `-AcceptanceGateReport` al preflight.
+- [x] Mantener `BLOCKED_DEPENDENCY`; no PASS falso.
+
 ## Sprint 10 P1 — External Infra Remediation Kickoff
 
 - [x] Crear intake formal para owners de Infra/Portal.

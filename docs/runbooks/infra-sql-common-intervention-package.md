@@ -1,5 +1,7 @@
 # Infra SQL Common Intervention Package
 
+Sprint 10 P2 review: SQL owner evidence was NotReceived, so Gate 1 and Gate 2 remain `BLOCKED_DEPENDENCY`.
+
 Sprint 10 P1 requires SQL owners to use `docs/qa/templates/sql-common-evidence-template.md` and pass Gate 1/Gate 2 in `docs/qa/financial-sprint-10-p1-e2e-acceptance-gate.md`.
 
 Sprint 9 P5 closure keeps this intervention as a Sprint 10 prerequisite. PASS requires owner evidence for shared SQL before Financiero runtime evidence can be accepted.

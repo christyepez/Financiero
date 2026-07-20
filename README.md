@@ -1,5 +1,14 @@
 # Financiero
 
+## Sprint 10 P2 owner evidence review
+
+Sprint 10 P2 reviewed owner evidence intake and executed acceptance gates. No external SQL/Portal evidence was received, so the real state remains `BLOCKED_DEPENDENCY`.
+
+- Evidence review: `docs/qa/financial-sprint-10-p2-owner-evidence-review.md`.
+- Gate execution: `docs/qa/financial-sprint-10-p2-acceptance-gate-execution.md`.
+- Preflight supports `-AcceptanceGateReport` and `-EvidenceOutputPath`.
+- No PASS is claimed until SQL, Portal Gateway, Portal Shell and PortalShellContext evidence is accepted.
+
 ## Sprint 10 P1 external infra remediation kickoff
 
 Sprint 10 starts as external infrastructure remediation, not production activation. Owner evidence intake and E2E gates are now the source of acceptance for the next PASS attempt.

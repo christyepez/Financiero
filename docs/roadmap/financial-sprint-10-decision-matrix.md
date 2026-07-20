@@ -1,5 +1,9 @@
 # Financial Sprint 10 Decision Matrix
 
+## Sprint 10 P2 gate result
+
+Owner evidence review found no external evidence received. Option A remains active but blocked at evidence intake. Sprint 10 P2 result is `BLOCKED_DEPENDENCY`, with Gate 9 PASS and Gates 1-8 blocked.
+
 ## Sprint 10 P1 kickoff
 
 Option A is active as owner evidence intake. P1 does not remediate runtime directly; it prepares acceptance gates and evidence templates so SQL Common Owner, Portal Gateway Owner, Portal Shell Owner and Portal Contract Owner can return valid proof.

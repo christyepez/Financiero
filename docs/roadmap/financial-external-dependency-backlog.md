@@ -1,5 +1,9 @@
 # Financial External Dependency Backlog
 
+## Sprint 10 P2 review update
+
+No external SQL/Portal evidence was received. Current state remains `EvidencePending` or `Blocked` depending on whether the item is owner-provided or dependent on blocked runtime. Escalation paths remain active.
+
 ## Sprint 10 P1 intake update
 
 Each dependency now requires an owner, target date, evidence artifact, acceptance gate, escalation path and current state. Evidence must use the sanitized templates under `docs/qa/templates`.
@@ -10,9 +14,9 @@ Track external dependencies required before Financiero E2E PASS and productizati
 
 | Item | Owner | Target date | Evidence artifact | Acceptance gate | Escalation path | Current state after P1 | Acceptance criteria | Evidence required |
 |---|---|---|---|---|---|---|---|---|
-| Shared SQL runtime | SQL Common Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 1 | Infra lead | Requested | TCP `host.docker.internal:21433` open. | Sanitized TCP and SQL connectivity evidence. |
-| `FinancieroDb` logical database | SQL Common/DBA Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 2 | Infra/DBA lead | Requested | Separate logical DB exists or migrations can initialize it. | Sanitized DB existence proof. |
-| Portal Gateway health route | Portal Gateway Owner TBD | TBD | `portal-gateway-evidence-template.md` | Gate 3 | Portal lead | Requested | Owner-confirmed route returns HTTP 2xx. | URL/path/status with no tokens. |
+| Shared SQL runtime | SQL Common Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 1 | Infra lead | EvidencePending | TCP `host.docker.internal:21433` open. | Sanitized TCP and SQL connectivity evidence. |
+| `FinancieroDb` logical database | SQL Common/DBA Owner TBD | TBD | `sql-common-evidence-template.md` | Gate 2 | Infra/DBA lead | EvidencePending | Separate logical DB exists or migrations can initialize it. | Sanitized DB existence proof. |
+| Portal Gateway health route | Portal Gateway Owner TBD | TBD | `portal-gateway-evidence-template.md` | Gate 3 | Portal lead | EvidencePending | Owner-confirmed route returns HTTP 2xx. | URL/path/status with no tokens. |
 | Portal Shell runtime | Portal Shell Owner TBD | TBD | `portal-shell-evidence-template.md` | Gate 4 | Portal lead | EvidencePending | Shell URL reachable. | Sanitized HTTP/browser evidence. |
 | PortalShellContext | Portal Contract Owner TBD | TBD | `portal-contract-evidence-template.md` | Gate 5 | Portal architecture lead | EvidencePending | `contractVersion=1.0`, source portal, menu, permissions, feature flags, correlation id. | Sanitized context sample. |
 | Menu/permissions alignment | Portal Security/Menu Owner TBD | TBD | `portal-contract-evidence-template.md` | Gate 5 | Portal security lead | EvidencePending | Financial routes and permissions align with allow-list. | Sanitized menu/permission matrix. |
