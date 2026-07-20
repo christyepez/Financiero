@@ -1,5 +1,11 @@
 # Financial Sprint 11 Notes
 
+## Sprint 11 P3 update
+
+External evidence gate decision completed with `NoResponse` / `EvidencePending` and preflight `SCRIPT_EXIT=2`. PASS capture remains blocked and NOT_READY. Sprint 11 P4 should either continue external escalation or become PASS capture only if accepted owner evidence and preflight `SCRIPT_EXIT=0` are available.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 update
 
 External evidence follow-up completed with `NoResponse` / `EvidencePending`. PASS capture remains blocked. Sprint 11 P3 should either continue external follow-up or become PASS capture only if accepted owner evidence and preflight `SCRIPT_EXIT=0` are available.

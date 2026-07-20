@@ -1,5 +1,11 @@
 # Financial E2E PASS Checklist
 
+## Sprint 11 P3 PASS follow-up note
+
+PASS capture remains closed after P3. Required state to open P4 PASS capture: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`. Current state is `NoResponse` / `EvidencePending` / `BLOCKED_DEPENDENCY` with `SCRIPT_EXIT=2`, so PASS capture is NOT_READY.
+
+No SRI Production; No official ATS; No legal-final RIDE; No productive XAdES.
+
 ## Sprint 11 P2 PASS follow-up note
 
 PASS capture remains closed after P2. Required state to open P3 PASS capture: accepted external evidence for all gates and preflight `SCRIPT_EXIT=0`.
