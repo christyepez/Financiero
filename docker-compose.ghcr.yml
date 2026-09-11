@@ -1,0 +1,4 @@
+services:
+  financial-api:
+    image: ghcr.io/christyepez/financiero-financial-api@sha256:c21f8cb231a16c6f6501b24c0a0ae58aef4c23884f0fea135c416d67d83900ec
+    build: null
