@@ -1,0 +1,30 @@
+name: Financiero Portal Integration CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'financiero-portal-*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore Financiero.sln
+      - name: Build
+        run: dotnet build Financiero.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test Financiero.sln -c Release --no-build
+      - name: Validate Portal PROD-local compose
+        env:
+          SQLSERVER_SA_PASSWORD: Portal_Local_Only_12345!
+          JWT_SECRET: portal-local-ci-placeholder-secret-32chars
+        run: docker compose -f docker-compose.portal-prod-local.yml config --quiet
