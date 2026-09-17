@@ -1062,7 +1062,7 @@ BEGIN
         Credit decimal(19,4) NOT NULL,
         CreatedAtUtc datetimeoffset NOT NULL,
         UpdatedAtUtc datetimeoffset NOT NULL,
-        CONSTRAINT FK_journal_entry_lines_journal_entries FOREIGN KEY (JournalEntryId) REFERENCES financial.journal_entries(Id) ON DELETE CASCADE
+        CONSTRAINT FK_journal_entry_lines_journal_entries FOREIGN KEY (JournalEntryId) REFERENCES financial.journal_entries(Id) ON DELETE NO ACTION
     );
     CREATE UNIQUE INDEX IX_journal_entry_lines_TenantId_JournalEntryId_LineNumber ON financial.journal_entry_lines(TenantId, JournalEntryId, LineNumber);
     CREATE INDEX IX_journal_entry_lines_TenantId_AccountId ON financial.journal_entry_lines(TenantId, AccountId);

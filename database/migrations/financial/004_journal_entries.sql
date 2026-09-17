@@ -44,7 +44,7 @@ BEGIN
 END;
 
 IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_journal_entry_lines_journal_entries')
-    ALTER TABLE financial.journal_entry_lines ADD CONSTRAINT FK_journal_entry_lines_journal_entries FOREIGN KEY (JournalEntryId) REFERENCES financial.journal_entries(Id) ON DELETE CASCADE;
+    ALTER TABLE financial.journal_entry_lines ADD CONSTRAINT FK_journal_entry_lines_journal_entries FOREIGN KEY (JournalEntryId) REFERENCES financial.journal_entries(Id) ON DELETE NO ACTION;
 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_journal_entry_lines_TenantId_JournalEntryId_LineNumber' AND object_id = OBJECT_ID('financial.journal_entry_lines'))
     CREATE UNIQUE INDEX IX_journal_entry_lines_TenantId_JournalEntryId_LineNumber ON financial.journal_entry_lines(TenantId, JournalEntryId, LineNumber);
