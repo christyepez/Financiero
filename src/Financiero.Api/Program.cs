@@ -14,11 +14,19 @@ builder.Host.UseSerilog((context, _, log) => log.ReadFrom.Configuration(context.
 builder.Services.AddHealthChecks();
 builder.Services.AddFinancialInfrastructure(builder.Configuration);
 
-var secret = builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret must be supplied through environment or secret storage.");
+var secret = builder.Configuration["Jwt:Secret"]
+    ?? builder.Configuration["JWT_SECRET"]
+    ?? throw new InvalidOperationException("Jwt:Secret or JWT_SECRET must be supplied through environment or secret storage.");
+var issuer = builder.Configuration["Jwt:Issuer"]
+    ?? builder.Configuration["JWT_ISSUER"]
+    ?? "portal-corporativo";
+var audience = builder.Configuration["Jwt:Audience"]
+    ?? builder.Configuration["JWT_AUDIENCE"]
+    ?? "portal-corporativo-clients";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => options.TokenValidationParameters = new()
 {
-    ValidateIssuer = true, ValidIssuer = builder.Configuration["Jwt:Issuer"], ValidateAudience = true,
-    ValidAudience = builder.Configuration["Jwt:Audience"], ValidateIssuerSigningKey = true,
+    ValidateIssuer = true, ValidIssuer = issuer, ValidateAudience = true,
+    ValidAudience = audience, ValidateIssuerSigningKey = true,
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), ValidateLifetime = true,
     ClockSkew = TimeSpan.FromMinutes(1)
 });

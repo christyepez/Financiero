@@ -18,9 +18,9 @@ public sealed class FinancialApiFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseSetting("Jwt:Secret", "Test_Secret_At_Least_32_Characters_Long!");
-        builder.UseSetting("Jwt:Issuer", "portal-corporativo");
-        builder.UseSetting("Jwt:Audience", "portal-corporativo-clients");
+        Environment.SetEnvironmentVariable("JWT_SECRET", "Test_Secret_At_Least_32_Characters_Long!");
+        Environment.SetEnvironmentVariable("JWT_ISSUER", "portal-corporativo");
+        Environment.SetEnvironmentVariable("JWT_AUDIENCE", "portal-corporativo-clients");
         builder.UseSetting("ConnectionStrings:FinancialDb", "");
     }
 }
