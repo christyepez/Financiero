@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Net;
 using Xunit;
 namespace Financiero.Api.Tests;
@@ -13,6 +16,26 @@ public sealed class HealthTests : IClassFixture<FinancialApiFactory>
     [Fact] public async Task Content_file_health_is_anonymous() => Assert.False((await _client.GetAsync("/health/content-file")).StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden);
     [Fact] public async Task Correlation_id_is_preserved()
     { using var request=new HttpRequestMessage(HttpMethod.Get,"/health");request.Headers.Add("X-Correlation-ID","api-test-correlation");var response=await _client.SendAsync(request);Assert.Equal("api-test-correlation",response.Headers.GetValues("X-Correlation-ID").Single()); }
+
+    [Fact]
+    public void Oidc_authority_mode_configures_bearer_options()
+    {
+        using var factory = new FinancialApiFactory().WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Jwt:Authority", "https://idp.corp.internal/");
+            builder.UseSetting("Jwt:Audience", "portal-api");
+            builder.UseSetting("Jwt:RequireHttpsMetadata", "true");
+        });
+
+        using var scope = factory.Services.CreateScope();
+        var options = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
+            .Get(JwtBearerDefaults.AuthenticationScheme);
+
+        Assert.Equal("https://idp.corp.internal/", options.Authority);
+        Assert.Equal("portal-api", options.Audience);
+        Assert.True(options.RequireHttpsMetadata);
+        Assert.Null(options.TokenValidationParameters.IssuerSigningKey);
+    }
 }
 public sealed class FinancialApiFactory : WebApplicationFactory<Program>
 {

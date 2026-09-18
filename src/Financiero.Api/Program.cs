@@ -14,21 +14,43 @@ builder.Host.UseSerilog((context, _, log) => log.ReadFrom.Configuration(context.
 builder.Services.AddHealthChecks();
 builder.Services.AddFinancialInfrastructure(builder.Configuration);
 
-var secret = builder.Configuration["Jwt:Secret"]
-    ?? builder.Configuration["JWT_SECRET"]
-    ?? throw new InvalidOperationException("Jwt:Secret or JWT_SECRET must be supplied through environment or secret storage.");
-var issuer = builder.Configuration["Jwt:Issuer"]
-    ?? builder.Configuration["JWT_ISSUER"]
-    ?? "portal-corporativo";
+var authority = builder.Configuration["Jwt:Authority"] ?? builder.Configuration["JWT_AUTHORITY"];
 var audience = builder.Configuration["Jwt:Audience"]
     ?? builder.Configuration["JWT_AUDIENCE"]
     ?? "portal-corporativo-clients";
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => options.TokenValidationParameters = new()
+var requireHttpsMetadataValue = builder.Configuration["Jwt:RequireHttpsMetadata"]
+    ?? builder.Configuration["JWT_REQUIRE_HTTPS_METADATA"];
+var requireHttpsMetadata = !bool.TryParse(requireHttpsMetadataValue, out var parsedRequireHttpsMetadata)
+    || parsedRequireHttpsMetadata;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
-    ValidateIssuer = true, ValidIssuer = issuer, ValidateAudience = true,
-    ValidAudience = audience, ValidateIssuerSigningKey = true,
-    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), ValidateLifetime = true,
-    ClockSkew = TimeSpan.FromMinutes(1)
+    if (!string.IsNullOrWhiteSpace(authority))
+    {
+        options.Authority = authority.Trim();
+        options.Audience = audience;
+        options.RequireHttpsMetadata = requireHttpsMetadata;
+        options.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true, ValidateAudience = true, ValidAudience = audience,
+            ValidateIssuerSigningKey = true, ValidateLifetime = true, ClockSkew = TimeSpan.FromMinutes(1)
+        };
+        return;
+    }
+
+    var secret = builder.Configuration["Jwt:Secret"]
+        ?? builder.Configuration["JWT_SECRET"]
+        ?? throw new InvalidOperationException("Configure Jwt:Authority/JWT_AUTHORITY for OIDC or provide Jwt:Secret/JWT_SECRET for local JWT mode.");
+    var issuer = builder.Configuration["Jwt:Issuer"]
+        ?? builder.Configuration["JWT_ISSUER"]
+        ?? "portal-corporativo";
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = true, ValidIssuer = issuer, ValidateAudience = true,
+        ValidAudience = audience, ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)), ValidateLifetime = true,
+        ClockSkew = TimeSpan.FromMinutes(1)
+    };
 });
 builder.Services.AddFinancialRuntimeAuthorization();
 
