@@ -30,6 +30,7 @@ const required = [
   'src/app/features/sri-readiness/sri-readiness.component.ts',
   'src/app/features/ats-readiness/ats-readiness.component.ts',
   'src/app/features/external-approvals/external-approvals.component.ts',
+  'src/app/features/accounting/accounting-workspace.component.ts',
   'src/environments/environment.ts',
   'src/environments/environment.development.ts',
   'src/environments/environment.example.ts'
@@ -177,6 +178,14 @@ for (const token of ['missingRequiredPortalContext()', 'hasUnsupportedContract()
 const dashboard = readFileSync(join(root, 'src/app/features/dashboard/dashboard.component.ts'), 'utf8');
 for (const token of ['Portal E2E readiness', 'development standalone only', 'production requires Portal context']) {
   if (!dashboard.includes(token)) throw new Error(`Dashboard missing Portal E2E readiness token ${token}.`);
+}
+
+const accountingWorkspace = readFileSync(join(root, 'src/app/features/accounting/accounting-workspace.component.ts'), 'utf8');
+for (const token of ['/api/financial/accounts', '/api/financial/journal-entries', '/api/financial/fiscal-years', '/api/financial/fiscal-periods', 'Plan de cuentas', 'Asientos contables']) {
+  if (!accountingWorkspace.includes(token)) throw new Error(`Accounting workspace missing ${token}.`);
+}
+for (const token of ['financial.chartofaccounts.read', 'financial.journalentries.read', 'financial.fiscalyears.read', 'financial.fiscalperiods.read']) {
+  if (!portalDefaults.includes(token)) throw new Error(`Portal financial menu missing ${token}.`);
 }
 
 const menuAdapter = readFileSync(join(root, 'src/app/core/adapters/portal-menu.adapter.ts'), 'utf8');
