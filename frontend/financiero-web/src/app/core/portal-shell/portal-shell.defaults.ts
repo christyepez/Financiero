@@ -32,7 +32,11 @@ export const financialMenuItems: PortalMenuItemContract[] = [
   { route: '/external-approvals', title: 'Aprobaciones externas', permission: 'financial.electronicdocuments.manage', featureFlag: 'showExternalApprovals', icon: 'approval', order: 40, foundationOnly: true, readOnly: true },
   { route: '/tax-catalogs', title: 'Catálogos tributarios', permission: 'financial.electronicdocuments.read', icon: 'catalog', order: 50, foundationOnly: true, readOnly: true },
   { route: '/purchases', title: 'Compras', permission: 'financial.electronicdocuments.read', featureFlag: 'showPurchases', icon: 'purchase', order: 60, foundationOnly: true, readOnly: true },
-  { route: '/voided-documents', title: 'Anulados', permission: 'financial.electronicdocuments.read', featureFlag: 'showVoidedDocuments', icon: 'voided', order: 70, foundationOnly: true, readOnly: true }
+  { route: '/voided-documents', title: 'Anulados', permission: 'financial.electronicdocuments.read', featureFlag: 'showVoidedDocuments', icon: 'voided', order: 70, foundationOnly: true, readOnly: true },
+  { route: '/accounting/accounts', title: 'Plan de cuentas', permission: 'financial.chartofaccounts.read', icon: 'accounts', order: 80, foundationOnly: false, readOnly: false },
+  { route: '/accounting/journal-entries', title: 'Asientos contables', permission: 'financial.journalentries.read', icon: 'journal', order: 90, foundationOnly: false, readOnly: false },
+  { route: '/accounting/fiscal-years', title: 'Años fiscales', permission: 'financial.fiscalyears.read', icon: 'calendar', order: 100, foundationOnly: false, readOnly: false },
+  { route: '/accounting/fiscal-periods', title: 'Períodos fiscales', permission: 'financial.fiscalperiods.read', icon: 'period', order: 110, foundationOnly: false, readOnly: false }
 ];
 
 export const allowedFinancialRoutes = financialMenuItems.map(item => item.route);
