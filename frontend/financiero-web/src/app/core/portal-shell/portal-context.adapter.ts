@@ -18,9 +18,20 @@ export class PortalIntegratedContextProvider implements PortalShellContextProvid
   private readonly sanitizer = inject(SanitizationService);
 
   getContext(): PortalShellContext {
-    const windowContext = typeof window !== 'undefined' ? window.__PORTAL_SHELL_CONTEXT__ : null;
+    const windowContext = typeof window !== 'undefined'
+      ? window.__PORTAL_SHELL_CONTEXT__ ?? this.parentWindowContext()
+      : null;
     const localEmbeddedContext = portalLocalEmbeddedContext();
     return sanitizePortalShellContext(this.injectedContext || windowContext || localEmbeddedContext, this.sanitizer);
+  }
+
+  private parentWindowContext(): Partial<PortalShellContext> | null {
+    if (typeof window === 'undefined' || window.parent === window) return null;
+    try {
+      return window.parent.__PORTAL_SHELL_CONTEXT__ ?? null;
+    } catch {
+      return null;
+    }
   }
 }
 
