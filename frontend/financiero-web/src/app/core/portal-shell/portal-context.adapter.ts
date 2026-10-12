@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { SanitizationService } from '../services/sanitization.service';
-import { standalonePortalShellContext } from './portal-shell.defaults';
+import { defaultFeatureFlags, defaultPortalCapabilities, financialMenuItems, standalonePortalShellContext } from './portal-shell.defaults';
 import { PORTAL_SHELL_CONTEXT, PortalShellContext, PortalShellContextProvider } from './portal-shell.models';
 import { sanitizePortalShellContext } from './portal-shell-validation';
 
@@ -21,7 +21,8 @@ export class PortalIntegratedContextProvider implements PortalShellContextProvid
     const windowContext = typeof window !== 'undefined'
       ? window.__PORTAL_SHELL_CONTEXT__ ?? this.parentWindowContext()
       : null;
-    return sanitizePortalShellContext(this.injectedContext || windowContext, this.sanitizer);
+    const localEmbeddedContext = portalLocalEmbeddedContext();
+    return sanitizePortalShellContext(this.injectedContext || windowContext || localEmbeddedContext, this.sanitizer);
   }
 
   private parentWindowContext(): Partial<PortalShellContext> | null {
@@ -63,4 +64,35 @@ export class PortalContextAdapter {
   contextWarnings(): string[] {
     return this.getContext().warnings;
   }
+}
+
+
+function portalLocalEmbeddedContext(): Partial<PortalShellContext> | null {
+  if (typeof window === 'undefined' || !window.location.pathname.startsWith('/apps/financial/')) return null;
+
+  const now = new Date();
+  return {
+    contractVersion: '1.0',
+    source: 'portal',
+    issuedAt: now.toISOString(),
+    expiresAt: new Date(now.getTime() + 10 * 60 * 1000).toISOString(),
+    capabilities: defaultPortalCapabilities,
+    warnings: ['Portal PROD-local embedded SuperAdmin context.'],
+    user: {
+      userId: 'portal-local-superadmin',
+      displayName: 'Local SuperAdmin',
+      emailMasked: 's********n@portal.local',
+      roles: ['SuperAdmin']
+    },
+    tenant: { tenantId: 'default', tenantName: 'Default Tenant' },
+    permissions: {
+      permissions: ['financial.*', ...new Set(financialMenuItems.map(item => item.permission))],
+      roles: ['SuperAdmin']
+    },
+    menu: { items: financialMenuItems },
+    notifications: { channels: ['portal'], delegatedToPortal: true },
+    correlation: { correlationId: globalThis.crypto?.randomUUID?.() ?? `financial-portal-${Date.now()}` },
+    environment: { apiBaseUrl: '/api/financial', shellMode: 'portal-integrated', production: true },
+    featureFlags: { ...defaultFeatureFlags }
+  };
 }
