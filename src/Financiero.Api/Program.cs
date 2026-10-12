@@ -25,6 +25,20 @@ var requireHttpsMetadata = !bool.TryParse(requireHttpsMetadataValue, out var par
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (!context.Request.Headers.ContainsKey("Authorization") &&
+                context.Request.Cookies.TryGetValue("portal_local_session", out var cookieToken) &&
+                !string.IsNullOrWhiteSpace(cookieToken))
+            {
+                context.Token = cookieToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
     if (!string.IsNullOrWhiteSpace(authority))
     {
         options.Authority = authority.Trim();
