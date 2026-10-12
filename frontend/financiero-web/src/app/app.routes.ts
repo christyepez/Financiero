@@ -6,6 +6,7 @@ import { ExternalApprovalsComponent } from './features/external-approvals/extern
 import { TaxCatalogsComponent } from './features/tax-catalogs/tax-catalogs.component';
 import { PurchasesComponent } from './features/purchases/purchases.component';
 import { VoidedDocumentsComponent } from './features/voided-documents/voided-documents.component';
+import { AccountingWorkspaceComponent } from './features/accounting/accounting-workspace.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -16,5 +17,6 @@ export const routes: Routes = [
   { path: 'tax-catalogs', component: TaxCatalogsComponent },
   { path: 'purchases', component: PurchasesComponent },
   { path: 'voided-documents', component: VoidedDocumentsComponent },
+  { path: 'accounting/:area', component: AccountingWorkspaceComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
