@@ -37,6 +37,9 @@ export class PortalMenuAdapter {
 
   private hasPermission(permission: string): boolean {
     const permissions = this.context.getContext().permissions.permissions;
-    return permissions.includes(permission);
+    return permissions.some(granted =>
+      granted === permission ||
+      (granted.endsWith('.*') && permission.startsWith(granted.slice(0, -1)))
+    );
   }
 }
