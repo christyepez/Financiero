@@ -249,3 +249,84 @@ export interface ViewState<T> {
   error: string | null;
   updatedAt: string | null;
 }
+
+export interface PageResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface FinancialAccount {
+  id: string;
+  tenantId: string;
+  code: string;
+  name: string;
+  type: string;
+  level: number;
+  parentAccountId?: string | null;
+  isMovementAccount: boolean;
+  status: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface CreateFinancialAccount {
+  code: string;
+  name: string;
+  type: string;
+  level: number;
+  parentAccountId?: string | null;
+  isMovementAccount: boolean;
+}
+
+export interface FiscalYear {
+  id: string;
+  tenantId: string;
+  year: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface FiscalPeriod {
+  id: string;
+  tenantId: string;
+  fiscalYearId: string;
+  periodNumber: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface JournalEntryLine {
+  id: string;
+  accountId: string;
+  lineNumber: number;
+  description?: string | null;
+  debit: number;
+  credit: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  tenantId: string;
+  fiscalPeriodId?: string | null;
+  entryNumber?: string | null;
+  postingDate: string;
+  reference?: string | null;
+  description: string;
+  status: string;
+  source: string;
+  reversalOfJournalEntryId?: string | null;
+  reversedByJournalEntryId?: string | null;
+  totalDebit: number;
+  totalCredit: number;
+  lines: JournalEntryLine[];
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
