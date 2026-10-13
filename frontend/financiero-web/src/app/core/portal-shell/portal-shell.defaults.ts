@@ -36,7 +36,11 @@ export const financialMenuItems: PortalMenuItemContract[] = [
   { route: '/accounting/accounts', title: 'Plan de cuentas', permission: 'financial.chartofaccounts.read', icon: 'accounts', order: 80, foundationOnly: false, readOnly: false },
   { route: '/accounting/journal-entries', title: 'Asientos contables', permission: 'financial.journalentries.read', icon: 'journal', order: 90, foundationOnly: false, readOnly: false },
   { route: '/accounting/fiscal-years', title: 'Años fiscales', permission: 'financial.fiscalyears.read', icon: 'calendar', order: 100, foundationOnly: false, readOnly: false },
-  { route: '/accounting/fiscal-periods', title: 'Períodos fiscales', permission: 'financial.fiscalperiods.read', icon: 'period', order: 110, foundationOnly: false, readOnly: false }
+  { route: '/accounting/fiscal-periods', title: 'Períodos fiscales', permission: 'financial.fiscalperiods.read', icon: 'period', order: 110, foundationOnly: false, readOnly: false },
+  { route: '/operations/electronic-documents', title: 'Documentos electrónicos', permission: 'financial.electronicdocuments.read', icon: 'documents', order: 120, foundationOnly: false, readOnly: true },
+  { route: '/operations/tax-reporting', title: 'Reporting tributario', permission: 'financial.electronicdocuments.read', icon: 'reporting', order: 130, foundationOnly: false, readOnly: true },
+  { route: '/operations/tax-action-queue', title: 'Cola tributaria', permission: 'financial.electronicdocuments.read', icon: 'queue', order: 140, foundationOnly: false, readOnly: true },
+  { route: '/operations/tax-legal-review', title: 'Revisión tributaria', permission: 'financial.electronicdocuments.read', icon: 'review', order: 150, foundationOnly: true, readOnly: true }
 ];
 
 export const allowedFinancialRoutes = financialMenuItems.map(item => item.route);
