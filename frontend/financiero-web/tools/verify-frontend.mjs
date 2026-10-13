@@ -31,6 +31,7 @@ const required = [
   'src/app/features/ats-readiness/ats-readiness.component.ts',
   'src/app/features/external-approvals/external-approvals.component.ts',
   'src/app/features/accounting/accounting-workspace.component.ts',
+  'src/app/features/operations/financial-operations.component.ts',
   'src/environments/environment.ts',
   'src/environments/environment.development.ts',
   'src/environments/environment.example.ts'
@@ -186,6 +187,14 @@ for (const token of ['/api/financial/accounts', '/api/financial/journal-entries'
 }
 for (const token of ['financial.chartofaccounts.read', 'financial.journalentries.read', 'financial.fiscalyears.read', 'financial.fiscalperiods.read']) {
   if (!portalDefaults.includes(token)) throw new Error(`Portal financial menu missing ${token}.`);
+}
+
+const operationsWorkspace = readFileSync(join(root, 'src/app/features/operations/financial-operations.component.ts'), 'utf8');
+for (const token of ['/api/financial/electronic-documents/', '/api/financial/tax-reporting/documents', '/api/financial/tax-reporting/action-queue', '/api/financial/tax-legal-review/approval-checklist', 'Documentos electrónicos', 'Reporting tributario', 'Cola tributaria', 'Revisión tributaria']) {
+  if (!operationsWorkspace.includes(token)) throw new Error(`Financial operations workspace missing ${token}.`);
+}
+for (const route of ['/operations/electronic-documents', '/operations/tax-reporting', '/operations/tax-action-queue', '/operations/tax-legal-review']) {
+  if (!portalDefaults.includes(route)) throw new Error(`Portal financial menu missing ${route}.`);
 }
 
 const menuAdapter = readFileSync(join(root, 'src/app/core/adapters/portal-menu.adapter.ts'), 'utf8');
