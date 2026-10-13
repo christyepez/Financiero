@@ -7,6 +7,7 @@ import { TaxCatalogsComponent } from './features/tax-catalogs/tax-catalogs.compo
 import { PurchasesComponent } from './features/purchases/purchases.component';
 import { VoidedDocumentsComponent } from './features/voided-documents/voided-documents.component';
 import { AccountingWorkspaceComponent } from './features/accounting/accounting-workspace.component';
+import { FinancialOperationsComponent } from './features/operations/financial-operations.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -18,5 +19,6 @@ export const routes: Routes = [
   { path: 'purchases', component: PurchasesComponent },
   { path: 'voided-documents', component: VoidedDocumentsComponent },
   { path: 'accounting/:area', component: AccountingWorkspaceComponent },
+  { path: 'operations/:area', component: FinancialOperationsComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
